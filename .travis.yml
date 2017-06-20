@@ -9,4 +9,4 @@ before_script:
   - export CFLAGS="-I`pwd`/include -L`pwd`/lib $CFLAGS"
 
   
-script: pwd && ls && make install && make tests
+script: pwd && ls && make install
