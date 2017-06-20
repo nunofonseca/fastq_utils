@@ -1,11 +1,13 @@
 #!/bin/bash
 
+let num_failed=0
 function must_fail {
     cmd=$*
     STATUS=PASSED
     bash -c "$cmd" 2> /dev/null
     if [ 0 -eq $? ];  then	
 	STATUS=FAILED
+	num_failed+=1
     fi
     echo $STATUS $cmd
 }
@@ -16,6 +18,7 @@ function must_succeed {
     bash -c "$cmd" 2> /dev/null
     if [ 0 -ne $? ];  then	
 	STATUS=FAILED
+	num_failed+=1
     fi
     echo $STATUS $cmd
 }
@@ -90,5 +93,5 @@ must_succeed ./bin/fastq_filterpair tests/c18_10000_1.fastq.gz tests/c18_10000_2
 #must_succeed ./bin/fastq_filterpair tests/c18_1M_1.fastq.gz tests/c18_1M_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz
 
 
-exit 0
+exit $num_failed
 
