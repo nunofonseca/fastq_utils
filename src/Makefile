@@ -10,7 +10,7 @@ ifdef DEBUG
 CFLAGS+= -g -DDEBUG=1
 endif
 
-TARGETS=fastq_truncate fastq_filterpair fastq_randsample fastq_filter_n fastq_num_reads fastq_info fastq_not_empty
+TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty
 
 ############################################################################
 all: $(TARGETS)
@@ -50,10 +50,6 @@ hash.o: hash.c hash.h
 
 %.o: %.c
 	gcc $(CFLAGS) -c $<
-
-
-fastq_randsample:  fastq_randsample.o 
-	gcc  $(CFLAGS) -o $@ $^
 
 clean:
 	rm -f *.o $(TARGETS) *~
