@@ -3,9 +3,9 @@ language: c
 compiler:
   - gcc
 
-before_install:
-  - sudo apt-get install -y gcc-6
-  - wget http://zlib.net/zlib-1.2.11.tar.gz   && tar xvzf zlib-1.2.11.tar.gz && pushd zlib-1.2.11 && ./configure --prefix /usr && make && sudo make install && popd
+before_script:
+  - ./install_deps.sh
+  - export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH/usr/local/lib 
 
   
-script: export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH/usr/local/lib && export CFLAGS="-I/usr/include $CFLAGS" &&  pwd && ls && make install && make tests
+script: export CFLAGS="-I`pwd`/include $CFLAGS" &&  pwd && ls && make install && make tests
