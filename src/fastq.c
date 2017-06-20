@@ -38,7 +38,6 @@ static inline void GZ_WRITE(gzFile fd,char *s);
 
 //
 gzFile fastq_open(const char* filename,const char *mode);
-gzFile fastq_open_write(const char* filename);
 static void fastq_close(gzFile fd);
 
 
