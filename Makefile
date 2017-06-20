@@ -11,5 +11,7 @@ install:
 release:
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.c
 
-tests:
+tests: FORCE
 	./run_tests.sh
+
+FORCE: 
