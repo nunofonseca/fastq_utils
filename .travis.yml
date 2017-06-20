@@ -4,7 +4,7 @@ compiler:
   - gcc
 
 before_install:
-  - wget http://zlib.net/zlib-1.2.11.tar.gz   && tar xvzf zlib-1.2.11.tar.gz && cd zlib-zlib-1.2.11 && ./configure --prefix /usr && make && sudo make install
+  - wget http://zlib.net/zlib-1.2.11.tar.gz   && tar xvzf zlib-1.2.11.tar.gz && cd zlib-1.2.11 && ./configure --prefix /usr && make && sudo make install
 
 
 script: make install && make tests
