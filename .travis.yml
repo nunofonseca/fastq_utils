@@ -6,5 +6,7 @@ compiler:
 before_install:
   - wget http://zlib.net/zlib-1.2.11.tar.gz   && tar xvzf zlib-1.2.11.tar.gz && pushd zlib-1.2.11 && ./configure --prefix /usr && make && sudo make install && popd
 
-
-script: CFLAGS="-I/usr/include" LD_LIBRARY_PATH=/usr/lib  make install && make tests
+env:
+  - CFLAGS="-I/usr/include"
+  - LD_LIBRARY_PATH=/usr/lib  
+script: pwd && ls && make install && make tests
