@@ -6,5 +6,4 @@ compiler:
 before_install:
   - sudo apt-get install -y zlib1g-dev zlib1g 
 
-
 script: make install && make tests
