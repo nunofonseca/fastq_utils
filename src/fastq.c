@@ -148,7 +148,7 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
   new->readname_format=UNDEF;
   new->is_casava_18=UNDEF;
   strncpy(new->filename,filename,MAX_FILENAME_LENGTH-1);
-  new->filename[MAX_FILENAME_LENGTH]='\0';
+  new->filename[MAX_FILENAME_LENGTH-1]='\0';
   new->fd=fastq_open(filename,mode);
   memset(new->rdlen_ctr,0,sizeof(long)*MAX_READ_LENGTH);
   return(new);
