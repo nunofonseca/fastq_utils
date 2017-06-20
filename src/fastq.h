@@ -5,8 +5,8 @@
 #define INTEGERNAME 2
 
 #ifndef MAX_READ_LENGTH
-// 1Mb should cover most of the cases for now :)
-#define MAX_READ_LENGTH 1000000
+// 500000 bases should cover most of the cases for now :)
+#define MAX_READ_LENGTH 500000
 #endif
 
 #ifndef MAX_LABEL_LENGTH
@@ -24,7 +24,7 @@
 #define UNDEF -1
 
 #ifndef HASHSIZE
-#define HASHSIZE 19000001
+#define HASHSIZE 39000001
 #endif
 
 #include "hash.h"
