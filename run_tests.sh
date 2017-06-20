@@ -7,7 +7,7 @@ function must_fail {
     bash -c "$cmd" 2> /dev/null
     if [ 0 -eq $? ];  then	
 	STATUS=FAILED
-	num_failed+=1
+	let num_failed=num_failed+1
     fi
     echo $STATUS $cmd
 }
@@ -18,7 +18,7 @@ function must_succeed {
     bash -c "$cmd" 2> /dev/null
     if [ 0 -ne $? ];  then	
 	STATUS=FAILED
-	num_failed+=1
+	let num_failed=num_failed+1
     fi
     echo $STATUS $cmd
 }
