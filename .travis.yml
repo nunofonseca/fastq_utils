@@ -4,6 +4,7 @@ compiler:
   - gcc
 
 before_install:
-  - sudo apt-get install -y zlib1g-dev zlib1g 
+  - wget http://zlib.net/zlib-1.2.11.tar.gz   && tar xvzf zlib-1.2.11.tar.gz && cd zlib-zlib-1.2.11 && ./configure --prefix /usr && make && sudo make install
+
 
 script: make install && make tests
