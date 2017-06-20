@@ -6,7 +6,7 @@ all:
 	make -C src
 
 install:
-	mdkir -p bin && make -C src install
+	mkdir -p bin && make -C src install
 
 release:
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.c
