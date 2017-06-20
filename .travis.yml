@@ -1,9 +1,10 @@
 language: c
 
 compiler:
-  - gcc-6
+  - gcc
 
 before_install:
+  - sudo apt-get install -y gcc-6
   - wget http://zlib.net/zlib-1.2.11.tar.gz   && tar xvzf zlib-1.2.11.tar.gz && pushd zlib-1.2.11 && ./configure --prefix /usr && make && sudo make install && popd
 
   
