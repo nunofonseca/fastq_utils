@@ -5,7 +5,7 @@ compiler:
 
 before_script:
   - ./install_deps.sh
-  - export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH/usr/local/lib 
-
+  - export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH/usr/local/lib
+  - export CFLAGS="-I`pwd`/include $CFLAGS"
   
-script: export CFLAGS="-I`pwd`/include $CFLAGS" &&  pwd && ls && make install && make tests
+script: pwd && ls && make install && make tests
