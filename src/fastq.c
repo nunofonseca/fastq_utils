@@ -42,6 +42,13 @@ static void fastq_close(gzFile fd);
 
 
 /* ******************************************************************************* */
+FASTQ_ENTRY* tmp_entry=NULL;
+static FASTQ_ENTRY* get_tmp_entry() {
+  if (tmp_entry!=NULL) return tmp_entry;
+  tmp_entry=fastq_new_entry();
+  return tmp_entry;
+}
+
 void fastq_rewind(FASTQ_FILE* fd) {
   fd->cline=1;
   gzrewind(fd->fd);
@@ -82,6 +89,42 @@ FASTQ_ENTRY* fastq_new_entry(void) {
   new->offset=0;
   return(new);
 }
+unsigned long ctr_seek=0,ctr_noseek=0;
+void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
+
+  if ( gztell(from->fd)!=offset ) {
+    //fprintf(stderr,"miss %lu / %lu\n",offset, gztell(from->fd));
+    // we need to seek
+    if (gzseek(from->fd,offset,SEEK_SET)<0) {
+      fprintf(stderr,"Error: gzseek failed on %s.\n",from->filename);
+      exit(1);
+    }
+    ++ctr_seek;
+  } else     ++ctr_noseek;
+  //fprintf(stderr,"%lu / %lu\n",ctr_seek, ctr_noseek);
+  FASTQ_ENTRY* e=get_tmp_entry();
+  if( gzeof(from->fd)) {
+    fprintf(stderr,"Error: premature eof on %s.\n",from->filename);
+      exit(1);
+  }
+  GZ_READ(from->fd,&e->hdr1[0],MAX_LABEL_LENGTH);
+  if ( e->hdr1[0]=='\0') {
+    fprintf(stderr,"ERROR: file %s truncated: line %ld\n",from->filename,from->cline);    
+    exit(1);
+  }
+  GZ_READ(from->fd,&e->seq[0],MAX_READ_LENGTH);
+  GZ_READ(from->fd,&e->hdr2[0],MAX_LABEL_LENGTH);
+  GZ_READ(from->fd,&e->qual[0],MAX_READ_LENGTH);
+  if (e->seq[0]=='\0' || e->hdr2[0]=='\0' || e->qual[0]=='\0' ) {
+    fprintf(stderr,"ERROR: file truncated: line %ld\n",from->cline);
+    exit(1);
+  }
+  GZ_WRITE(to->fd,&e->hdr1[0]);
+  GZ_WRITE(to->fd,&e->seq[0]);
+  GZ_WRITE(to->fd,&e->hdr2[0]);
+  GZ_WRITE(to->fd,&e->qual[0]);
+  from->cur_offset=gztell(from->fd);
+}
 /*
  *
  */
@@ -111,12 +154,6 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
   return(new);
 }
 
-FASTQ_ENTRY* tmp_entry=NULL;
-static FASTQ_ENTRY* get_tmp_entry() {
-  if (tmp_entry!=NULL) return tmp_entry;
-  tmp_entry=fastq_new_entry();
-  return tmp_entry;
-}
 
 void fastq_seek_copy_read(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
   if (gzseek(from->fd,offset,SEEK_SET)<0) {
@@ -521,7 +558,7 @@ inline gzFile fastq_open(const char* filename,const char *mode) {
   }
   //gzbuffer(fd1,sizeof(FASTQ_ENTRY)*2);
   // too large value slows down seek
-  gzbuffer(fd1,128000);
+  gzbuffer(fd1,512000);
   return(fd1);
 }
 

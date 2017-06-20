@@ -32,7 +32,7 @@
 
 #include "fastq.h"
 
-#define VERSION "0.9.0a"
+#define VERSION "0.9.0"
 
 int main(int argc, char **argv) {
   unsigned long paired=0;
@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
   FASTQ_FILE* fdw3=fastq_new(p3,FALSE,"w4");
   unsigned long up2=0;
 
+  
   if ( fdw1==NULL || fdw2==NULL || fdw3==NULL ) {
     fprintf(stderr,"Unable to create output files\n");
     exit(1);
@@ -97,19 +98,13 @@ int main(int argc, char **argv) {
       // pair found
       ++paired;
       fastq_write_entry(fdw2,m2);
-      // assume that the order is similar to minimize seeks
-      if ( gztell(fd1->fd) != e->entry_start ) {
-	//fprintf(stderr,"+");
-        fastq_seek_copy_read(e->entry_start,fd1,fdw1);
-      } else {
-	//fprintf(stderr,"-");
-	fastq_read_entry(fd1,m1);
-	fastq_write_entry(fdw1,m1);
-      }
+      // assumes that the order is similar to minimize seeks
+      fastq_quick_copy_entry(e->entry_start,fd1,fdw1);
       // remove entry from index
       fastq_index_delete(readname,index);
     }
-    PRINT_READS_PROCESSED(fd2->cline/4,100000);
+    //fprintf(stderr,"%d\n",fd2->cline);
+    PRINT_READS_PROCESSED(fd2->cline/4,10000);
   }
   fprintf(stderr,"\n");
   fprintf(stderr,"Recording %ld unpaired reads from %s\n",index->n_entries,argv[1]);fflush(stderr);
@@ -141,6 +136,7 @@ int main(int argc, char **argv) {
       fastq_write_entry(fdw3,m1);
       remaining--;
     }
+    PRINT_READS_PROCESSED(fd1->cline/4,100000);
   }
 #endif
   fprintf(stderr,"\n");

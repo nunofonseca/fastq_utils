@@ -29,7 +29,7 @@
 #include <stdlib.h>
 
 #include "fastq.h"
-#define VERSION "0.9.0a"
+#define VERSION "0.9.0"
 
 
 int main(int argc, char **argv ) {

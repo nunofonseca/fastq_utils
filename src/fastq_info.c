@@ -35,7 +35,7 @@
 #include "hash.h"
 #include "fastq.h"
 
-#define VERSION "0.9.0a"
+#define VERSION "0.9.0"
 
 
 // approx. median read length
