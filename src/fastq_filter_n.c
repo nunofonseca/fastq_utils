@@ -38,7 +38,7 @@ int main(int argc, char **argv ) {
   int c;
   opterr = 0;
 
-  fprintf(stderr,"Version iRAP %s\n",VERSION); 
+  fprintf(stderr,"fastq_utils %s\n",VERSION); 
   // add an option -n N
   //if (optopt == 'c')
   char *cvalue = NULL;

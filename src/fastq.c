@@ -32,7 +32,6 @@ INDEX_ENTRY* new_indexentry(hashtable ht,char*hdr,int len,long start_pos);
 static inline int compare_headers(const char *hdr1,const char *hdr2); //?
 
 
-
 static inline char* GZ_READ(gzFile fd,char *s,long max);
 static inline void GZ_WRITE(gzFile fd,char *s);
 

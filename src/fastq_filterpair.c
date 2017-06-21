@@ -2,7 +2,7 @@
 # =========================================================
 # Copyright 2012-2017,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
 #
-# This file is part of iRAP.
+# This file is part of fastq_utils.
 #
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
   char rname[MAX_LABEL_LENGTH];
 
-  fprintf(stderr,"Version iRAP %s\n",VERSION);
+  fprintf(stderr,"fastq_utils %s\n",VERSION);
   
   if (argc!=6) {
     fprintf(stderr,"Usage: filterpair fastq1 fastq2 paired1 paired2 unpaired\n");

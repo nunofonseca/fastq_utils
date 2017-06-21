@@ -2,7 +2,7 @@
 # =========================================================
 # Copyright 2012-2017,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
 #
-# This file is part of iRAP.
+# This file is part of fastq_utils.
 #
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
