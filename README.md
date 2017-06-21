@@ -47,6 +47,11 @@ Check two paired fastq files
     
      fastq_info file_1.fastq.gz file_2.fastq.gz    
 
+There is a script available (fastq_validator.sh) that also accepts a BAM file or bzip2 compressed .FASTQ files as input besides of .FASTQ or .FASTQ.gz files.
+
+     fastq_validator.sh file_1.fastq.bzip2 file_2.fastq.bzip2    
+
+
 #### fastq_filterpair - sorts and keeps the reads with a mate in two paired fastq files.
 
 Usage: fastq_filterpair fastq_file1 fastq_file2 out_fastq_file1.fastq.gz out_fastq_file2.fastq.gz out_fastq_sing.fastq.gz
