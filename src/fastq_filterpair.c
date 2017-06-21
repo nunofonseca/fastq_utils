@@ -32,7 +32,7 @@
 
 #include "fastq.h"
 
-#define VERSION "0.9.0"
+#define VERSION "0.9.3"
 
 int main(int argc, char **argv) {
   unsigned long paired=0;

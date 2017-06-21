@@ -1,4 +1,4 @@
-VERSION=0.9.2
+VERSION=0.9.3
 # Requires zlib libraries
 
 
@@ -11,6 +11,10 @@ install:
 release:
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.c
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.h
+	git pull && \
+	git commit -m "New version $(VERSION)" . &&\
+	git tag -a "$(VERSION)" -m "New version $(VERSION)" &&\
+	git push --tags
 
 tests: FORCE
 	./run_tests.sh

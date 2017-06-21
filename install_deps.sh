@@ -1,5 +1,7 @@
 #!/bin/bash
-set -e 
+set -e
+############################################
+## zlib
 wget http://zlib.net/zlib-1.2.11.tar.gz
 tar xvzf zlib-1.2.11.tar.gz
 pushd zlib-1.2.11
@@ -7,3 +9,4 @@ pushd zlib-1.2.11
 make
 make install
 popd
+
