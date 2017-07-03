@@ -13,7 +13,7 @@ ifdef DEBUG
 CFLAGS+= -g -DDEBUG=1
 endif
 
-TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty fastq_pre_barcodes
+TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at
 
 ifdef SAMTOOLS_PATH
 TARGETS+= bam_add_tags
@@ -47,6 +47,8 @@ fastq_truncate:  fastq_truncate.o  hash.o fastq.o
 #fastq_validator:  hash.o fastq_validator.o
 #	gcc  $(CFLAGS) $^ -o $@
 
+fastq_trim_poly_at: fastq_trim_poly_at.o hash.o fastq.o
+	gcc  $(CFLAGS) $^  -o $@  -lz
 
 fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
 	gcc  $(CFLAGS) -g  $^ -o $@ -lz
