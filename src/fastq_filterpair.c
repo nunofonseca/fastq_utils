@@ -32,7 +32,6 @@
 
 #include "fastq.h"
 
-#define VERSION "0.9.4"
 
 int main(int argc, char **argv) {
   unsigned long paired=0;
@@ -41,12 +40,12 @@ int main(int argc, char **argv) {
 
   char rname[MAX_LABEL_LENGTH];
 
-  fprintf(stderr,"fastq_utils %s\n",VERSION);
+  fastq_print_version();
   
   if (argc!=6) {
     fprintf(stderr,"Usage: filterpair fastq1 fastq2 paired1 paired2 unpaired\n");
     //fprintf(stderr,"%d",argc);
-    exit(1);
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
 
   FASTQ_FILE* fd1=fastq_new(argv[1],FALSE,"r");
@@ -79,7 +78,7 @@ int main(int argc, char **argv) {
   
   if ( fdw1==NULL || fdw2==NULL || fdw3==NULL ) {
     fprintf(stderr,"Unable to create output files\n");
-    exit(1);
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
   // go back to the beginning
   fastq_rewind(fd1);
@@ -151,7 +150,7 @@ int main(int argc, char **argv) {
   fastq_destroy(fd2);
   if ( paired == 0 ) {
     fprintf(stderr,"!!!WARNING!!! 0 paired reads! are the headers ok?\n");
-    exit(1);
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   exit(0);
 }
