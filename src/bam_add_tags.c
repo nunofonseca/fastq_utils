@@ -89,21 +89,21 @@ int main(int argc, char *argv[])
   bamFile out; 
 
   if (argc != 3) {  
-    fprintf(stderr, "Usage: bam_add_tags <in.bam> <out.bam or - for stdout>\n");  
-    return 1;  
+    PRINT_ERROR("Usage: bam_add_tags <in.bam> <out.bam or - for stdout>");  
+    return(PARAMS_ERROR_EXIT_STATUS);  
   }  
   // Open file and exit if error
   in = bam_open(argv[1], "rb");
   out2stdout = strcmp(argv[2], "-")? 0 : 1; 
   out = strcmp(argv[2], "-")? bam_open(argv[2], "w") : bam_dopen(fileno(stdout), "w"); 
   if (in == 0 ) {  
-    fprintf(stderr, "ERROR: Fail to open BAM file %s\n", argv[1]);  
-    return 1;  
+    PRINT_ERROR("Failed to open BAM file %s", argv[1]);  
+    return(PARAMS_ERROR_EXIT_STATUS);  
   }  
 
   if (out == 0) {  
-    fprintf(stderr, "ERROR: Fail to open BAM file %s\n", argv[2]);  
-    return 1;  
+    PRINT_ERROR("Failed to open BAM file %s", argv[2]);  
+    return(PARAMS_ERROR_EXIT_STATUS);  
   }  
 
   unsigned long num_alns=0;
