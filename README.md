@@ -92,7 +92,9 @@ Example:
     fastq_pre_barcodes  --file1 my.umi.fastq.gz   --outfile1 tmp.fastq.gz --phred_encoding 33 --read1_offset 22 --read1_size -1 --umi_read 1 --umi_size=8 --umi_offset 12
 
 In the above command, the UMIs (starting in the base 12 and with a length of 8 bases) are extracted from the sequences and inserted in the respective read name. The read sequences in the output file includes the bases starting in position 22 until the end of the sequence. The modified readname will have the following format
+
 @_STAGS_CELL=<cell>_UMI=<umi>_SAMPLE=<sample>_ETAGS_<ORIGINAL READ NAME>
+
 where <cell>, <umi>, and <sample> will have the value of the barcode (if available) and <ORIGINAL_READ_NAME> is, as the name suggest, the read name found in the input fastq file.
 
 #### bam_add_tags - companion program to fastq_pre_barcodes. Given a bam file produced based on fastq files preprocessed by fastq_pre_barcodes, bam_add_tags will add the UM (UMI), CB (Cell), and BC (sample) tags based on the information found in the readnames.
