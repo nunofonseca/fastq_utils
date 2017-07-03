@@ -20,6 +20,8 @@
 #
 # =========================================================
 */
+#define VERSION "0.9.4"
+
 #define DEFAULT  0
 #define CASAVA18 1
 #define INTEGERNAME 2
@@ -37,11 +39,11 @@
 #define MAX_FILENAME_LENGTH 5000
 #endif
 
-
+#define MAX_BARCODE_LENGTH 50
 #define MIN_READ_LENGTH 1
-#define TRUE 1
-#define FALSE 0
 #define UNDEF -1
+
+typedef enum  { TRUE=1, FALSE=0 } FASTQ_BOOLEAN;
 
 #ifndef HASHSIZE
 #define HASHSIZE 39000001
@@ -103,6 +105,7 @@ struct fastq_file {
 };
 typedef struct fastq_file  FASTQ_FILE;
 
+void fastq_print_version();
 FASTQ_ENTRY* fastq_new_entry(void);
 void fastq_write_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e);
 
