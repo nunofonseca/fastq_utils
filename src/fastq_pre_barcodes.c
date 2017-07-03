@@ -35,7 +35,7 @@
 #include "fastq.h"
 
 typedef enum  { READ1=1, READ2=2, READ3=3 } READ_IDX;
-typedef long FASTQ_OFFSET;
+
 typedef long FASTQ_SIZE;
 
 struct params_s {
@@ -44,16 +44,16 @@ struct params_s {
   short phred_encoding; //33/64 - map the ascii code to the 0 phred value
   FASTQ_BOOLEAN paired; // maximum read length
   FASTQ_BOOLEAN verbose;
-  FASTQ_OFFSET read_offset[2+1];//
+  FASTQ_READ_OFFSET read_offset[2+1];//
   FASTQ_SIZE read_size[2+1]; //
   READ_IDX cell_read;  // cell barcode
-  FASTQ_OFFSET cell_offset;//
+  FASTQ_READ_OFFSET cell_offset;//
   FASTQ_SIZE cell_size;  //
   READ_IDX sample_read;  // sample barcode
-  FASTQ_OFFSET sample_offset;// sample barcode
+  FASTQ_READ_OFFSET sample_offset;// sample barcode
   FASTQ_SIZE sample_size;  //
   READ_IDX umi_read;  // Read with the UMI (1/2)
-  FASTQ_OFFSET umi_offset; //UMI offset
+  FASTQ_READ_OFFSET umi_offset; //UMI offset
   FASTQ_SIZE umi_size; //
   short min_qual; // discard read if the base quality of the UMI/cell barc code is below the threshold
   short num_input_files;
@@ -62,42 +62,22 @@ typedef struct params_s Params;
 
 
 #define PRINT_VERBOSE(p,s...) {if (p->verbose) fprintf(stderr,##s );  }
-#define PRINT_INFO(s...) {fprintf(stderr,"INFO:"); fprintf(stderr,##s );fprintf(stderr,"\n");}
-
-#define DEBUG
-#ifdef DEBUG
-#define PRINT_DEBUG(s...) { fprintf(stderr,"DEBUG: "); fprintf(stderr,##s ); }
-#else
-#define PRINT_DEBUG(s...) 
-#endif
 
 
 void validate_options(Params* options) {
 
   if ( options->file[1]==NULL ) {
-    fprintf(stderr,"ERROR: missing input file (-file1)\n");
+    PRINT_ERROR("missing input file (-file1)");
     exit(1);
   }
   if ( options->paired && options->file[2]==NULL ) {
-    fprintf(stderr,"ERROR: if paired_end is used then two fastq files should be provided - missing input file (-file2)\n");
-    exit(2);
+    PRINT_ERROR("if paired_end is used then two fastq files should be provided - missing input file (-file2)");
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
 
-  //if ( !options->paired && options->outfile[1]==NULL ) {
-  //  fprintf(stderr,"ERROR: if single_end then -outfile1 should be provided\n");
-  //  exit(2);
-  // }
-  
-  
-  // We should output something!
-  /* if ( !options->paired && (options->read_offset[READ1]!=UNDEF && options->read_size[READ1]>0) ) { */
-  /*   fprintf(stderr,"ERROR: no read output defined - please set --read1_size and --read1_offset\n"); */
-  /*   exit(2); */
-  /* } */
-
   if ( options->outfile[1]==NULL ) {
-    fprintf(stderr,"ERROR: if single_end then -outfile1 should be provided\n");
-    exit(2);
+    PRINT_ERROR("if single_end then -outfile1 should be provided");
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
 
 }
@@ -106,8 +86,8 @@ void validate_options(Params* options) {
 Params* Params_new(void) {
   Params* new=(Params*)malloc(sizeof(Params));
   if (new==NULL) {
-    fprintf(stderr,"ERROR: unable to allocate %ld bytes of memory\n",sizeof(Params));
-    exit(1);
+    PRINT_ERROR("unable to allocate %ld bytes of memory",sizeof(Params));
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
 
   new->file[READ1]=NULL;
@@ -139,8 +119,8 @@ Params* Params_new(void) {
 
 void set_input_file(Params* p,char* filename,READ_IDX rdx) {
   if (rdx<READ1 || rdx>READ3 ) {
-    fprintf(stderr,"ERROR: internal error set_input_file\n");
-    exit(1);
+    PRINT_ERROR("internal error set_input_file");
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
 
   if (filename!=NULL && p->file[rdx]==NULL)
@@ -162,10 +142,10 @@ void slice_read(FASTQ_ENTRY* m,const Params* p,READ_IDX cur_read) {
     return;
   }
   //
-  FASTQ_OFFSET offset=p->read_offset[cur_read];  
+  FASTQ_READ_OFFSET offset=p->read_offset[cur_read];  
   if ( offset > 0 ) { // copy
-    FASTQ_OFFSET len=p->read_size[cur_read];
-    FASTQ_OFFSET x;
+    FASTQ_READ_OFFSET len=p->read_size[cur_read];
+    FASTQ_READ_OFFSET x;
     if ( len==-1 ) len=m->read_len;
     for (x=0; x<=len;++x) {
       m->seq[x]=m->seq[x+offset];
@@ -183,7 +163,7 @@ void add_tags2readname(FASTQ_ENTRY* m,char*cell,char*umi,char*sample) {
   // add the tags right to the beginning of the read
   // STAGS_CELL=  _UMI= _SAMPLE= _ETAGS_ 31
   #define TAGS_NAMES_LEN 31
-  FASTQ_OFFSET  offset=TAGS_NAMES_LEN+strlen(cell)+strlen(umi)+strlen(sample);
+  FASTQ_READ_OFFSET  offset=TAGS_NAMES_LEN+strlen(cell)+strlen(umi)+strlen(sample);
   // go to the end
   unsigned int s=1;
 
@@ -208,7 +188,7 @@ void add_tags2readname(FASTQ_ENTRY* m,char*cell,char*umi,char*sample) {
 short get_barcode(const FASTQ_ENTRY *m1,
 		  short phred_encoding,
 		  const READ_IDX  read,
-		  const FASTQ_OFFSET offset,
+		  const FASTQ_READ_OFFSET offset,
 		  const FASTQ_SIZE size,
 		  const short min_qual,
 		  char* dest) {
@@ -224,7 +204,7 @@ short get_barcode(const FASTQ_ENTRY *m1,
   }
   if ( min_qual > 0 ) {
     // check quality
-    FASTQ_OFFSET x;
+    FASTQ_READ_OFFSET x;
     for (x=offset;x<offset+size;++x) {
       fprintf(stderr,"Checking quality %c -> %d\n",m1->qual[x],m1->qual[x]-phred_encoding);
       if (m1->qual[x]-phred_encoding < min_qual) {
@@ -508,13 +488,13 @@ int main(int argc, char **argv ) {
       for (x=1;x<=p->num_input_files;++x) 
 	fastq_get_readname(fdi[x],m[x],&rnames[x][0],&len,TRUE);
       if (strcmp(rnames[READ1],rnames[READ2]) ) {
-	fprintf(stderr,"ERROR: Readnames do not match across files (read #%ld)\n",processed_reads+1);
-	exit(2);
+	PRINT_ERROR("Readnames do not match across files (read #%ld)",processed_reads+1);
+	exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
       }
       if (p->num_input_files==3) 
 	if (strcmp(rnames[READ1],rnames[READ3]) ) {
-	  fprintf(stderr,"ERROR: Readnames do not match across files (read #%ld)\n",processed_reads+1);
-	  exit(2);
+	  PRINT_ERROR("Readnames do not match across files (read #%ld)",processed_reads+1);
+	  exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
 	}
     }	  
     //
