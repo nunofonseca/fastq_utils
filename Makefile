@@ -13,6 +13,7 @@ release:
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.h
 	git pull && \
 	git commit -m "New version $(VERSION)" . &&\
+	git push &&\
 	git tag -a "$(VERSION)" -m "New version $(VERSION)" &&\
 	git push --tags
 
