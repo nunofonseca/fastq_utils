@@ -162,11 +162,12 @@ void slice_read(FASTQ_ENTRY* m,const Params* p,READ_IDX cur_read) {
     return;
   }
   //
-  FASTQ_OFFSET offset=p->read_offset[cur_read];
+  FASTQ_OFFSET offset=p->read_offset[cur_read];  
   if ( offset > 0 ) { // copy
     FASTQ_OFFSET len=p->read_size[cur_read];
+    FASTQ_OFFSET x;
     if ( len==-1 ) len=m->read_len;
-    for (FASTQ_OFFSET x=0; x<=len;++x) {
+    for (x=0; x<=len;++x) {
       m->seq[x]=m->seq[x+offset];
       m->qual[x]=m->qual[x+offset];
     }
@@ -223,7 +224,8 @@ short get_barcode(const FASTQ_ENTRY *m1,
   }
   if ( min_qual > 0 ) {
     // check quality
-    for ( int x=offset;x<offset+size;++x) {
+    FASTQ_OFFSET x;
+    for (x=offset;x<offset+size;++x) {
       fprintf(stderr,"Checking quality %c -> %d\n",m1->qual[x],m1->qual[x]-phred_encoding);
       if (m1->qual[x]-phred_encoding < min_qual) {
 	fprintf(stderr,"Warning: skipping read due to low quality in barcode sequence %c\n",m1->qual[x]-phred_encoding);
