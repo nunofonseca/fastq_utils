@@ -34,8 +34,6 @@
 #include "hash.h"
 #include "fastq.h"
 
-#define VERSION "0.9.4"
-
 
 // approx. median read length
 inline unsigned int median_rl(FASTQ_FILE* fd1,FASTQ_FILE* fd2) {
@@ -60,8 +58,8 @@ int has_gz_extension(const char *s) {
   int reti;
   reti = regcomp(&regex,".gz$",0);  
   if ( reti ) { 
-    fprintf(stderr, "\nInternal error: Could not compile regex\n"); 
-    exit(2); 
+    PRINT_ERROR("Internal error: Could not compile regex"); 
+    exit(SYS_INT_ERROR_EXIT_STATUS); 
   }
   /* Execute regular expression */
   //fprintf(stderr,"%s\n",hdr);
@@ -90,8 +88,8 @@ FASTQ_FILE* validate_interleaved(char *f) {
     if (fastq_read_entry(fd1,m1)==0) break;
     // read 2
     if (fastq_read_entry(fd1,m2)==0) {
-      fprintf(stderr,"\nError in file %s, line %lu: file truncated?\n",f,fd1->cline);
-      exit(1);
+      PRINT_ERROR("Error in file %s, line %lu: file truncated?",f,fd1->cline);
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
     // match
     char *readname1=fastq_get_readname(fd1,m1,&rname1[0],&len,TRUE);
@@ -102,15 +100,15 @@ FASTQ_FILE* validate_interleaved(char *f) {
     // replace_dots(start_pos,seq2,hdr2,hdr2_2,qual2,fdf);    
 
     if ( strcmp(readname1,readname2) ) {
-      fprintf(stderr,"\nError in file %s, line %lu: unpaired read - %s\n",f,fd1->cline,readname1);
-      exit(1);
+      PRINT_ERROR("Error in file %s, line %lu: unpaired read - %s",f,fd1->cline,readname1);
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     } 
 
     if (fastq_validate_entry(fd1,m1)) {
-      exit(1);
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
     if (fastq_validate_entry(fd1,m2)) {
-      exit(1);
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
     PRINT_READS_PROCESSED(cline/4,100000);
     nreads1+=2;
@@ -140,7 +138,7 @@ int main(int argc, char **argv ) {
   int c;
   opterr = 0;
 
-  fprintf(stderr,"fastq_utils %s\n",VERSION);
+  fastq_print_version();
   
   while ((c = getopt (argc, argv, "f")) != -1)
     switch (c)
@@ -148,20 +146,20 @@ int main(int argc, char **argv ) {
       case 'f':
         //fix_dot = TRUE;
 	fprintf(stderr,"Fixing (-f) enabled: Replacing . by N (creating .fix.gz files)\n");
-	fprintf(stderr,"ERROR: -f option is no longer valid.\n");
-	exit(1);
+	PRINT_ERROR("-f option is no longer valid.");
+	exit(PARAMS_ERROR_EXIT_STATUS);
 	++nopt;
         break;
       default:
 	++nopt;
-        fprintf(stderr,"ERROR: Option -%c invalid\n",optopt);
-	exit(1);
+        PRINT_ERROR("Option -%c invalid",optopt);
+	exit(PARAMS_ERROR_EXIT_STATUS);
       }
   
   if (argc-nopt<2 || argc-nopt>3) {
-    fprintf(stderr,"Usage: fastq_info fastq1 [fastq2 file|pe]\n");
+    PRINT_ERROR("Usage: fastq_info fastq1 [fastq2 file|pe]");
     //fprintf(stderr,"%d",argc);
-    exit(1);
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
 
 
@@ -226,8 +224,8 @@ int main(int argc, char **argv ) {
       INDEX_ENTRY* e=fastq_index_lookup_header(index,readname);
       if (e==NULL) {
 	// complain and exit if not found
-	fprintf(stderr,"\nError in file %s, line %lu: unpaired read - %s\n",argv[2+nopt],fd2->cline,readname);
-	exit(1);
+	PRINT_ERROR("Error in file %s, line %lu: unpaired read - %s",argv[2+nopt],fd2->cline,readname);
+	exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
       }
       fastq_index_delete(readname,index);
       // TODO
@@ -237,8 +235,8 @@ int main(int argc, char **argv ) {
     printf("\n");
     //fastq_destroy(fdf);//???
     if (index->n_entries>0 ) {
-      fprintf(stderr,"\nError in file %s: found %lu unpaired reads\n",argv[1+nopt],index->n_entries);
-      exit(1);
+      PRINT_ERROR("Error in file %s: found %lu unpaired reads",argv[1+nopt],index->n_entries);
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
     // stats
     min_rl=min(fd2->min_rl,min_rl);
@@ -261,8 +259,8 @@ int main(int argc, char **argv ) {
   fprintf(out,"Quality encoding range: %lu %lu\n",min_qual,max_qual);
   char *enc=fastq_qualRange2enc(min_qual,max_qual);
   if ( enc == NULL ) {
-    fprintf(stderr,"\nERROR: Unable to determine quality encoding - unknown range [%lu,%lu]\n",min_qual,max_qual);
-    exit(1);
+    PRINT_ERROR("Unable to determine quality encoding - unknown range [%lu,%lu]",min_qual,max_qual);
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   fprintf(out,"Quality encoding: %s\n",enc);
   fprintf(out,"Read length: %lu %lu %u\n",min_rl,max_rl,median_rl(fd1,fd2));
