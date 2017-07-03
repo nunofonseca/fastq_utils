@@ -65,6 +65,7 @@ void fastq_print_version() {
   fprintf(stderr,"fastq_utils %s\n",VERSION);
 }
 
+
 /* ******************************************************************************* */
 FASTQ_ENTRY* tmp_entry=NULL;
 static FASTQ_ENTRY* get_tmp_entry() {
@@ -87,6 +88,12 @@ void fastq_write_entry2stdout(FASTQ_ENTRY *e) {
 void fastq_is_pe(FASTQ_FILE* fd) {
   fd->is_pe=TRUE;
 }
+
+unsigned long get_elength(FASTQ_ENTRY* m) {
+  // -2 = \n\0
+  return(m->read_len-2);
+}
+
 void fastq_new_entry_stats(FASTQ_FILE *fd, FASTQ_ENTRY* entry) {
 
   unsigned long slen=entry->read_len;
@@ -106,8 +113,8 @@ FASTQ_ENTRY* fastq_new_entry(void) {
 
   FASTQ_ENTRY* new=(FASTQ_ENTRY*)malloc(sizeof(FASTQ_ENTRY));
   if (new==NULL) {
-    fprintf(stderr,"ERROR: unable to allocate %ld bytes of memory\n",sizeof(FASTQ_ENTRY));
-    exit(1);
+    PRINT_ERROR("unable to allocate %ld bytes of memory",sizeof(FASTQ_ENTRY));
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   new->read_len=0;
   new->offset=0;
@@ -120,28 +127,28 @@ void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
     //fprintf(stderr,"miss %lu / %lu\n",offset, gztell(from->fd));
     // we need to seek
     if (gzseek(from->fd,offset,SEEK_SET)<0) {
-      fprintf(stderr,"Error: gzseek failed on %s.\n",from->filename);
-      exit(1);
+      PRINT_ERROR("gzseek failed on %s.",from->filename);
+      exit(SYS_INT_ERROR_EXIT_STATUS);
     }
     ++ctr_seek;
   } else     ++ctr_noseek;
   //fprintf(stderr,"%lu / %lu\n",ctr_seek, ctr_noseek);
   FASTQ_ENTRY* e=get_tmp_entry();
   if( gzeof(from->fd)) {
-    fprintf(stderr,"Error: premature eof on %s.\n",from->filename);
-      exit(1);
+    PRINT_ERROR("premature eof on %s.",from->filename);
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   GZ_READ(from->fd,&e->hdr1[0],MAX_LABEL_LENGTH);
   if ( e->hdr1[0]=='\0') {
-    fprintf(stderr,"ERROR: file %s truncated: line %ld\n",from->filename,from->cline);    
-    exit(1);
+    PRINT_ERROR("file %s truncated: line %ld",from->filename,from->cline);    
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   GZ_READ(from->fd,&e->seq[0],MAX_READ_LENGTH);
   GZ_READ(from->fd,&e->hdr2[0],MAX_LABEL_LENGTH);
   GZ_READ(from->fd,&e->qual[0],MAX_READ_LENGTH);
   if (e->seq[0]=='\0' || e->hdr2[0]=='\0' || e->qual[0]=='\0' ) {
-    fprintf(stderr,"ERROR: file truncated: line %ld\n",from->cline);
-    exit(1);
+    PRINT_ERROR("file truncated: line %ld",from->cline);
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   GZ_WRITE(to->fd,&e->hdr1[0]);
   GZ_WRITE(to->fd,&e->seq[0]);
@@ -156,8 +163,8 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
   
   FASTQ_FILE* new=(FASTQ_FILE*)malloc(sizeof(FASTQ_FILE));
   if (new==NULL) {
-    fprintf(stderr,"ERROR: unable to allocate %ld bytes of memory\n",sizeof(FASTQ_FILE));
-    exit(1);
+    PRINT_ERROR("unable to allocate %ld bytes of memory",sizeof(FASTQ_FILE));
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   new->cur_offset=0L;
   new->max_rl=0L;
@@ -181,8 +188,8 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
 
 void fastq_seek_copy_read(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
   if (gzseek(from->fd,offset,SEEK_SET)<0) {
-    fprintf(stderr,"Error: gzseek failed.\n");
-    exit(1);
+    PRINT_ERROR("gzseek failed.");
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   FASTQ_ENTRY* e=get_tmp_entry();
   fastq_read_entry(from,e);
@@ -204,7 +211,7 @@ static inline void GZ_WRITE(gzFile fd,char *s) {
   if ( n>0 ) return;
   if ( *s=='\0' ) return;
   const char *errmsg=gzerror(fd,&n);
-  fprintf(stderr,"Error: %s.\n",errmsg);
+  PRINT_ERROR("%s.\n",errmsg);
   /* switch(n) { */
   /* case Z_ERRNO: */
   /*   fprintf(stderr,"Error: Internal error (%d).\n",errno()); */
@@ -219,7 +226,7 @@ static inline void GZ_WRITE(gzFile fd,char *s) {
   /*   fprint(stderr,"Error: Insufficient memory available to compress.\n"); */
   /*   break; */
   /* } */
-  exit(1);
+  exit(SYS_INT_ERROR_EXIT_STATUS);
 }
 
 int fastq_read_next_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
@@ -240,7 +247,7 @@ int fastq_read_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   GZ_READ(fd->fd,&e->hdr2[0],MAX_LABEL_LENGTH);
   GZ_READ(fd->fd,&e->qual[0],MAX_READ_LENGTH);
   if (e->seq[0]=='\0' || e->hdr2[0]=='\0' || e->qual[0]=='\0' ) {
-    fprintf(stderr,"ERROR: file truncated: line %ld\n",fd->cline);
+    PRINT_ERROR("file truncated: line %ld",fd->cline);
     exit(1);
   }
   fd->cline+=4;
@@ -288,11 +295,11 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
 
   // Sequence identifier
   if ( e->hdr1[0]!='@' ) {
-    fprintf(stderr,"\nError in file %s, line %lu: sequence identifier should start with an @ - %s\n",fd->filename,fd->cline,e->hdr1);
+    PRINT_ERROR("Error in file %s, line %lu: sequence identifier should start with an @ - %s",fd->filename,fd->cline,e->hdr1);
     return 1;
   }  
   if ( e->hdr1[1]=='\0' || e->hdr1[1]=='\n' || e->hdr1[1]=='\r') {
-    fprintf(stderr,"\nError in file %s, line %lu: sequence identifier should be longer than 1\n",fd->filename,fd->cline);	   
+    PRINT_ERROR("Error in file %s, line %lu: sequence identifier should be longer than 1",fd->filename,fd->cline);	   
     return 1;
   }
   // sequence
@@ -303,7 +310,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
 	 e->seq[slen]!='a' && e->seq[slen]!='c' && e->seq[slen]!='g' && e->seq[slen]!='t' &&
 	 e->seq[slen]!='0' && e->seq[slen]!='1' && e->seq[slen]!='2' && e->seq[slen]!='3' &&
 	 e->seq[slen]!='n' && e->seq[slen]!='N' && e->seq[slen]!='.' ) {
-      fprintf(stderr,"\nError in file %s, line %lu: invalid character '%c' (hex. code:'%x'), expected ACGTacgt0123nN.\n",fd->filename,fd->cline+1,e->seq[slen],e->seq[slen]);
+      PRINT_ERROR("Error in file %s, line %lu: invalid character '%c' (hex. code:'%x'), expected ACGTacgt0123nN.",fd->filename,fd->cline+1,e->seq[slen],e->seq[slen]);
       return 1;
     }
     slen++;
@@ -311,7 +318,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   fastq_new_entry_stats(fd,e);  
   // check len
   if (slen < MIN_READ_LENGTH ) {
-    fprintf(stderr,"\nError in file %s, line %lu: read length too small - %lu\n",fd->filename,fd->cline+1,slen);
+    PRINT_ERROR("Error in file %s, line %lu: read length too small - %lu",fd->filename,fd->cline+1,slen);
     return 1;
   }
   // be tolerant
@@ -320,7 +327,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   //  return 1;
   //}  
   if (e->hdr2[0]!='+') {
-    fprintf(stderr,"\nError in file %s, line %lu:  header2 wrong. The line should contain only '+' followed by a newline or read name (header1).\n",fd->filename,fd->cline+2);
+    PRINT_ERROR("Error in file %s, line %lu:  header2 wrong. The line should contain only '+' followed by a newline or read name (header1).",fd->filename,fd->cline+2);
     return 1;
   }
   // length of hdr2 should be 1 or be the same has the hdr1
@@ -331,7 +338,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
     char *rn1=fastq_get_readname(fd,e,&rname1[0],&len,TRUE);
     char *rn2=fastq_get_readname(fd,e,&rname2[0],&len,FALSE);
     if ( !compare_headers(rn1,rn2) ) {
-      fprintf(stderr,"\nError in file %s, line %lu:  header2 differs from header1\nheader 1 \"%s\"\nheader 2 \"%s\"\n",fd->filename,fd->cline,e->hdr1,e->hdr2);
+      PRINT_ERROR("Error in file %s, line %lu:  header2 differs from header1\nheader 1 \"%s\"\nheader 2 \"%s\"",fd->filename,fd->cline,e->hdr1,e->hdr2);
       return 1;
     }
   }
@@ -345,7 +352,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   }  
 
   if ( qlen!=slen ) {
-    fprintf(stderr,"\nError in file %s, line %lu: sequence and quality don't have the same length %lu!=%lu\n",fd->filename,fd->cline,slen,qlen);
+    PRINT_ERROR("Error in file %s, line %lu: sequence and quality don't have the same length %lu!=%lu",fd->filename,fd->cline,slen,qlen);
     return 1;
   }
   return 0;
@@ -360,13 +367,13 @@ void fastq_index_readnames(FASTQ_FILE* fd1,hashtable index,long long start_offse
   char rname[MAX_LABEL_LENGTH];
 
   if (fd1->fd==NULL) {
-    fprintf(stderr,"Unable to open %s\n",fd1->filename);
-    exit(1);
+    PRINT_ERROR("Unable to open %s",fd1->filename);
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
   // move to the right position
   if(start_offset>0) {
-    fprintf(stderr, " Not implemented\n");
-    exit(1);
+    PRINT_ERROR(" Not implemented");
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   unsigned long len;
   // index creation could be done in parallel...
@@ -379,17 +386,17 @@ void fastq_index_readnames(FASTQ_FILE* fd1,hashtable index,long long start_offse
     //    replace_dots(start_pos,seq,hdr,hdr2,qual,fdf);    
     // check for duplicates
     if ( fastq_index_lookup_header(index,readname)!=NULL ) {
-      fprintf(stderr,"\nError in file %s, line %lu: duplicated sequence %s\n",fd1->filename,fd1->cline,readname);
-      exit(1);
+      PRINT_ERROR("Error in file %s, line %lu: duplicated sequence %s",fd1->filename,fd1->cline,readname);
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
 
     if ( new_indexentry(index,readname,len,m1->offset)==NULL) {
-      fprintf(stderr,"line %lu: malloc failed?",fd1->cline-4);
-      exit(1);
+      PRINT_ERROR("line %lu: malloc failed?",fd1->cline-4);
+      exit(SYS_INT_ERROR_EXIT_STATUS);
     }
     // TODO validate option
     if (fastq_validate_entry(fd1,m1)!=0) {
-      exit(1);
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
     PRINT_READS_PROCESSED(fd1->cline/4,100000);
   }  
@@ -404,14 +411,14 @@ char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *
   else  hdr=e->hdr2;
 
   if ( is_header1==TRUE && hdr[0]!='@' ) {
-    fprintf(stderr,"Error in file %s, line %lu: wrong header %s\n",fd->filename,fd->cline,hdr);
-    exit(1);
+    PRINT_ERROR("Error in file %s, line %lu: wrong header %s",fd->filename,fd->cline,hdr);
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
 
   // rn=&rn[1];// ignore/discard @
   if ( strncpy(rn,&hdr[1],MAX_LABEL_LENGTH-1)==NULL ) {
-      fprintf(stderr, "Error in strcpy\n");
-      exit(1);
+    PRINT_ERROR("Error in strcpy");
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   // executed only once
   if ( fd->readname_format == UNDEF ) {
@@ -513,8 +520,8 @@ void fastq_index_delete(char *rname,hashtable index) {
   unsigned long key=hashit(rname);
   INDEX_ENTRY* e=fastq_index_lookup_header(index,rname);
   if (delete(index,key,e)!=e) {
-    fprintf(stderr,"Error: Unable to delete entry from index\n");
-    exit(1);
+    PRINT_ERROR("Unable to delete entry from index");
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   free_indexentry(e);  
 }
@@ -547,7 +554,7 @@ INDEX_ENTRY* new_indexentry(hashtable ht,char*hdr,int len,long start_pos) {
   ulong key=hashit(e->hdr);
   //collisions[key%HASHSIZE]++;
   if(insere(ht,key,e)<0) {
-    fprintf(stderr,"\nError adding %s to index\n",hdr);
+    PRINT_ERROR("Error while adding %s to index",hdr);
     return(NULL);
   }
   index_mem+=sizeof(INDEX_ENTRY)+len+1+sizeof(hashnode);
@@ -567,8 +574,8 @@ void fastq_destroy(FASTQ_FILE* fd) {
 static inline void fastq_close(gzFile fd) {
   //if (fd==NULL) { return; }
   if (gzclose(fd)!=Z_OK) {
-    fprintf(stderr,"\nError: unable to close file descriptor\n");
-    exit(1);
+    PRINT_ERROR("unable to close file descriptor");
+    exit(SYS_INT_ERROR_EXIT_STATUS);
   }
 }
 
@@ -577,8 +584,8 @@ inline gzFile fastq_open(const char* filename,const char *mode) {
   
   fd1=gzopen(filename,mode);
   if (fd1==NULL) {
-    fprintf(stderr,"\nError: Unable to open %s\n",filename);
-    exit(1);
+    PRINT_ERROR("Unable to open %s",filename);
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
   //gzbuffer(fd1,sizeof(FASTQ_ENTRY)*2);
   // too large value slows down seek
@@ -595,8 +602,8 @@ int is_casava_1_8_readname(const char *s) {
   int is_casava_1_8=FALSE;
   reti = regcomp(&regex,"[A-Z0-9:]* [12]:[YN]:[0-9]*:.*",0);  
   if ( reti ) { 
-    fprintf(stderr, "Internal error: Could not compile regex\n"); 
-    exit(2); 
+    PRINT_ERROR("Internal error: Could not compile regex"); 
+    exit(SYS_INT_ERROR_EXIT_STATUS); 
   }
   /* Execute regular expression */
   //fprintf(stderr,"%s\n",hdr);
@@ -617,8 +624,8 @@ static int is_int_readname(const char *s) {
   // @ was alread removed
   reti = regcomp(&regex,"^[0-9]+[\n\r]?$",REG_EXTENDED);  
   if ( reti ) { 
-    fprintf(stderr, "Internal error: Could not compile regex\n"); 
-    exit(2); 
+    PRINT_ERROR("Internal error: Could not compile regex"); 
+    exit(SYS_INT_ERROR_EXIT_STATUS); 
   }
   /* Execute regular expression */
   //fprintf(stderr,">%s<\n",s);
