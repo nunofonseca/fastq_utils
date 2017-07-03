@@ -54,7 +54,7 @@ fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
 
 # Companion of fastq preprocess barcodes fastq_pre_barcodes
 bam_add_tags: bam_add_tags.c
-	gcc  $< -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -o $@
+	gcc  $< -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
 
 
 ##################################################
