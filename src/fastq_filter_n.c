@@ -2,7 +2,6 @@
  * =========================================================
  * Copyright 2012-2017,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
  *
- 
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +28,6 @@
 #include <stdlib.h>
 
 #include "fastq.h"
-#define VERSION "0.9.4"
 
 
 int main(int argc, char **argv ) {
@@ -38,7 +36,7 @@ int main(int argc, char **argv ) {
   int c;
   opterr = 0;
 
-  fprintf(stderr,"fastq_utils %s\n",VERSION); 
+  fastq_print_version();
   // add an option -n N
   //if (optopt == 'c')
   char *cvalue = NULL;
@@ -54,13 +52,13 @@ int main(int argc, char **argv ) {
         break;
       default:
   	++nopt;
-        fprintf(stderr,"ERROR: Option -%c invalid\n",optopt);
-  	exit(1);
+        PRINT_ERROR("Option -%c invalid",optopt);
+  	exit(PARAMS_ERROR_EXIT_STATUS);
       }
   
   if (argc-nopt<2 || argc-nopt>3) { 
-    fprintf(stderr,"Usage: fastq_filter_n [ -n 0 ] fastq1\n");
-    exit(1);
+    PRINT_ERROR("Usage: fastq_filter_n [ -n 0 ] fastq1");
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
   
   fprintf(stderr,"Discard reads with more than %d%% of Ns\n",max_n);
