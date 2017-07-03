@@ -6,12 +6,18 @@ CFLAGS+=  -Wall -O3
 #
 SHELL=bash
 
+SAMTOOLS_PATH=../samtools-0.1.19
+
+
 ifdef DEBUG
 CFLAGS+= -g -DDEBUG=1
 endif
 
-TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty
+TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty fastq_pre_barcodes
 
+ifdef SAMTOOLS_PATH
+TARGETS+= bam_add_tags
+endif
 ############################################################################
 all: $(TARGETS)
 
@@ -38,9 +44,20 @@ fastq_truncate:  fastq_truncate.o  hash.o fastq.o
 
 
 # deprecated
-fastq_validator:  hash.o fastq_validator.o
-	gcc  $(CFLAGS) $^ -o $@
+#fastq_validator:  hash.o fastq_validator.o
+#	gcc  $(CFLAGS) $^ -o $@
 
+
+fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
+	gcc  $(CFLAGS) -g  $^ -o $@ -lz
+
+
+# Companion of fastq preprocess barcodes fastq_pre_barcodes
+bam_add_tags: bam_add_tags.c
+	gcc  $< -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -o $@
+
+
+##################################################
 
 fastq.o: fastq.c fastq.h hash.h
 	gcc $(CFLAGS) -c $< -lz
