@@ -44,6 +44,7 @@
 #define UNDEF -1
 
 typedef enum  { TRUE=1, FALSE=0 } FASTQ_BOOLEAN;
+typedef long FASTQ_READ_OFFSET;
 
 #ifndef HASHSIZE
 #define HASHSIZE 39000001
@@ -55,6 +56,21 @@ typedef enum  { TRUE=1, FALSE=0 } FASTQ_BOOLEAN;
 
 #define min(a,b) (a<b?a:b)
 #define max(a,b) (a>b?a:b)
+
+
+#define PRINT_INFO(s...) {fprintf(stderr,"INFO:"); fprintf(stderr,##s );fprintf(stderr,"\n");}
+#define PRINT_ERROR(s...) {fprintf(stderr,"\nERROR: "); fprintf(stderr,##s );fprintf(stderr,"\n");}
+#define DEBUG
+#ifdef DEBUG
+#define PRINT_DEBUG(s...) { fprintf(stderr,"DEBUG: "); fprintf(stderr,##s ); }
+#else
+#define PRINT_DEBUG(s...) 
+#endif
+
+#define PARAMS_ERROR_EXIT_STATUS 1
+#define SYS_INT_ERROR_EXIT_STATUS 2
+#define FASTQ_FORMAT_ERROR_EXIT_STATUS 3
+
 #define PRINT_READS_PROCESSED(c,n) { if (c%n==0) { fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%lu",c);fflush(stderr); }}
 
 extern unsigned long index_mem;
@@ -109,6 +125,7 @@ void fastq_print_version();
 FASTQ_ENTRY* fastq_new_entry(void);
 void fastq_write_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e);
 
+unsigned long get_elength(FASTQ_ENTRY*);
 void fastq_index_delete(char *rname,hashtable index);
 INDEX_ENTRY* fastq_index_lookup_header(hashtable sn_index,char *hdr);
 char* fastq_get_readname(FASTQ_FILE*, FASTQ_ENTRY *,char* rn,unsigned long*,int is_header1);
