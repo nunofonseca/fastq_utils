@@ -7,7 +7,7 @@ Set of Linux utilities to validate and manipulate fastq files.
 #### Dependencies
 
 samtools (version 0.1.19) and zlib (http://zlib.net) version 1.2.11 or latest are required to compile fastq_utils. 
-The [install_deps.sh] (https://github.com/nunofonseca/fastq_utils/blob/master/install_deps.sh) script in the toplevel folder tries to download and compile the dependencies.
+The [install_deps.sh](https://github.com/nunofonseca/fastq_utils/blob/master/install_deps.sh) script in the toplevel folder tries to download and compile the dependencies.
 
 #### Getting sources
 
