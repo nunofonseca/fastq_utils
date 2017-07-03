@@ -61,6 +61,9 @@ static inline void GZ_WRITE(gzFile fd,char *s);
 gzFile fastq_open(const char* filename,const char *mode);
 static void fastq_close(gzFile fd);
 
+void fastq_print_version() {
+  fprintf(stderr,"fastq_utils %s\n",VERSION);
+}
 
 /* ******************************************************************************* */
 FASTQ_ENTRY* tmp_entry=NULL;
