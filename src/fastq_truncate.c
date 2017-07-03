@@ -2,7 +2,6 @@
  * =========================================================
  * Copyright 2012-2017,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
  *
- 
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,9 +32,11 @@
 
 int main(int argc, char **argv ) {
 
+  fastq_print_version();
+  
   if (argc!=3) {
     fprintf(stderr,"Usage: fastq_truncate fastq1 num_reads\n");
-    exit(1);
+    exit(PARAMS_ERROR_EXIT_STATUS);
   }
   long num_reads=atol(argv[2]);
 
