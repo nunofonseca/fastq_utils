@@ -46,7 +46,7 @@ if [ "$ext-" == "gz-" ]; then
     echo ""
 fi
 
-set -e
+set -exTv
 if [ "$ext-" == "bam-" ]; then
     #hmm, this now validates bams...kind of
     # samtools version should be 1 or above
