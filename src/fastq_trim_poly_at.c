@@ -125,7 +125,7 @@ void print_usage(void) {
   --min_poly_at_len integer     : minimum length of poly-A|T sequence to remove.\n\
   --min_len integer     : minimum read length.\n\
 ";
-  fprintf(stdout,"usage: fastq_trim_poly_at --file1 fastq_file --outfile1 out_file [optional parameters]");
+  fprintf(stdout,"usage: fastq_trim_poly_at --file fastq_file --outfile out_file [optional parameters]");
   fprintf(stdout,"%s",msg);
 }
 //
@@ -189,7 +189,7 @@ int main(int argc, char **argv ) {
   PRINT_INFO("Validating options...");
   validate_options(p);
   PRINT_INFO("Options OK.");
-  PRINT_ERROR(">%d",p->min_poly_at_len);
+  
   // Assumptions:
   // 1) the fastq files have been validated and
   // 2) reads have the same order in the multiple files
