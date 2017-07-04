@@ -25,9 +25,28 @@ FILES=$*
 function file_extension {
     echo $*|sed -E "s/([^ \.]+)\.//g" 
 }
-set -e
+
+
 # check extension
 ext=`file_extension $1`
+# Check integrity of gzip files
+if [ "$ext-" == "gz-" ]; then
+    for f in $FILES; do
+	echo -n "Checking integrity of gzip file $f..."
+	gzip -t $f
+	if [ $? -eq 0 ]; then
+	    echo "done."
+	else
+	    echo ""
+	    echo "ERROR: Error in file $f: corrupted gzip file"
+	    exit 1
+	fi
+	    
+    done
+    echo ""
+fi
+
+set -e
 if [ "$ext-" == "bam-" ]; then
     #hmm, this now validates bams...kind of
     # samtools version should be 1 or above
