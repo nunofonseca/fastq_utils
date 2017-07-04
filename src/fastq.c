@@ -581,11 +581,29 @@ static inline void fastq_close(gzFile fd) {
 
 inline gzFile fastq_open(const char* filename,const char *mode) {
   gzFile fd1;
-  
-  fd1=gzopen(filename,mode);
-  if (fd1==NULL) {
-    PRINT_ERROR("Unable to open %s",filename);
-    exit(PARAMS_ERROR_EXIT_STATUS);
+
+  if ( filename[0]=='-' && filename[1]=='\0' ) {
+    if (mode[0]=='r') {
+      //SET_BINARY_MODE(stdin);
+      fd1 = gzdopen(fileno(stdin), "rb");
+      if (fd1 == NULL) {
+	PRINT_ERROR("Unable to gzdopen stdin");
+	exit(PARAMS_ERROR_EXIT_STATUS);
+      }
+    } else {
+      //SET_BINARY_MODE(stdout);
+      fd1 = gzdopen(fileno(stdout), "wb");
+      if (fd1 == NULL) {
+	PRINT_ERROR("Unable to gzdopen stdout");
+	exit(PARAMS_ERROR_EXIT_STATUS);
+      }
+    }
+  } else {
+    fd1=gzopen(filename,mode);
+    if (fd1==NULL) {
+      PRINT_ERROR("Unable to open %s",filename);
+      exit(PARAMS_ERROR_EXIT_STATUS);
+    }
   }
   //gzbuffer(fd1,sizeof(FASTQ_ENTRY)*2);
   // too large value slows down seek
