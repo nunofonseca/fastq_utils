@@ -36,7 +36,11 @@ must_succeed "./bin/fastq_trim_poly_at --file tests/a_1.fastq.gz --outfile tmp.f
 
 must_succeed "./bin/fastq_trim_poly_at --file tests/poly_at.fastq.gz --outfile tmp.fastq.gz --min_poly_at_len 3 && diff <(zcat tests/poly_at_len3.fastq.gz) <(zcat tmp.fastq.gz) "
 
-must_succeed "./bin/fastq_trim_poly_at --file tests/poly_at.fastq.gz --outfile tmp.fastq.gz --min_poly_at_len 300 --min_len 1 && diff <(zcat tests/poly_at.fastq.gz) <(zcat tmp.fastq.gz) " 
+must_succeed "./bin/fastq_trim_poly_at --file tests/poly_at.fastq.gz --outfile tmp.fastq.gz --min_poly_at_len 300 --min_len 1 && diff <(zcat tests/poly_at.fastq.gz) <(zcat tmp.fastq.gz) "
+
+must_succeed "zcat tests/poly_at.fastq.gz | ./bin/fastq_trim_poly_at --file - --outfile tmp.fastq.gz --min_poly_at_len 300 --min_len 1 && diff <(zcat tests/poly_at.fastq.gz) <(zcat tmp.fastq.gz) " 
+
+must_succeed "diff <(zcat tests/poly_at.fastq.gz | ./bin/fastq_trim_poly_at --file - --outfile -  --min_poly_at_len 300 --min_len 1|zcat ) <(zcat tests/poly_at.fastq.gz) "
 
 
 echo "*** fastq_filter_n"
