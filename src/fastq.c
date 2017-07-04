@@ -127,7 +127,7 @@ void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
     //fprintf(stderr,"miss %lu / %lu\n",offset, gztell(from->fd));
     // we need to seek
     if (gzseek(from->fd,offset,SEEK_SET)<0) {
-      PRINT_ERROR("gzseek failed on %s.",from->filename);
+      PRINT_ERROR("Error in file %s, line %lu: gzseek failed",from->filename,from->cline);
       exit(SYS_INT_ERROR_EXIT_STATUS);
     }
     ++ctr_seek;
@@ -135,19 +135,20 @@ void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
   //fprintf(stderr,"%lu / %lu\n",ctr_seek, ctr_noseek);
   FASTQ_ENTRY* e=get_tmp_entry();
   if( gzeof(from->fd)) {
-    PRINT_ERROR("premature eof on %s.",from->filename);
+    PRINT_ERROR("Error in file %s, line %lu: premature eof",from->filename,from->cline);
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   GZ_READ(from->fd,&e->hdr1[0],MAX_LABEL_LENGTH);
   if ( e->hdr1[0]=='\0') {
-    PRINT_ERROR("file %s truncated: line %ld",from->filename,from->cline);    
+    PRINT_ERROR("Error in file %s, line %lu: file truncated",from->filename,from->cline);
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   GZ_READ(from->fd,&e->seq[0],MAX_READ_LENGTH);
   GZ_READ(from->fd,&e->hdr2[0],MAX_LABEL_LENGTH);
   GZ_READ(from->fd,&e->qual[0],MAX_READ_LENGTH);
   if (e->seq[0]=='\0' || e->hdr2[0]=='\0' || e->qual[0]=='\0' ) {
-    PRINT_ERROR("file truncated: line %ld",from->cline);
+    PRINT_ERROR("Error in file %s, line %lu: file truncated",from->filename,from->cline);
+
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   GZ_WRITE(to->fd,&e->hdr1[0]);
@@ -188,7 +189,7 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
 
 void fastq_seek_copy_read(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
   if (gzseek(from->fd,offset,SEEK_SET)<0) {
-    PRINT_ERROR("gzseek failed.");
+    PRINT_ERROR("Error in file %s, line %lu: gzseek failed",from->filename,from->cline);    
     exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   FASTQ_ENTRY* e=get_tmp_entry();
@@ -247,7 +248,7 @@ int fastq_read_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   GZ_READ(fd->fd,&e->hdr2[0],MAX_LABEL_LENGTH);
   GZ_READ(fd->fd,&e->qual[0],MAX_READ_LENGTH);
   if (e->seq[0]=='\0' || e->hdr2[0]=='\0' || e->qual[0]=='\0' ) {
-    PRINT_ERROR("file truncated: line %ld",fd->cline);
+    PRINT_ERROR("Error in file %s, line %lu: file truncated",fd->filename,fd->cline);
     exit(1);
   }
   fd->cline+=4;
