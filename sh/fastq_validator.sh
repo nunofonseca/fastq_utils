@@ -22,13 +22,37 @@
 
 FILES=$*
 
-function file_extension {
-    echo $*|sed -E "s/([^ \.]+)\.//g" 
+function file_type {
+    x=$(file -b -i  $1|cut -f 1 -d\;|sed "s|.*/||")
+    if [ "$x" == "x-gzip" ]; then echo "gz";
+    else
+	if [ "$x" == "x-bzip2" ]; then echo "bzip2";
+	else
+	    if [ "$x" == "plain" ]; then echo "fastq";
+	    else
+		echo "Unsupported file type $x" > /dev/stderr
+		exit 4
+	    fi
+	fi
+    fi
 }
 
+function file_extension {
+    filename=$(basename $*)
+    ext="${filename##*.}"
+    if [ "$ext-" != "$filename-" ]; then
+	echo $ext
+    fi
+}
 
 # check extension
 ext=`file_extension $1`
+
+if [ "-$ext" == "-" ]; then
+    ext=$(file_type $1)
+    echo "File does not have an extension, assuming that it is '.$ext'"
+fi
+
 # Check integrity of gzip files
 if [ "$ext-" == "gz-" ]; then
     for f in $FILES; do
@@ -46,7 +70,8 @@ if [ "$ext-" == "gz-" ]; then
     echo ""
 fi
 
-set -exTv
+set -eT
+#x
 if [ "$ext-" == "bam-" ]; then
     #hmm, this now validates bams...kind of
     # samtools version should be 1 or above
