@@ -96,9 +96,14 @@ else
     FILES2DELETE=
     for f in $FILES; do
 	ext=`file_extension $f`
+	if [ "-$ext" == "-" ]; then
+	    ext=$(file_type $f)
+	    echo "File $f does not have an extension, assuming that it is '.$ext'"
+	fi
 	if [ "-$ext" == "-bz2" ] || [ "-$ext" == "-bzip2" ] ; then
 	    echo BZIP file
 	    named_pipe=.`basename .$f`.pipe.fastq
+	    rm -f $named_pipe
 	    mkfifo $named_pipe
 	    bunzip2 -k  -c $f > $named_pipe  &
 	    FILES2PROCESS="$FILES2PROCESS $named_pipe"
