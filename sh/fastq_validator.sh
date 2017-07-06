@@ -28,6 +28,11 @@ else
     FILES=$*
 fi
 
+if [ "$1-" == "-" ]; then
+    echo "ERROR: fastq_validator.sh file1 [file2|pe]" 
+    exit 1
+fi
+
 function file_type {
     x=$(file -b -i  $1|cut -f 1 -d\;|sed "s|.*/||")
     if [ "$x" == "x-gzip" ]; then echo "gz";
