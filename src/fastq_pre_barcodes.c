@@ -262,7 +262,7 @@ void print_usage(void) {
   --file2 <filename> :fastq (optional gzipped) file name \n\
   --file3 <filename> :fastq (optional gzipped) file name \n\
   --phred_encoding (33|64) :phred encoding used in the input files\n\
-  --min_qual [0-40]        :defines the minimum quality that all bases in the UMI, CELL or Sample should have (reads that do not pass the criteria are discarded). 0 disables filter. \n\
+  --min_qual [0-40]        :defines the minimum quality that all bases in the UMI, CELL or Sample should have (reads that do not pass the criteria are discarded). 0 disables the filter. \n\
   --outfile1 <filename>    :file name for ouputing the reads from file1\n\
   --outfile2 <filename>    :file name for ouputing the reads from file2\n\
   --outfile3 <filename>    :file name for ouputing the reads from file3\n\
