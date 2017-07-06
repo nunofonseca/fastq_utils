@@ -113,6 +113,16 @@ else
 	fi
 	if [ "-$ext" == "-bz2" ] || [ "-$ext" == "-bzip2" ] ; then
 	    echo BZIP file
+	    # check integrity
+	    set +e
+	    echo "Checking integrity of $f..."
+	    bzip2  -t $f 
+	    if [ $? -ne 0 ]; then
+		echo "ERROR: $f: error uncompressing bzip2 file"
+		exit 2
+	    fi
+	    set -e
+	    echo "Checking integrity of $f...complete."
 	    named_pipe=.`basename .$f`.pipe.fastq
 	    rm -f $named_pipe
 	    mkfifo $named_pipe
