@@ -88,7 +88,7 @@ FASTQ_FILE* validate_interleaved(char *f) {
     if (fastq_read_entry(fd1,m1)==0) break;
     // read 2
     if (fastq_read_entry(fd1,m2)==0) {
-      PRINT_ERROR("Error in file %s, line %lu: file truncated?",f,fd1->cline);
+      PRINT_ERROR("Error in file %s: line %lu: file truncated?",f,fd1->cline);
       exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
     // match
@@ -100,7 +100,7 @@ FASTQ_FILE* validate_interleaved(char *f) {
     // replace_dots(start_pos,seq2,hdr2,hdr2_2,qual2,fdf);    
 
     if ( strcmp(readname1,readname2) ) {
-      PRINT_ERROR("Error in file %s, line %lu: unpaired read - %s",f,fd1->cline,readname1);
+      PRINT_ERROR("Error in file %s: line %lu: unpaired read - %s",f,fd1->cline,readname1);
       exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     } 
 
@@ -224,7 +224,7 @@ int main(int argc, char **argv ) {
       INDEX_ENTRY* e=fastq_index_lookup_header(index,readname);
       if (e==NULL) {
 	// complain and exit if not found
-	PRINT_ERROR("Error in file %s, line %lu: unpaired read - %s",argv[2+nopt],fd2->cline,readname);
+	PRINT_ERROR("Error in file %s: line %lu: unpaired read - %s",argv[2+nopt],fd2->cline,readname);
 	exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
       }
       fastq_index_delete(readname,index);

@@ -127,7 +127,7 @@ void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
     //fprintf(stderr,"miss %lu / %lu\n",offset, gztell(from->fd));
     // we need to seek
     if (gzseek(from->fd,offset,SEEK_SET)<0) {
-      PRINT_ERROR("Error in file %s, line %lu: gzseek failed",from->filename,from->cline);
+      PRINT_ERROR("Error in file %s: line %lu: gzseek failed",from->filename,from->cline);
       exit(SYS_INT_ERROR_EXIT_STATUS);
     }
     ++ctr_seek;
@@ -135,19 +135,19 @@ void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
   //fprintf(stderr,"%lu / %lu\n",ctr_seek, ctr_noseek);
   FASTQ_ENTRY* e=get_tmp_entry();
   if( gzeof(from->fd)) {
-    PRINT_ERROR("Error in file %s, line %lu: premature eof",from->filename,from->cline);
+    PRINT_ERROR("Error in file %s: line %lu: premature eof",from->filename,from->cline);
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   GZ_READ(from->fd,&e->hdr1[0],MAX_LABEL_LENGTH);
   if ( e->hdr1[0]=='\0') {
-    PRINT_ERROR("Error in file %s, line %lu: file truncated",from->filename,from->cline);
+    PRINT_ERROR("Error in file %s: line %lu: file truncated",from->filename,from->cline);
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   GZ_READ(from->fd,&e->seq[0],MAX_READ_LENGTH);
   GZ_READ(from->fd,&e->hdr2[0],MAX_LABEL_LENGTH);
   GZ_READ(from->fd,&e->qual[0],MAX_READ_LENGTH);
   if (e->seq[0]=='\0' || e->hdr2[0]=='\0' || e->qual[0]=='\0' ) {
-    PRINT_ERROR("Error in file %s, line %lu: file truncated",from->filename,from->cline);
+    PRINT_ERROR("Error in file %s: line %lu: file truncated",from->filename,from->cline);
 
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
@@ -164,7 +164,7 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
   
   FASTQ_FILE* new=(FASTQ_FILE*)malloc(sizeof(FASTQ_FILE));
   if (new==NULL) {
-    PRINT_ERROR("unable to allocate %ld bytes of memory",sizeof(FASTQ_FILE));
+    PRINT_ERROR("Error while processing file %s: unable to allocate %ld bytes of memory",filename,sizeof(FASTQ_FILE));
     exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   new->cur_offset=0L;
@@ -189,7 +189,7 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
 
 void fastq_seek_copy_read(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
   if (gzseek(from->fd,offset,SEEK_SET)<0) {
-    PRINT_ERROR("Error in file %s, line %lu: gzseek failed",from->filename,from->cline);    
+    PRINT_ERROR("Error in file %s: line %lu: gzseek failed",from->filename,from->cline);    
     exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   FASTQ_ENTRY* e=get_tmp_entry();
@@ -248,7 +248,7 @@ int fastq_read_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   GZ_READ(fd->fd,&e->hdr2[0],MAX_LABEL_LENGTH);
   GZ_READ(fd->fd,&e->qual[0],MAX_READ_LENGTH);
   if (e->seq[0]=='\0' || e->hdr2[0]=='\0' || e->qual[0]=='\0' ) {
-    PRINT_ERROR("Error in file %s, line %lu: file truncated",fd->filename,fd->cline);
+    PRINT_ERROR("Error in file %s: line %lu: file truncated",fd->filename,fd->cline);
     exit(1);
   }
   fd->cline+=4;
@@ -296,11 +296,11 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
 
   // Sequence identifier
   if ( e->hdr1[0]!='@' ) {
-    PRINT_ERROR("Error in file %s, line %lu: sequence identifier should start with an @ - %s",fd->filename,fd->cline,e->hdr1);
+    PRINT_ERROR("Error in file %s: line %lu: sequence identifier should start with an @ - %s",fd->filename,fd->cline,e->hdr1);
     return 1;
   }  
   if ( e->hdr1[1]=='\0' || e->hdr1[1]=='\n' || e->hdr1[1]=='\r') {
-    PRINT_ERROR("Error in file %s, line %lu: sequence identifier should be longer than 1",fd->filename,fd->cline);	   
+    PRINT_ERROR("Error in file %s: line %lu: sequence identifier should be longer than 1",fd->filename,fd->cline);	   
     return 1;
   }
   // sequence
@@ -311,7 +311,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
 	 e->seq[slen]!='a' && e->seq[slen]!='c' && e->seq[slen]!='g' && e->seq[slen]!='t' &&
 	 e->seq[slen]!='0' && e->seq[slen]!='1' && e->seq[slen]!='2' && e->seq[slen]!='3' &&
 	 e->seq[slen]!='n' && e->seq[slen]!='N' && e->seq[slen]!='.' ) {
-      PRINT_ERROR("Error in file %s, line %lu: invalid character '%c' (hex. code:'%x'), expected ACGTacgt0123nN.",fd->filename,fd->cline+1,e->seq[slen],e->seq[slen]);
+      PRINT_ERROR("Error in file %s: line %lu: invalid character '%c' (hex. code:'%x'), expected ACGTacgt0123nN.",fd->filename,fd->cline+1,e->seq[slen],e->seq[slen]);
       return 1;
     }
     slen++;
@@ -319,7 +319,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   fastq_new_entry_stats(fd,e);  
   // check len
   if (slen < MIN_READ_LENGTH ) {
-    PRINT_ERROR("Error in file %s, line %lu: read length too small - %lu",fd->filename,fd->cline+1,slen);
+    PRINT_ERROR("Error in file %s: line %lu: read length too small - %lu",fd->filename,fd->cline+1,slen);
     return 1;
   }
   // be tolerant
@@ -328,7 +328,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   //  return 1;
   //}  
   if (e->hdr2[0]!='+') {
-    PRINT_ERROR("Error in file %s, line %lu:  header2 wrong. The line should contain only '+' followed by a newline or read name (header1).",fd->filename,fd->cline+2);
+    PRINT_ERROR("Error in file %s: line %lu:  header2 wrong. The line should contain only '+' followed by a newline or read name (header1).",fd->filename,fd->cline+2);
     return 1;
   }
   // length of hdr2 should be 1 or be the same has the hdr1
@@ -339,7 +339,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
     char *rn1=fastq_get_readname(fd,e,&rname1[0],&len,TRUE);
     char *rn2=fastq_get_readname(fd,e,&rname2[0],&len,FALSE);
     if ( !compare_headers(rn1,rn2) ) {
-      PRINT_ERROR("Error in file %s, line %lu:  header2 differs from header1\nheader 1 \"%s\"\nheader 2 \"%s\"",fd->filename,fd->cline,e->hdr1,e->hdr2);
+      PRINT_ERROR("Error in file %s: line %lu:  header2 differs from header1\nheader 1 \"%s\"\nheader 2 \"%s\"",fd->filename,fd->cline,e->hdr1,e->hdr2);
       return 1;
     }
   }
@@ -353,7 +353,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   }  
 
   if ( qlen!=slen ) {
-    PRINT_ERROR("Error in file %s, line %lu: sequence and quality don't have the same length %lu!=%lu",fd->filename,fd->cline,slen,qlen);
+    PRINT_ERROR("Error in file %s: line %lu: sequence and quality don't have the same length %lu!=%lu",fd->filename,fd->cline,slen,qlen);
     return 1;
   }
   return 0;
@@ -387,12 +387,12 @@ void fastq_index_readnames(FASTQ_FILE* fd1,hashtable index,long long start_offse
     //    replace_dots(start_pos,seq,hdr,hdr2,qual,fdf);    
     // check for duplicates
     if ( fastq_index_lookup_header(index,readname)!=NULL ) {
-      PRINT_ERROR("Error in file %s, line %lu: duplicated sequence %s",fd1->filename,fd1->cline,readname);
+      PRINT_ERROR("Error in file %s: line %lu: duplicated sequence %s",fd1->filename,fd1->cline,readname);
       exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
 
     if ( new_indexentry(index,readname,len,m1->offset)==NULL) {
-      PRINT_ERROR("line %lu: malloc failed?",fd1->cline-4);
+      PRINT_ERROR("Error in file %s: line %lu: malloc failed?",fd1->filename,fd1->cline-4);
       exit(SYS_INT_ERROR_EXIT_STATUS);
     }
     // TODO validate option
@@ -412,7 +412,7 @@ char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *
   else  hdr=e->hdr2;
 
   if ( is_header1==TRUE && hdr[0]!='@' ) {
-    PRINT_ERROR("Error in file %s, line %lu: wrong header %s",fd->filename,fd->cline,hdr);
+    PRINT_ERROR("Error in file %s: line %lu: wrong header %s",fd->filename,fd->cline,hdr);
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
 
