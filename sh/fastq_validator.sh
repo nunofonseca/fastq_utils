@@ -20,7 +20,13 @@
 # =========================================================
 # wrapper to fastq_info to support BAM and bzip2
 
-FILES=$*
+FILES=$1
+PE_PARAMETER=
+if [ "$2-" == "pe-" ]; then
+    PE_PARAMETER=pe
+else
+    FILES=$*
+fi
 
 function file_type {
     x=$(file -b -i  $1|cut -f 1 -d\;|sed "s|.*/||")
@@ -113,7 +119,7 @@ else
 	fi
     done
 fi
-fastq_info $FILES2PROCESS
+fastq_info $FILES2PROCESS $PE_PARAMETER
 
 if [ "-$FILES2DELETE" != "-" ]; then
     #echo -n "Removing named pipes..."
