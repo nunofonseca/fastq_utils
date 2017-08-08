@@ -122,8 +122,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Processing %s\n",argv[1]);
   }
   //
-  //
-  // place holders to keep the info
+  // place holders to keep the information
   char sample[MAX_BARCODE_LENGTH];
   char umi[MAX_BARCODE_LENGTH];
   char cell[MAX_BARCODE_LENGTH];
@@ -133,17 +132,16 @@ int main(int argc, char *argv[])
     if (aln->core.tid < 0) goto end_loop;//ignore unaligned reads
     if (aln->core.flag & BAM_FUNMAP) goto end_loop;
     ++num_alns;
-
     //assert(r!=NULL);
     char *qn=bam1_qname(aln);
     //fprintf(stderr,"-->%s\n",qn);
     if (get_barcodes(qn,&sample[0],&umi[0],&cell[0],&sample_len,&umi_len,&cell_len)) {
       //fprintf(stderr,"YES-->%s\n",qn);
       //fprintf(stderr,"YES-->%s %s %s\n",cell,sample,umi);
-      if ( umi_len > 0 )
+      if ( umi_len > 0 )   // UMI
 	bam_aux_append(aln, "UM", 'Z', umi_len, umi);
-      if ( cell_len > 0 )
-	bam_aux_append(aln, "CB", 'Z', cell_len, cell); 
+      if ( cell_len > 0 )  // cellular barcode sequence as reported by the sequencer
+	bam_aux_append(aln, "CR", 'Z', cell_len, cell); 
       if ( sample_len > 0 ) // sample index
 	bam_aux_append(aln, "BC", 'Z', sample_len, sample); 
     }
