@@ -99,7 +99,7 @@ where [cell], [umi], and [sample] will have the value of the barcode (if availab
 
 #### bam_add_tags - companion program to fastq_pre_barcodes. 
 
-Given a bam file produced based on fastq files preprocessed by fastq_pre_barcodes, bam_add_tags will add UM (UMI), CB (Cell), and BC (sample) tags to each alignment in the BAM file based on the information found in the respective readnames.
+Given a bam file produced based on fastq files preprocessed by fastq_pre_barcodes, bam_add_tags will add UM (UMI), CR (Cell), and BC (sample) tags to each alignment in the BAM file based on the information found in the respective readnames.
 
 Usage: bam_add_tags input.bam output.bam
 
