@@ -1,7 +1,7 @@
 # Note: avoid having boost in  -I : it may result on including the wrong regexp.h
 # zlib is required
 CFLAGS?=
-CFLAGS+=  -Wall -O3
+CFLAGS+=  -g -Wall -O3
 #-g -Wunused-result 
 #
 SHELL=bash
@@ -16,7 +16,7 @@ endif
 TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at
 
 ifdef SAMTOOLS_PATH
-TARGETS+= bam_add_tags
+TARGETS+= bam_add_tags bam_count_tags
 endif
 ############################################################################
 all: $(TARGETS)
@@ -58,8 +58,12 @@ fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
 bam_add_tags: bam_add_tags.c
 	gcc  $< -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
 
+bam_count_tags:   hash.o  bam_count_tags.o fastq.o
+	gcc  $^ -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
+
 
 ##################################################
+
 
 fastq.o: fastq.c fastq.h hash.h
 	gcc $(CFLAGS) -c $< -lz
@@ -68,7 +72,7 @@ hash.o: hash.c hash.h
 	gcc $(CFLAGS) -c $<
 
 %.o: %.c
-	gcc $(CFLAGS) -c $<
+	gcc -I $(SAMTOOLS_PATH) $(CFLAGS)  -c $<
 
 clean:
 	rm -f *.o $(TARGETS) *~
