@@ -60,9 +60,12 @@ int main(int argc, char **argv ) {
     PRINT_ERROR("Usage: fastq_filter_n [ -n 0 ] fastq1");
     exit(PARAMS_ERROR_EXIT_STATUS);
   }
-  
-  fprintf(stderr,"Discard reads with more than %d%% of Ns\n",max_n);
-  
+
+  if ( max_n > 0 ) {
+    fprintf(stderr,"Discard reads with more than %d%% of Ns\n",max_n);
+  } else {
+    fprintf(stderr,"Discard reads with at least one N\n");
+  }
   FASTQ_FILE *fd1=fastq_new(argv[nopt+1],FALSE,"r");
 
   unsigned num_n,max_num_n;
