@@ -130,8 +130,9 @@ void set_input_file(Params* p,char* filename,READ_IDX rdx) {
 
 void slice_read(FASTQ_ENTRY* m,const Params* p,READ_IDX cur_read) {
 
-  fprintf(stderr,">%d %ld %ld\n",cur_read,p->read_offset[cur_read],p->read_size[cur_read]);
+  //fprintf(stderr,">%d %ld %ld\n",cur_read,p->read_offset[cur_read],p->read_size[cur_read]);
   if (p->read_offset[cur_read]==UNDEF) return; // do nothing
+  if (cur_read<READ3 && p->read_offset[cur_read]==0 && p->read_size[cur_read]==-1 ) return; // do not slice
   // truncate header2
   m->hdr2[1]='\n';
   m->hdr2[2]='\0';
@@ -206,8 +207,9 @@ short get_barcode(const FASTQ_ENTRY *m1,
     // check quality
     FASTQ_READ_OFFSET x;
     for (x=offset;x<offset+size;++x) {
-      fprintf(stderr,"Checking quality %c -> %d\n",m1->qual[x],m1->qual[x]-phred_encoding);
+      
       if (m1->qual[x]-phred_encoding < min_qual) {
+	fprintf(stderr,"Checking quality %c -> %d\n",m1->qual[x],m1->qual[x]-phred_encoding);	
 	fprintf(stderr,"Warning: skipping read due to low quality in barcode sequence %c\n",m1->qual[x]-phred_encoding);
 	return(FALSE);	
       }
