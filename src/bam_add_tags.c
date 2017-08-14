@@ -129,8 +129,8 @@ int main(int argc, char *argv[])
   int sample_len, umi_len,cell_len;
   num_alns=0;
   while(bam_read1(in,aln)>=0) { // read alignment
-    if (aln->core.tid < 0) goto end_loop;//ignore unaligned reads
-    if (aln->core.flag & BAM_FUNMAP) goto end_loop;
+    if (aln->core.tid < 0) continue;//ignore unaligned reads
+    //if (aln->core.flag & BAM_FUNMAP) continue; // the mate is unmapped
     ++num_alns;
     //assert(r!=NULL);
     char *qn=bam1_qname(aln);
