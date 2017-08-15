@@ -229,7 +229,10 @@ static inline void GZ_WRITE(gzFile fd,char *s) {
   /* } */
   exit(SYS_INT_ERROR_EXIT_STATUS);
 }
-
+/*
+ * Reads one entry from the fastq file fd and places it in e
+ * Returns 0 on failure, 1 on success
+ */
 int fastq_read_next_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
 
   int r=fastq_read_entry(fd,e);
