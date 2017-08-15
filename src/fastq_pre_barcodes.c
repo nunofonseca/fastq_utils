@@ -34,13 +34,15 @@
 #include "hash.h"
 #include "fastq.h"
 
-typedef enum  { READ1=1, READ2=2, READ3=3 } READ_IDX;
+typedef enum  { READ1=1, READ2=2, READ3=3 , READ4=4 } READ_IDX;
+#define INDEX1 3
+#define INDEX2 4
 
 typedef long FASTQ_SIZE;
 
 struct params_s {
-  char *file[3+1];
-  char *outfile[3+1];
+  char *file[4+1];
+  char *outfile[2+1]; // index files are not touched
   short phred_encoding; //33/64 - map the ascii code to the 0 phred value
   FASTQ_BOOLEAN paired; // maximum read length
   FASTQ_BOOLEAN verbose;
@@ -64,14 +66,25 @@ typedef struct params_s Params;
 #define PRINT_VERBOSE(p,s...) {if (p->verbose) fprintf(stderr,##s );  }
 
 
+READ_IDX read_index2read_idx(const char *s) {
+
+  if (!strcmp(s,"read1")) return READ1;
+  if (!strcmp(s,"read2")) return READ2;
+  if (!strcmp(s,"index1")) return READ3;
+  if (!strcmp(s,"index2")) return READ4;
+
+  PRINT_ERROR("invalid file reference %s (valid values are read1,read2, index1,index2)\n",s);
+  exit(1);    
+}
+
 void validate_options(Params* options) {
 
   if ( options->file[1]==NULL ) {
-    PRINT_ERROR("missing input file (-file1)");
+    PRINT_ERROR("missing input file (-read1)");
     exit(1);
   }
   if ( options->paired && options->file[2]==NULL ) {
-    PRINT_ERROR("if paired_end is used then two fastq files should be provided - missing input file (-file2)");
+    PRINT_ERROR("if paired_end is used then two fastq files should be provided - missing input file (-read2)");
     exit(PARAMS_ERROR_EXIT_STATUS);
   }
 
@@ -93,22 +106,22 @@ Params* Params_new(void) {
   new->file[READ1]=NULL;
   new->file[READ2]=NULL;
   new->file[READ3]=NULL;
+  new->file[READ4]=NULL;
   new->outfile[READ1]=NULL;
   new->outfile[READ2]=NULL;
-  new->outfile[READ3]=NULL;
   new->phred_encoding=64;
   new->paired=FALSE; // maximum read length
   new->read_offset[READ1]=UNDEF;//
   new->read_size[READ1]=0; //
   new->read_offset[READ2]=UNDEF;//
   new->read_size[READ2]=0; //
-  new->cell_read=READ1;  // cell barcode: default read1
+  new->cell_read=UNDEF;  // cell barcode: default read1
   new->cell_offset=UNDEF;//
   new->cell_size=0;  //
-  new->sample_read=READ1;  // sample barcode
+  new->sample_read=UNDEF;  // sample barcode
   new->sample_offset=UNDEF;// sample barcode
   new->sample_size=0;  //
-  new->umi_read=READ1;  // Read with the UMI (1/2)
+  new->umi_read=UNDEF;  // Read with the UMI (1/2)
   new->verbose=FALSE;
   new->umi_offset=UNDEF; //
   new->umi_size=0; //
@@ -118,7 +131,7 @@ Params* Params_new(void) {
 }
 
 void set_input_file(Params* p,char* filename,READ_IDX rdx) {
-  if (rdx<READ1 || rdx>READ3 ) {
+  if (rdx<READ1 || rdx>READ4 ) {
     PRINT_ERROR("internal error set_input_file");
     exit(SYS_INT_ERROR_EXIT_STATUS);
   }
@@ -222,7 +235,7 @@ short get_barcode(const FASTQ_ENTRY *m1,
 }
 // Extract all required information from a read based on the given configuration
 int extract_info(const FASTQ_ENTRY *m1,const Params *p,
-		 const READ_IDX read,// 1/2/3
+		 const READ_IDX read,// 1/2/3/4
 		 char *cell,
 		 char *umi,
 		 char *sample) {
@@ -244,11 +257,12 @@ int extract_info(const FASTQ_ENTRY *m1,const Params *p,
 
 // return TRUE if at least one fd reached EOF
 FASTQ_BOOLEAN fastq_files_eof(FASTQ_FILE** fdi,int n) {
-  while(n) {
-    if ( fdi[n]!=NULL )
-      if (gzeof(fdi[n]->fd))
-	return TRUE;
-    --n;
+  int k=1;
+  while(k<=n) {
+    if ( fdi[k]!=NULL )
+      if (gzeof(fdi[k]->fd))
+	return TRUE; // do not ensure that all files 
+    ++k;
   }
   return FALSE;
 }
@@ -260,21 +274,22 @@ void print_usage(void) {
   --verbose    :increase level of messages printed to stderr\n\
   --brief      :decrease level of messages printed to stderr\n\
   --help       :print the usage\n\
-  --file1 <filename> :fastq (optional gzipped) file name \n\
-  --file2 <filename> :fastq (optional gzipped) file name \n\
-  --file3 <filename> :fastq (optional gzipped) file name \n\
+  --read1 <filename> :fastq (optional gzipped) file name \n\
+  --read2 <filename> :fastq (optional gzipped) file name \n\
+  --index1 <filename> :fastq (optional gzipped) file name \n\
+  --index2 <filename> :fastq (optional gzipped) file name \n\
   --phred_encoding (33|64) :phred encoding used in the input files\n\
   --min_qual [0-40]        :defines the minimum quality that all bases in the UMI, CELL or Sample should have (reads that do not pass the criteria are discarded). 0 disables the filter. \n\
   --outfile1 <filename>    :file name for ouputing the reads from file1\n\
   --outfile2 <filename>    :file name for ouputing the reads from file2\n\
   --outfile3 <filename>    :file name for ouputing the reads from file3\n\
-  --umi_read (1|2|3)       :in which input file can the UMI be found\n\
+  --umi_read (read1|read2|index1|index2)       :in which input file can the UMI be found\n\
   --umi_offset integer     :offset \n\
   --umi_size               :number of bases after the offset\n\
-  --cell_read (1|2|3)      :in which input file can the cell be found\n\
+  --cell_read (read1|read2|index1|index2)      :in which input file can the cell be found\n\
   --cell_offset integer    :offset \n\
   --cell_size integer      :number of bases after the offset\n\
-  --sample_read (1|2|3)    :in which input file can the cell be found\n\
+  --sample_read (read1|read2|index1|index2)    :in which input file can the sample barcode be found\n\
   --sample_offset integer  :offset \n\
   --sample_size integer    :number of bases after the offset\n\
   --read1_offset integer   :\n\
@@ -282,7 +297,7 @@ void print_usage(void) {
   --read2_offset integer   :\n\
   --read2_size integer     :\n\
 ";
-  fprintf(stderr,"usage: fastq_pre_barcodes --file1 fastq_file --outfile1 out_file [optional parameters]\n");
+  fprintf(stderr,"usage: fastq_pre_barcodes --read1 fastq_file --outfile1 out_file [optional parameters]\n");
   fprintf(stderr,"%s\n",msg);
 }
 //
@@ -317,12 +332,12 @@ int main(int argc, char **argv ) {
     {"cell_read",     required_argument,       0, 'i'},
     {"cell_offset",  required_argument,       0, 'j'},
     {"cell_size",  required_argument, 0, 'k'},
-    {"file1",  required_argument, 0, 'l'},
-    {"file2",  required_argument, 0, 'm'},
-    {"file3",  required_argument, 0, 't'},
+    {"read1",  required_argument, 0, 'l'},
+    {"read2",  required_argument, 0, 'm'},
+    {"index1",  required_argument, 0, 't'},
+    {"index2",  required_argument, 0, 'v'},
     {"outfile1",  required_argument, 0, 'n'},
     {"outfile2",  required_argument, 0, 'o'},
-    {"outfile3",  required_argument, 0, 'u'},
     {"sample_read",     required_argument,       0, 'p'},
     {"sample_offset",  required_argument,       0, 'q'},
     {"sample_size",  required_argument, 0, 'r'},
@@ -343,7 +358,7 @@ int main(int argc, char **argv ) {
     switch (c) {
       
     case 'a':
-      p->umi_read=atoi(optarg);
+      p->umi_read=read_index2read_idx(optarg);
       break;
       
     case 'b':
@@ -375,7 +390,7 @@ int main(int argc, char **argv ) {
       break;
 
     case 'i':
-      p->cell_read=atoi(optarg);
+      p->cell_read=read_index2read_idx(optarg);
       break;
       
     case 'j':
@@ -397,7 +412,11 @@ int main(int argc, char **argv ) {
     case 't':
       set_input_file(p,optarg,READ3);
       break;
-      
+
+    case 'v':
+      set_input_file(p,optarg,READ4);
+      break;
+
     case 'n':
       p->outfile[READ1]=optarg;
       break;
@@ -406,12 +425,12 @@ int main(int argc, char **argv ) {
       p->outfile[READ2]=optarg;
       break;
 
-    case 'u': 
-      p->outfile[READ3]=optarg;
-      break;
+      //    case 'u': 
+      //      p->outfile[READ3]=optarg;
+      //      break;
 
     case 'p':
-      p->sample_read=atoi(optarg);
+      p->sample_read=read_index2read_idx(optarg);
       break;
       
     case 'q':
@@ -430,6 +449,7 @@ int main(int argc, char **argv ) {
       break;
     }
   }
+
   if (help ) {
     print_usage();
     exit(0);
@@ -456,68 +476,81 @@ int main(int argc, char **argv ) {
   // 
   short x;
   FASTQ_BOOLEAN skip;
-  FASTQ_FILE* fdi[READ3+1]={NULL,NULL,NULL,NULL};
-  FASTQ_ENTRY* m[READ3+1]={NULL,NULL,NULL,NULL};
-  FASTQ_FILE* fdw[READ3+1]={NULL,NULL,NULL,NULL}; // out files
-  char rnames[READ3+1][MAX_LABEL_LENGTH];
+  FASTQ_FILE* fdi[READ4+1]={NULL,NULL,NULL,NULL,NULL};
+  FASTQ_ENTRY* m[READ4+1]={NULL,NULL,NULL,NULL,NULL};
+  FASTQ_FILE* fdw[READ4+1]={NULL,NULL,NULL,NULL,NULL}; // out files
+  char rnames[READ4+1][MAX_LABEL_LENGTH];
   
-  for (x=1;x<=p->num_input_files;++x) {
-    PRINT_VERBOSE(p,"Opening %s",p->file[x]);    
-    fdi[x]=fastq_new(p->file[x],FALSE,"r");
+  for (x=1;x<=READ4;++x) {
+    if ( p->file[x] != NULL ) {
+      PRINT_VERBOSE(p,"Opening %s",p->file[x]);    
+      fdi[x]=fastq_new(p->file[x],FALSE,"r");
+    }
   }
   PRINT_VERBOSE(p,"done\n");
   
-  // initialize the objects to old an entry
-  for (x=1;x<=READ3;++x) m[x]=fastq_new_entry();
+  // initialize the objects to hold an entry
+  for (x=1;x<=READ4;++x) m[x]=fastq_new_entry();
 
-
-  for (x=1;x<=READ3;++x)
+  // output files
+  for (x=1;x<=READ2;++x) {
     if ( p->outfile[x]!=NULL)
       fdw[x]=fastq_new(p->outfile[x],FALSE,"w4"); 
- 
+  }
 
   //
-
-  while(!fastq_files_eof(fdi,READ3) ) {
+  while(!fastq_files_eof(fdi,READ4) ) {
     skip=FALSE;
-    for (x=1;x<=p->num_input_files;++x) // read one entry from each input  file
-      if (fastq_read_next_entry(fdi[x],m[x])==0) break; // EOF
-    if (x<=p->num_input_files) break;
+
+    for (x=1;x<=READ4;++x) // read one entry from each input  file
+      if ( p->file[x] != NULL )
+	if (fastq_read_next_entry(fdi[x],m[x])==0) goto end_loop; // EOF
 
     // check if the read names match
     if (p->num_input_files>1) {
       unsigned long len;
-      for (x=1;x<=p->num_input_files;++x) 
-	fastq_get_readname(fdi[x],m[x],&rnames[x][0],&len,TRUE);
-      if (strcmp(rnames[READ1],rnames[READ2]) ) {
-	PRINT_ERROR("Readnames do not match across files (read #%ld)",processed_reads+1);
-	exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
-      }
-      if (p->num_input_files==3) 
+      for (x=1;x<=READ4;++x)
+	if ( p->file[x] != NULL )
+	  fastq_get_readname(fdi[x],m[x],&rnames[x][0],&len,TRUE);
+
+      if ( p->file[READ2] != NULL )
+	if (strcmp(rnames[READ1],rnames[READ2]) ) {
+	  PRINT_ERROR("Readnames do not match across files (read #%ld)",processed_reads+1);
+	  exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+	}
+
+      if ( p->file[READ3] != NULL )
 	if (strcmp(rnames[READ1],rnames[READ3]) ) {
 	  PRINT_ERROR("Readnames do not match across files (read #%ld)",processed_reads+1);
 	  exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
 	}
-    }	  
+
+      if ( p->file[READ4] != NULL )
+	if (strcmp(rnames[READ1],rnames[READ4]) ) {
+	  PRINT_ERROR("Readnames do not match across files (read #%ld)",processed_reads+1);
+	  exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+	}
+
+    }
     //
     ++processed_reads;
     // initialize
     cell[0]=sample[0]=umi[0]='\0';
-    for (x=1;x<=p->num_input_files;++x) // extract the tags from each file
-      if (extract_info(m[x],p,x,&cell[0],&umi[0],&sample[0])==FALSE ) {
-	// failed due to bad quality
-	// other errors would have resulted in the exit of the program
-	PRINT_VERBOSE(p,"Discarded %s %s %s <- %s\n",cell,umi,sample,m[x]->hdr1);
-	++discarded_reads;
-	skip=TRUE;
-	break;
-      }
+    for (x=1;x<=READ4;++x) // extract the tags from each file
+      if ( p->file[x]!=NULL)
+	if (extract_info(m[x],p,x,&cell[0],&umi[0],&sample[0])==FALSE ) {
+	  // failed due to bad quality
+	  // other errors would have resulted in the exit of the program
+	  PRINT_VERBOSE(p,"Discarded %s %s %s <- %s\n",cell,umi,sample,m[x]->hdr1);
+	  ++discarded_reads;
+	  skip=TRUE;
+	  break;
+	}
 
     if(skip) continue;
     // output the read(s) with the modified read name
     PRINT_VERBOSE(p,"_STAGS_CELL=%s_UMI=%s_SAMPLE=%s_ETAGS\n",cell,umi,sample);
-    for (x=1;x<=READ3;++x)
-      // read one entry from each input  file
+    for (x=1;x<=READ2;++x)
       if (fdw[x]!=NULL) {
 	add_tags2readname(m[x],cell,umi,sample);
 	slice_read(m[x],p,x);
@@ -525,6 +558,7 @@ int main(int argc, char **argv ) {
       }
     PRINT_READS_PROCESSED(fdi[READ1]->cline/4,100000);
   }
+ end_loop: 
   //   extract the info, change read name, trim the read, write
   PRINT_INFO("Reads processed: %ld",processed_reads);
   PRINT_INFO("Reads discarded: %ld",discarded_reads);
