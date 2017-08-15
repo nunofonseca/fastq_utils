@@ -29,22 +29,26 @@
 
 #include "fastq.h"
 
-
+/*
+ * Returns 1 on sucess, 0 otherwise.
+ */
 short get_barcodes(const char *s,char *sample,char *umi,char *cell,
 		   int* sample_len, int* umi_len, int* cell_len) {
   cell[0]=sample[0]=umi[0]='\0';
 
   *cell_len=*sample_len=*umi_len=0;
 
-  if ( s[0]!='_' || s[1]!='S'  || s[2]!='T' || s[3]!='A' ||
-       s[4]!='G' || s[5]!='S' || s[6]!='_' ) {
+  if ( s[0]!='S'  || s[1]!='T' || s[2]!='A' ||
+       s[3]!='G' || s[4]!='S' || s[5]!='_' ) {
+    fprintf(stderr,"failed cond1\n");
     return(0);
   }
   //
-  int idx=7;
+  int idx=6;
   int z=0;
   if ( s[idx]!='C' || s[idx+1]!='E'  || s[idx+2]!='L' || s[idx+3]!='L' ||
-       s[idx+4]!='_' ) {
+       s[idx+4]!='=' ) {
+    fprintf(stderr,"failed cond2\n");
     return(0);
   }
   // cell
@@ -53,10 +57,11 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
     cell[z++]=s[idx++];
   }
   cell[z]='\0';
-  *cell_len=z+1;
+  *cell_len=z;
   idx++;
   // umi
-  if ( s[idx]!='U' || s[idx+1]!='M'  || s[idx+2]!='I' || s[idx+3]!='_') {
+  if ( s[idx]!='U' || s[idx+1]!='M'  || s[idx+2]!='I' || s[idx+3]!='=') {
+    fprintf(stderr,"failed cond3\n");
     return(0);
   }
   idx=idx+4;
@@ -66,10 +71,10 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
   }
   umi[z]='\0';
   ++idx;
-  *umi_len=z+1;
+  *umi_len=z;
   // sample
   if ( s[idx]!='S' || s[idx+1]!='A'  || s[idx+2]!='M' || s[idx+3]!='P' ||
-       s[idx+4]!='L' || s[idx+5]!='E' || s[idx+6]!='_' ) {
+       s[idx+4]!='L' || s[idx+5]!='E' || s[idx+6]!='=' ) {
     return(0);
   }
   idx=idx+7;
@@ -78,7 +83,7 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
     sample[z++]=s[idx++];
   }
   sample[z]='\0';
-  *sample_len=z+1;
+  *sample_len=z;
   return(1);
 }
 
@@ -134,16 +139,18 @@ int main(int argc, char *argv[])
     ++num_alns;
     //assert(r!=NULL);
     char *qn=bam1_qname(aln);
-    //fprintf(stderr,"-->%s\n",qn);
+    fprintf(stderr,"-->%s\n",qn);
     if (get_barcodes(qn,&sample[0],&umi[0],&cell[0],&sample_len,&umi_len,&cell_len)) {
       //fprintf(stderr,"YES-->%s\n",qn);
       //fprintf(stderr,"YES-->%s %s %s\n",cell,sample,umi);
+      // 
       if ( umi_len > 0 )   // UMI
-	bam_aux_append(aln, "UM", 'Z', umi_len, umi);
+	bam_aux_append(aln, "UM", 'Z', umi_len+1, umi);
       if ( cell_len > 0 )  // cellular barcode sequence as reported by the sequencer
-	bam_aux_append(aln, "CR", 'Z', cell_len, cell); 
+	bam_aux_append(aln, "CR", 'Z', cell_len+1, cell); 
       if ( sample_len > 0 ) // sample index
-	bam_aux_append(aln, "BC", 'Z', sample_len, sample); 
+	bam_aux_append(aln, "BC", 'Z', sample_len+1, sample);
+      fprintf(stderr,"YES-->%s %s %s\n",cell,sample,umi);
     }
     bam_write1(out,aln);
   }
