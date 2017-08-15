@@ -98,7 +98,8 @@ int main(int argc, char *argv[])
     return(PARAMS_ERROR_EXIT_STATUS);  
   }  
   // Open file and exit if error
-  in = bam_open(argv[1], "rb");
+  //in = bam_open(argv[1], "rb");
+  in = strcmp(argv[1], "-")? bam_open(argv[1], "rb") : bam_dopen(fileno(stdin), "rb"); 
   out2stdout = strcmp(argv[2], "-")? 0 : 1; 
   out = strcmp(argv[2], "-")? bam_open(argv[2], "w") : bam_dopen(fileno(stdout), "w"); 
   if (in == 0 ) {  
@@ -155,7 +156,8 @@ int main(int argc, char *argv[])
     bam_write1(out,aln);
   }
  end_loop:
-  bam_close(out); 
+  //bam_close(in); 
+  bam_close(out);
   bam_destroy1(aln);  
   return(0);
 }
