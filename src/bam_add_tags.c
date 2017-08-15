@@ -40,7 +40,7 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
 
   if ( s[0]!='S'  || s[1]!='T' || s[2]!='A' ||
        s[3]!='G' || s[4]!='S' || s[5]!='_' ) {
-    fprintf(stderr,"failed cond1\n");
+    //fprintf(stderr,"failed cond1\n");
     return(0);
   }
   //
@@ -48,7 +48,7 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
   int z=0;
   if ( s[idx]!='C' || s[idx+1]!='E'  || s[idx+2]!='L' || s[idx+3]!='L' ||
        s[idx+4]!='=' ) {
-    fprintf(stderr,"failed cond2\n");
+    //fprintf(stderr,"failed cond2\n");
     return(0);
   }
   // cell
@@ -61,7 +61,7 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
   idx++;
   // umi
   if ( s[idx]!='U' || s[idx+1]!='M'  || s[idx+2]!='I' || s[idx+3]!='=') {
-    fprintf(stderr,"failed cond3\n");
+    //fprintf(stderr,"failed cond3\n");
     return(0);
   }
   idx=idx+4;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
     ++num_alns;
     //assert(r!=NULL);
     char *qn=bam1_qname(aln);
-    fprintf(stderr,"-->%s\n",qn);
+    //fprintf(stderr,"-->%s\n",qn);
     if (get_barcodes(qn,&sample[0],&umi[0],&cell[0],&sample_len,&umi_len,&cell_len)) {
       //fprintf(stderr,"YES-->%s\n",qn);
       //fprintf(stderr,"YES-->%s %s %s\n",cell,sample,umi);
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 	bam_aux_append(aln, "CR", 'Z', cell_len+1, cell); 
       if ( sample_len > 0 ) // sample index
 	bam_aux_append(aln, "BC", 'Z', sample_len+1, sample);
-      fprintf(stderr,"YES-->%s %s %s\n",cell,sample,umi);
+      //fprintf(stderr,"YES-->%s %s %s\n",cell,sample,umi);
     }
     bam_write1(out,aln);
   }
