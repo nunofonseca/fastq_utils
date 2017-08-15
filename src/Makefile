@@ -16,8 +16,9 @@ endif
 TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at
 
 ifdef SAMTOOLS_PATH
-TARGETS+= bam_add_tags bam_count_tags
+TARGETS+= bam_add_tags
 endif
+#  bam_count_tags
 ############################################################################
 all: $(TARGETS)
 
