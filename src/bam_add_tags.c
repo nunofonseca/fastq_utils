@@ -145,9 +145,9 @@ int main(int argc, char *argv[])
       if ( sample_len > 0 ) // sample index
 	bam_aux_append(aln, "BC", 'Z', sample_len, sample); 
     }
+    bam_write1(out,aln);
   }
  end_loop:
-  bam_write1(out,aln);
   bam_close(out); 
   bam_destroy1(aln);  
   return(0);
