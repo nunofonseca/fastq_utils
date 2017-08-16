@@ -1,7 +1,7 @@
 # Note: avoid having boost in  -I : it may result on including the wrong regexp.h
 # zlib is required
 CFLAGS?=
-CFLAGS+=  -g -Wall -O3
+CFLAGS+=  -Wall -O3
 #-g -Wunused-result 
 #
 SHELL=bash
