@@ -32,6 +32,14 @@ If something goes wrong, then remove the whole build subdirectory with make clea
 
 ### Fastq utilities
 
+   1. [fastq_info](#fastq_info---validates-and-collects-information-from-single-or-paired-fastq-files)
+   2. [fastq_filterpair](#fastq_filterpair---sorts-and-keeps-the-reads-with-a-mate-in-two-paired-fastq-files)
+   3. [fastq_filter_n](#fastq_filter_n---discards-reads-with-more-than-x-of-uncalled-bases-n)
+   4. [fastq_pre_barcodes](#fastq_pre_barcodes---preprocess-the-reads-to-move-the-barcodes-umi-cell--to-the-respective-readname-optionally-discarding-reads-with-bases-in-the-barcode-regions-below-a-given-threshold)
+   5. [fastq_trim_poly_at](#fastq_trim_poly_at---trims-poly-a-stretches-at-the-3-end-and-poly-t-at-5-end-of-each-read-optionally-discarding-reads-with-a-length-below-the-given-threshold)
+   6. [fastq_pre_barcodes](#fastq_pre_barcodes---preprocess-the-reads-to-move-the-barcodes-umi-cell--to-the-respective-readname-optionally-discarding-reads-with-bases-in-the-barcode-regions-below-a-given-threshold)
+   7. [bam_add_tags](#bam_add_tags---companion-program-to-fastq_pre_barcodes)
+
 #### fastq_info - validates and collects information from single or paired fastq files.
 
 Usage: fastq_info fastq_file1 [fastq_file2|pe]
