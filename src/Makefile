@@ -1,24 +1,23 @@
 # Note: avoid having boost in  -I : it may result on including the wrong regexp.h
 # zlib is required
-CFLAGS?=
-CFLAGS+=  -Wall -O3
-#-g -Wunused-result 
+#CFLAGS+= -g -Wunused-result  
+CFLAGS+= -Wall -O3
 #
 SHELL=bash
 
 SAMTOOLS_PATH=../samtools-0.1.19
 
 
-ifdef DEBUG
+ifeq ($(DEBUG),1)
 CFLAGS+= -g -DDEBUG=1
 endif
 
 TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at
 
 ifdef SAMTOOLS_PATH
-TARGETS+= bam_add_tags
+TARGETS+= bam_add_tags bam_umi_count
 endif
-#  bam_count_tags
+
 ############################################################################
 all: $(TARGETS)
 
@@ -59,7 +58,7 @@ fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
 bam_add_tags: bam_add_tags.c
 	gcc  $< -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
 
-bam_count_tags:   hash.o  bam_count_tags.o fastq.o
+bam_umi_count:   hash.o  bam_umi_count.o 
 	gcc  $^ -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
 
 
