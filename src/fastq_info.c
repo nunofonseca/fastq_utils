@@ -36,7 +36,7 @@
 
 
 // approx. median read length
-inline unsigned int median_rl(FASTQ_FILE* fd1,FASTQ_FILE* fd2) {
+static inline unsigned int median_rl(FASTQ_FILE* fd1,FASTQ_FILE* fd2) {
   unsigned long long ctr=0;
   unsigned int crl=1;
   unsigned long nreads=fd1->num_rds;
