@@ -60,7 +60,7 @@ typedef long FASTQ_READ_OFFSET;
 
 #define PRINT_INFO(s...) {fprintf(stderr,"INFO:"); fprintf(stderr,##s );fprintf(stderr,"\n");}
 #define PRINT_ERROR(s...) {fprintf(stderr,"\nERROR: "); fprintf(stderr,##s );fprintf(stderr,"\n");}
-#define DEBUG
+
 #ifdef DEBUG
 #define PRINT_DEBUG(s...) { fprintf(stderr,"DEBUG: "); fprintf(stderr,##s ); }
 #else
