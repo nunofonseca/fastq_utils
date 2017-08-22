@@ -2,6 +2,7 @@
 ## fastq utils  ![Build Status](https://travis-ci.org/nunofonseca/fastq_utils.svg?branch=master) [![License](http://img.shields.io/badge/license-GPL%203-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-3.0.html)
 Set of Linux utilities to validate and manipulate fastq files.
 
+Programs:
    1. [fastq_info](#fastq_info---validates-and-collects-information-from-single-or-paired-fastq-files)
    2. [fastq_filterpair](#fastq_filterpair---sorts-and-keeps-the-reads-with-a-mate-in-two-paired-fastq-files)
    3. [fastq_filter_n](#fastq_filter_n---discards-reads-with-more-than-x-of-uncalled-bases-n)
