@@ -10,6 +10,7 @@ Programs:
    5. [fastq_trim_poly_at](#fastq_trim_poly_at---trims-poly-a-stretches-at-the-3-end-and-poly-t-at-5-end-of-each-read-optionally-discarding-reads-with-a-length-below-the-given-threshold)
    6. [fastq_pre_barcodes](#fastq_pre_barcodes---preprocess-the-reads-to-move-the-barcodes-umi-cell--to-the-respective-readname-optionally-discarding-reads-with-bases-in-the-barcode-regions-below-a-given-threshold)
    7. [bam_add_tags](#bam_add_tags---companion-program-to-fastq_pre_barcodes)
+   8. [bam_umi_count](#bam_umi_count---companion-program-to-fastq_pre_barcodes/bam_add_tags)
 
 ### Building
 
@@ -110,9 +111,15 @@ where [cell], [umi], and [sample] will have the value of the barcode (if availab
 
 #### bam_add_tags - companion program to fastq_pre_barcodes. 
 
-Given a bam file produced based on fastq files preprocessed by fastq_pre_barcodes, bam_add_tags will add UM (UMI), CR (Cell), and BC (sample) tags to each alignment in the BAM file based on the information found in the respective readnames.
+Given a bam file generated from fastq files preprocessed by fastq_pre_barcodes, bam_add_tags will add UM (UMI), CR (Cell), and BC (sample) tags to each alignment in the BAM file based on the information found in the respective readnames.
 
 Usage: bam_add_tags input.bam output.bam
+
+#### bam_umi_count - count the number of unique UMIs
+
+Given a BAM file with the UM, CR, and BC tags (as produced by bam_add_tags) together with some extra tag. By default the bam_umi_count will count unique UMIs associated to uniquely mapped reads overlapping annotated genes. The GX tag is expected to contain the gene id. If an alignment overlaps y multiple features then the UMI count will be partially (1/y) assigned to each feature. The output file (--ucounts) will contain two or more columns (tab-separated): the feature id (gene id by default); cell (if found in the BAM); sample (if found in the bam); and the respective number of unique UMIs (with at least x number of reads, where x is passed in the parameter --min_reads).
+
+Usage: bam_umi_count --bam in.bam --ucounts output_filename.tsv [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump file.tsv] [--tag GX|TX]
 
 
 
