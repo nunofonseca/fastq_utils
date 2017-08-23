@@ -222,8 +222,8 @@ short get_barcode(const FASTQ_ENTRY *m1,
     for (x=offset;x<offset+size;++x) {
       
       if (m1->qual[x]-phred_encoding < min_qual) {
-	fprintf(stderr,"Checking quality %c -> %d\n",m1->qual[x],m1->qual[x]-phred_encoding);	
-	fprintf(stderr,"Warning: skipping read due to low quality in barcode sequence %c\n",m1->qual[x]-phred_encoding);
+	//fprintf(stderr,"Checking quality %c -> %d\n",m1->qual[x],m1->qual[x]-phred_encoding);	
+	fprintf(stderr,"Warning: skipping read due to low quality in barcode sequence %d\n",m1->qual[x]-phred_encoding);
 	return(FALSE);	
       }
     }
