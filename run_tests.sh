@@ -22,6 +22,7 @@ function must_succeed {
     fi
     echo $STATUS $cmd
 }
+
 #############################################
 ##
 ##
@@ -124,6 +125,17 @@ must_fail "./bin/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --p
 must_succeed "./bin/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 10 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --read1 tests/barcode_test2_2.fastq.gz --outfile1 test.fastq.gz && diff -q  <(zcat test.fastq.gz)  <(zcat tests/pre2.fastq.gz)"
 
 must_succeed "./bin/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read1 tests/barcode_test2_2.fastq.gz --outfile1 test.fastq.gz && diff -q  <(zcat test.fastq.gz)  <(zcat tests/pre3.fastq.gz)"
+
+echo "*** bam_umi_count"
+#
+must_succeed  " [ `./bin/bam_umi_count --bam tests/test_annot.bam  --ucounts /dev/stdout |wc -l |cut -f 1 -d\ ` ==  92 ]"
+must_succeed  " [ `./bin/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts /dev/stdout |wc -l |cut -f 1 -d\ ` ==  85 ]"
+must_succeed  " ./bin/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt --ucounts /dev/null --dump xx && diff -q xx tests/out_known_umis.txt"
+
+must_fail "./bin/bam_umi_count --min_reads 1"
+must_fail "./bin/bam_umi_count --bam tests/test_annot.bam"
+must_fail "./bin/bam_umi_count --bam tests/test_annot.bam -x"
+rm -f xx xy
 
 echo Failed tests: $num_failed
 exit $num_failed
