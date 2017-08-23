@@ -77,18 +77,7 @@ short base2int(char b) {
   }
 }
 
-long powi(long x, unsigned n)
-{
-    long  p;
-    p = x;
-    if ( n == 0 ) return(1);
-    if ( n == 1 ) return(p);
-    while (n > 0) {
-      p*=x;
-      --n;
-    }
-    return(p);
-}
+
 char* uint_642char(const uint_64 i,char *s) {
   
   uint_64 i2=i;
@@ -112,7 +101,7 @@ uint_64 char2uint_64(const char* s) {
   
   if ( s==NULL ) return(i);
   //fprintf(stderr,"s=%s\n",s);
-  while ( s[pos] != '\0' ) ++pos;
+  while ( s[pos] != '\0' && s[pos]!='\n' ) ++pos;
   // reverse so that the conversion is faster
   if ( !pos ) return(i); // nothing todo
   --pos;
@@ -356,6 +345,25 @@ char *get_tag(bam1_t *aln,const char tagname[2]) {
   return(s2);
 }
 
+int valid_umi(hashtable ht,char *umi_s) {
+  if (ht==NULL) return(TRUE); // by default all UMIs are valid
+  uint_64 umi=char2uint_64(umi_s);
+  ulong key;
+  if ( umi> 4294967296) {
+    key=umi/1000000000;// convert to ulong
+  } else {
+    key=umi;
+  }
+  uint_64 *ptr=(uint_64*)get_object(ht,key);
+  while ( ptr!=NULL ) {
+    if ( *ptr==umi) return(TRUE);
+    ptr=(uint_64*)get_next_object(ht,key);
+  }
+  //fprintf(stderr,"not valid %s\n",umi_s);
+  return(FALSE);
+}
+
+
 void print_usage(int exit_status) {
     PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag GX|TX]");
     if ( exit_status>=0) exit(exit_status);
@@ -369,11 +377,13 @@ int main(int argc, char *argv[])
   static int uniq_mapped_only=FALSE;
   char feat_tag[]="GX";
   unsigned long long num_alns=0;
+  unsigned long long num_tags_found=0;
   UNIQ_KEYS* key_list=NULL;
 
   char *bam_file=NULL;
   char *ucounts_file=NULL;
   char *dump_file=NULL;
+  char *known_umi_file=NULL;
   static int verbose=0;  
   static int help=FALSE;
   static struct option long_options[] = {
@@ -382,10 +392,12 @@ int main(int argc, char *argv[])
     {"uniq_mapped", no_argument,       &uniq_mapped_only, TRUE},
     {"help",   no_argument, &help, TRUE},
     {"bam",  required_argument, 0, 'b'},
+    {"known_umi",  required_argument, 0, 'k'},
     {"ucounts",  required_argument, 0, 'u'},
     {"dump",  required_argument, 0, 'd'},
     {"tag",  required_argument, 0, 'x'},
     {"min_reads",  required_argument, 0, 't'},
+    {0,0,0,0}
   };
 
   fprintf(stderr,"bam_umi_count version %s\n",VERSION);
@@ -398,9 +410,8 @@ int main(int argc, char *argv[])
 		     long_options, &option_index);      
     if (c == -1) // no more options
       break;
-      
-    switch (c) {
-      
+
+    switch (c) {      
     case 'b':
       bam_file=optarg;
       break;
@@ -410,12 +421,17 @@ int main(int argc, char *argv[])
     case 'd':
       dump_file=optarg;
       break;
+    case 'k':
+      known_umi_file=optarg;
+      break;
     case 'x':
       strncpy(feat_tag,optarg,3);
       break;
     case 't':
       min_num_reads=atol(optarg);
-    default:  // ignore
+      break;
+    default:
+      print_usage(1);
       break;
     }
   }
@@ -430,10 +446,50 @@ int main(int argc, char *argv[])
   hashtable ht=new_hashtable(HASHSIZE);
   // uniq=feature|cell|sample 
   hashtable uniq_ht=new_hashtable(HASHSIZE);
-
-
-
-   // Open file and exit if error
+  hashtable kumi_ht=NULL;
+  
+  if ( known_umi_file!=NULL ) {
+    FILE *kumi_fd;
+    if ((kumi_fd=fopen(known_umi_file,"r"))==NULL) {
+      PRINT_ERROR("Failed to open file %s", known_umi_file);  
+      exit(1);
+    }
+    // known UMIs
+    kumi_ht=new_hashtable(20341);
+    char buf[200];
+    unsigned long num_read_umis=0;
+    while (!feof(kumi_fd) ) {
+      char *umi=fgets(&buf[0],200,kumi_fd);
+      if (umi==NULL || umi[0]=='\0') continue;
+      ++num_read_umis;
+      uint_64 umi_num=char2uint_64(umi);
+      //fprintf(stderr,"%s->%llu\n",umi,umi_num);
+      ulong key;
+      if ( umi_num> 4294967296) {
+	key=umi_num/1000000000;// convert to ulong
+      } else {
+	key=umi_num;
+      }
+      uint_64 *ptr=(uint_64*)get_object(kumi_ht,key);
+      while ( ptr!=NULL ) {
+	if ( *ptr==umi_num) continue;
+	ptr=(uint_64*)get_next_object(kumi_ht,key);
+      }
+      if ( ptr==NULL ) {
+	uint_64 *e=(uint_64*)malloc(sizeof(uint_64));
+	if ( e==NULL ) {
+	  PRINT_ERROR("Failed to allocate memory\n");
+	  exit(1);
+	}
+	*e=umi_num;
+	insere(kumi_ht,key,e);// create a dummy entry (key is unique)
+      }
+    }
+    fclose(kumi_fd);
+    fprintf(stderr,"unique UMIs %lu\n",kumi_ht->n_entries);
+  }
+  
+  // Open file and exit if error
   in = strcmp(bam_file, "-")? bam_open(bam_file, "rb") : bam_dopen(fileno(stdin), "rb"); 
   
   if (in == 0 ) {  
@@ -496,12 +552,19 @@ int main(int argc, char *argv[])
     //fprintf(stderr,"aaaa1 %s\n",feat_tag);
     feat=get_tag(aln,feat_tag);
     if (feat[0]!='\0') {
+      num_tags_found++;
       umi=get_tag(aln,"UM");
       cell=get_tag(aln,"CR");
       sample=get_tag(aln,"BC");
+
 #ifdef DEBUG      
       fprintf(stderr,"umi2-->%s %s %s %s",umi,cell,sample,feat);
 #endif
+      // skip if the UMI is not valid
+      if ( !valid_umi(kumi_ht,umi) ) {
+        fprintf(stderr,"skipping %s\n",umi);
+        continue;
+      }
       //
       // feature id
       char *f=strtok(feat,",");
@@ -548,7 +611,11 @@ int main(int argc, char *argv[])
   bam_destroy1(aln);
   // write output
   fprintf(stderr,"Alignments processed: %llu\n",num_alns);
-
+  fprintf(stderr,"%s encountered  %llu times\n",feat_tag,num_tags_found);
+  if ( !num_tags_found ) {
+    fprintf(stderr,"ERROR: no valid alignments tagged with %s were found in %s.\n",feat_tag,bam_file);
+    exit(1);
+  }
   // uniq UMIs that overlap each gene per cell (and optionally per sample)
   // traverse the hashtable and count how many distinct UMIs are assigned to each gene (with the number of reads above minimum number of reads threshold)
   if ( ucounts_file !=NULL) {
