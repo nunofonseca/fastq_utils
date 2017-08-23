@@ -341,7 +341,8 @@ int main(int argc, char **argv ) {
     {"sample_read",     required_argument,       0, 'p'},
     {"sample_offset",  required_argument,       0, 'q'},
     {"sample_size",  required_argument, 0, 'r'},
-    {"phred_encoding",  required_argument, 0, 's'}
+    {"phred_encoding",  required_argument, 0, 's'},
+    {0,0,0,0}
   };
 
   // process arguments
