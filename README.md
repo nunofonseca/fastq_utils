@@ -119,7 +119,7 @@ Usage: bam_add_tags input.bam output.bam
 
 Given a BAM file with the UM, CR, and BC tags (as produced by bam_add_tags) together with some extra tag. By default the bam_umi_count will count unique UMIs associated to uniquely mapped reads overlapping annotated genes. The GX tag is expected to contain the gene id. If an alignment overlaps y multiple features then the UMI count will be partially (1/y) assigned to each feature. The output file (--ucounts) will contain two or more columns (tab-separated): the feature id (gene id by default); cell (if found in the BAM); sample (if found in the bam); and the respective number of unique UMIs (with at least x number of reads, where x is passed in the parameter --min_reads).
 
-Usage: bam_umi_count --bam in.bam --ucounts output_filename.tsv [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump file.tsv] [--tag GX|TX]
+Usage: bam_umi_count --bam in.bam --ucounts output_filename.tsv [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump file.tsv] [--tag GX|TX]  [--known_umi file_one_umi_per_line]
 
 
 
