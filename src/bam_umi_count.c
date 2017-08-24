@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
   static int help=FALSE;
   static struct option long_options[] = {
     {"verbose", no_argument,       &verbose, TRUE},
-    {"multi_mapped", no_argument,       &uniq_mapped_only, FALSE},
+    {"multi_mapped", no_argument,      &uniq_mapped_only, FALSE},
     {"uniq_mapped", no_argument,       &uniq_mapped_only, TRUE},
     {"help",   no_argument, &help, TRUE},
     {"bam",  required_argument, 0, 'b'},
@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
       min_num_reads=atol(optarg);
       break;
     default:
-      print_usage(1);
+      //print_usage(1);
       break;
     }
   }
