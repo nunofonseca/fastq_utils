@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
 #endif
       // skip if the UMI is not valid
       if ( !valid_umi(kumi_ht,umi) ) {
-        fprintf(stderr,"skipping %s\n",umi);
+        //fprintf(stderr,"skipping %s\n",umi);
         continue;
       }
       //
