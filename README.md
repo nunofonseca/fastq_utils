@@ -115,11 +115,19 @@ Given a bam file generated from fastq files preprocessed by fastq_pre_barcodes, 
 
 Usage: bam_add_tags input.bam output.bam
 
+#### bam_annotate.sh - annotate alignments with GX/TX tags
+
+Given a BAM file annotates the alignments with the features defined in the bed files (genes->GX tag, transcritps->TX tag). Alignments can also be annotated as exonic or intronic if they overlap the regions defined in the exon or intron bed file respectively.
+
+Usage: bam_annotate.sh  -b bam_file [ -e exon_bed -i intron_bed -g gene_bed -t transcript_bed ]
+
 #### bam_umi_count - count the number of unique UMIs
 
-Given a BAM file with the UM, CR, and BC tags (as produced by bam_add_tags) together with some extra tag. By default the bam_umi_count will count unique UMIs associated to uniquely mapped reads overlapping annotated genes. The GX tag is expected to contain the gene id. If an alignment overlaps y multiple features then the UMI count will be partially (1/y) assigned to each feature. The output file (--ucounts) will contain two or more columns (tab-separated): the feature id (gene id by default); cell (if found in the BAM); sample (if found in the bam); and the respective number of unique UMIs (with at least x number of reads, where x is passed in the parameter --min_reads).
-
+Given a BAM file with the UM, CR, and BC tags (as produced by bam_add_tags) together with some extra tag. By default the bam_umi_count will count unique UMIs associated to uniquely mapped reads overlapping annotated genes. The GX tag is expected to contain the gene id. If an alignment overlaps y multiple features then the UMI count will be partially (1/y) assigned to each feature. The output file (--ucounts) will contain two or more columns (tab-separated): the feature id (gene id by default); cell (if found in the BAM); sample (if found in the bam); and the respective number of unique UMIs (with at least x number of reads, where x is passed in the parameter --min_reads). This is a simpler and faster approach to count UMIs - as an alternative you may want to consider the `umis count` command available in the [umis package](https://github.com/vals/umis) which will try to correct the barcodes.
+ 
 Usage: bam_umi_count --bam in.bam --ucounts output_filename.tsv [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump file.tsv] [--tag GX|TX]  [--known_umi file_one_umi_per_line]
+
+
 
 
 
