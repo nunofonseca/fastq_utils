@@ -47,12 +47,12 @@ typedef struct params_s Params;
 
 void validate_options(Params* options) {
   if (options->file==NULL) {
-    PRINT_ERROR("missing input file (-file)");
+    PRINT_ERROR("missing input file (--file)");
     exit(PARAMS_ERROR_EXIT_STATUS);
   }
 
   if (options->outfile==NULL) {
-    PRINT_ERROR("missing output file name (-outfile)");
+    PRINT_ERROR("missing output file name (--outfile)");
     exit(PARAMS_ERROR_EXIT_STATUS);
   }
 
@@ -146,14 +146,15 @@ int main(int argc, char **argv ) {
     {"min_poly_at_len",  required_argument, 0, 'a'},
     {"file",  required_argument, 0, 'b'},
     {"outfile",  required_argument, 0, 'c'},
-    {"min_len",  required_argument, 0, 'd'}
+    {"min_len",  required_argument, 0, 'd'},
+    {0,0,0,0}
   };
 
   // process arguments
   while (1) {
     /* getopt_long stores the option index here. */
     int option_index = 0;
-    c = getopt_long (argc, argv, "a:b:c:",
+    c = getopt_long (argc, argv, "a:b:c:d:",
 		     long_options, &option_index);
     if (c == -1) // no more options
       break;
