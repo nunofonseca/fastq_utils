@@ -1,6 +1,6 @@
 # 
 ## fastq utils  ![Build Status](https://travis-ci.org/nunofonseca/fastq_utils.svg?branch=master) [![License](http://img.shields.io/badge/license-GPL%203-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-3.0.html)
-Set of Linux utilities to validate and manipulate fastq files.
+Set of Linux utilities to validate and manipulate fastq files. It also includes a set of programs to preprocess barcodes (namely UMIs), add the barcodes as tags in BAM files and count UMIs.
 
 Programs:
    1. [fastq_info](#fastq_info---validates-and-collects-information-from-single-or-paired-fastq-files)
@@ -40,7 +40,7 @@ To compile fastq_utils, type:
 If something goes wrong, then remove the whole build subdirectory with make clean and start new with make. The executables will be installed in the bin folder.
 
 
-### Fastq utilities
+### Programs
 
 
 
