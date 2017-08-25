@@ -620,6 +620,7 @@ int main(int argc, char *argv[])
   // traverse the hashtable and count how many distinct UMIs are assigned to each gene (with the number of reads above minimum number of reads threshold)
   if ( ucounts_file !=NULL) {
     UNIQ_KEYS *ukey=key_list;
+    uint_64 ctr=0;
     int pheader=TRUE;  
     while ( ukey!=NULL ) {
       ulong n=count_uniq_entries(uniq_ht,ukey,min_num_reads);
@@ -627,8 +628,14 @@ int main(int argc, char *argv[])
 	print_ucount(ukey,n,"\t",ucounts_fd,pheader);
       pheader&=FALSE;
       ukey=ukey->next;
+      ++ctr;
+    }
+    if ( ctr == 0 ) {
+      fprintf(stderr,"ERROR: 0 quantified features.");   
+      exit(1);
     }
     fclose(ucounts_fd);
+    
   }
   // dump the counts
   if ( dump_file != NULL ) {
