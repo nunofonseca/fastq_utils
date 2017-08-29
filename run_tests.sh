@@ -137,5 +137,13 @@ must_fail "./bin/bam_umi_count --bam tests/test_annot.bam"
 must_fail "./bin/bam_umi_count --bam tests/test_annot.bam -x"
 rm -f xx xy
 
+echo "*** bam_add_tags"
+
+must_succeed "./bin/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam"
+must_succeed "./bin/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam --tx --tx_2_gx tests/mapTrans2Gene.tsv"
+must_succeed "./bin/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam --tx "
+must_fail "./bin/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam --tx --tx_2_gx aaaatests/mapTrans2Gene.tsv"
+rm -f tmp.bam
+
 echo Failed tests: $num_failed
 exit $num_failed
