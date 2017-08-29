@@ -113,7 +113,7 @@ where [cell], [umi], and [sample] will have the value of the barcode (if availab
 
 Given a bam file generated from fastq files preprocessed by fastq_pre_barcodes, bam_add_tags will add UM (UMI), CR (Cell), and BC (sample) tags to each alignment in the BAM file based on the information found in the respective readnames.
 
-Usage: bam_add_tags input.bam output.bam
+Usage: bam_add_tags --inbam input.bam --outbam output.bam [--tx  --tx2gx gene2trans_map.tsv --help]
 
 #### bam_annotate.sh - annotate alignments with GX/TX tags
 
