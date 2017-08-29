@@ -644,7 +644,6 @@ int main(int argc, char *argv[])
     }
   }
   fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\n");fflush(stderr);
-  
   bam_destroy1(aln);
   // write output
   fprintf(stderr,"Alignments processed: %llu\n",num_alns);
