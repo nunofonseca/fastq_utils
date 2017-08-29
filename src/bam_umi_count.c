@@ -413,6 +413,7 @@ int main(int argc, char *argv[])
   char feat_tag[]="GX";
   unsigned long long num_alns=0;
   unsigned long long num_tags_found=0;
+  unsigned long long num_umis_discarded=0;
   UNIQ_KEYS_HT* key_list=NULL;
 
   char *bam_file=NULL;
@@ -597,7 +598,7 @@ int main(int argc, char *argv[])
 #endif
       // skip if the UMI is not valid
       if ( !valid_umi(kumi_ht,umi) ) {
-        //fprintf(stderr,"skipping %s\n",umi);
+	num_umis_discarded++;
         continue;
       }
       //
@@ -628,14 +629,13 @@ int main(int argc, char *argv[])
 	    PRINT_ERROR("Counter overflow (umi_obs) %.2lf\n",lookup->umi_obs);	    
 	    exit(1);
 	  }
-	  // add the entry to the other unique table
-	  if ( !add_count_entry_to_uht(uniq_ht,lookup) ) {
-	    // new entry
-	    key_list=add_to_list(key_list,lookup);
-	    if ( key_list==NULL ) {
+	  // 
+	  add_count_entry_to_uht(uniq_ht,lookup);
+	  // new entry
+	  key_list=add_to_list(key_list,lookup);
+	  if ( key_list==NULL ) {
 	      PRINT_ERROR("Error: failed to allocate memory\n");
 	      exit(1);
-	    }
 	  }
 	}
 	prev_f=f;
@@ -649,6 +649,7 @@ int main(int argc, char *argv[])
   // write output
   fprintf(stderr,"Alignments processed: %llu\n",num_alns);
   fprintf(stderr,"%s encountered  %llu times\n",feat_tag,num_tags_found);
+  fprintf(stderr,"%lld UMIs discarded\n",num_umis_discarded);
   if ( !num_tags_found ) {
     fprintf(stderr,"ERROR: no valid alignments tagged with %s were found in %s.\n",feat_tag,bam_file);
     exit(1);
@@ -656,7 +657,8 @@ int main(int argc, char *argv[])
   // uniq UMIs that overlap each gene per cell (and optionally per sample)
   // traverse the hashtable and count how many distinct UMIs are assigned to each gene (with the number of reads above minimum number of reads threshold)
   if ( ucounts_file !=NULL) {
-    UNIQ_KEYS *ukey=key_list->keys;
+    UNIQ_KEYS *ukey=NULL;
+    if ( key_list!=NULL) ukey=key_list->keys;
     uint_64 ctr=0;
     int pheader=TRUE;  
     while ( ukey!=NULL ) {
