@@ -1,4 +1,4 @@
-VERSION=0.11.0
+VERSION=0.12.0
 # Requires zlib and samtools 0.1.9
 all:
 	make -C src
@@ -19,3 +19,5 @@ tests: FORCE
 	./run_tests.sh
 
 FORCE: 
+
+
