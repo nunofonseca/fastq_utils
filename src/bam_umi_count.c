@@ -57,6 +57,13 @@ typedef struct uniq_keys {
   struct uniq_keys* next;
 } UNIQ_KEYS;
 
+typedef struct uniq_keys_ht {
+  hashtable ht;
+  UNIQ_KEYS* keys;
+} UNIQ_KEYS_HT;
+
+
+
 // this can be optimized
 const char INT2NT[]={' ','A','C','G','T','N','.'};
 
@@ -99,8 +106,8 @@ uint_64 char2uint_64(const char* s) {
   uint_64 i=0;
   int pos=0;
   
-  if ( s==NULL ) return(i);
-  //fprintf(stderr,"s=%s\n",s);
+  if ( s==NULL || *s=='\0' ) return(i);
+  //fprintf(stderr,"s=%d %s\n",s[1],s);
   while ( s[pos] != '\0' && s[pos]!='\n' ) ++pos;
   // reverse so that the conversion is faster
   if ( !pos ) return(i); // nothing todo
@@ -234,14 +241,34 @@ void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream
 }
 
 
-UNIQ_KEYS* add_to_list(UNIQ_KEYS* keys, COUNT_ENTRY *e) {
+UNIQ_KEYS_HT* add_to_list(UNIQ_KEYS_HT* keys, COUNT_ENTRY *e) {
+  if (keys==NULL) {
+    UNIQ_KEYS_HT *new=(UNIQ_KEYS_HT*)malloc(sizeof(UNIQ_KEYS_HT));
+    new->ht=new_hashtable(20231);
+    new->keys=NULL;
+    keys=new;
+  }
+  ulong ikey=hash_countkey(e->feat_id,0,e->cell,e->sample);
+  UNIQ_KEYS *f=(UNIQ_KEYS*)get_object(keys->ht,ikey);
+  while (f!=NULL) {
+    if ( 
+	 f->cell==e->cell &&
+	 f->sample==e->sample &&
+	 !strcmp(f->feat_id,e->feat_id)
+	 ) return(keys);
+  }
   UNIQ_KEYS *new=(UNIQ_KEYS*)malloc(sizeof(UNIQ_KEYS));
   if (new==NULL) { return(NULL);}
   new->cell=e->cell;
   new->sample=e->sample;
   new->feat_id=&e->feat_id[0]; // optimization only valid if memory is not released
-  new->next=keys;
-  return(new);
+  new->next=keys->keys;
+  keys->keys=new;
+  if(insere(keys->ht,ikey,new)<0) {
+    fprintf(stderr,"ERROR: unable to add entry to hash table");
+    exit(1);
+  }
+  return(keys);
 }
 
 COUNT_ENTRY* new_count_entry(const char* feat_id,const char* umi,const char* cell,const char* sample) {
@@ -264,8 +291,8 @@ COUNT_ENTRY* new_count_entry(const char* feat_id,const char* umi,const char* cel
   return(ck);
 }
 
-// 
-void add_count_entry_to_uht(hashtable uniq_ht,COUNT_ENTRY *e) {
+// return 1 if entry exists, 0 if a new entry is created
+int add_count_entry_to_uht(hashtable uniq_ht,COUNT_ENTRY *e) {
 
   ulong key=hash_uniq_umi_key(e->feat_id,e->cell,e->sample);
   COUNT_ENTRY* obj=(COUNT_ENTRY*)get_object(uniq_ht,key);
@@ -279,14 +306,18 @@ void add_count_entry_to_uht(hashtable uniq_ht,COUNT_ENTRY *e) {
 	) break;
     obj=(COUNT_ENTRY*)get_next_object(uniq_ht,key);
   }
+  //fprintf(stderr,"looking for %lu %llu %llu %llu %s\n",e->key,e->cell,e->umi,e->sample,e->feat_id);
   if ( obj == NULL ) {
     // add object
     if(insere(uniq_ht,key,e)<0) {
       fprintf(stderr,"ERROR: unable to add entry to hash table");
       exit(1);
     }
+    //bin/fprintf(stderr,"miss\n");
+    return(0);
   }
-  return;
+  //fprintf(stderr,"hit\n");
+  return(1);
 }
 
 ulong count_uniq_entries(hashtable uniq_ht,UNIQ_KEYS *key,ulong min_num_reads) {
@@ -382,7 +413,7 @@ int main(int argc, char *argv[])
   char feat_tag[]="GX";
   unsigned long long num_alns=0;
   unsigned long long num_tags_found=0;
-  UNIQ_KEYS* key_list=NULL;
+  UNIQ_KEYS_HT* key_list=NULL;
 
   char *bam_file=NULL;
   char *ucounts_file=NULL;
@@ -598,11 +629,13 @@ int main(int argc, char *argv[])
 	    exit(1);
 	  }
 	  // add the entry to the other unique table
-	  add_count_entry_to_uht(uniq_ht,lookup);
-	  key_list=add_to_list(key_list,lookup);
-	  if ( key_list==NULL ) {
-	    PRINT_ERROR("Error: failed to allocate memory\n");
-	    exit(1);
+	  if ( !add_count_entry_to_uht(uniq_ht,lookup) ) {
+	    // new entry
+	    key_list=add_to_list(key_list,lookup);
+	    if ( key_list==NULL ) {
+	      PRINT_ERROR("Error: failed to allocate memory\n");
+	      exit(1);
+	    }
 	  }
 	}
 	prev_f=f;
@@ -623,7 +656,7 @@ int main(int argc, char *argv[])
   // uniq UMIs that overlap each gene per cell (and optionally per sample)
   // traverse the hashtable and count how many distinct UMIs are assigned to each gene (with the number of reads above minimum number of reads threshold)
   if ( ucounts_file !=NULL) {
-    UNIQ_KEYS *ukey=key_list;
+    UNIQ_KEYS *ukey=key_list->keys;
     uint_64 ctr=0;
     int pheader=TRUE;  
     while ( ukey!=NULL ) {
