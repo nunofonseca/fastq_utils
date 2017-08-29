@@ -217,13 +217,17 @@ void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream
 
     
   if (print_header) {
-    if (x==1) 
+    if (x==0)
+      fprintf(stream,"%s%s%s\n","Feature",sep,"COUNT");    
+    else if (x==1) 
       fprintf(stream,"%s%s%s%s%s\n","Feature",sep,vl[0],sep,"COUNT");    
     else
       fprintf(stream,"%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,vl[1],sep,"COUNT");
   }
 
-  if (x==1) 
+  if (x==0)
+    fprintf(stream,"%s%s%lu\n",e->feat_id,sep,n);
+  else if (x==1) 
     fprintf(stream,"%s%s%s%s%lu\n",e->feat_id,sep,v[0],sep,n);
   else 
     fprintf(stream,"%s%s%s%s%s%s%lu\n",e->feat_id,sep,v[0],sep,v[1],sep,n);
