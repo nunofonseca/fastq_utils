@@ -35,7 +35,7 @@ fi
 
 function file_type {
     ## first check if is a bam file
-    samtools view -H $1 2> /dev/null
+    samtools view -H $1 &> /dev/null
     if [ $? -eq 0 ]; then
 	echo "bam"
     else
