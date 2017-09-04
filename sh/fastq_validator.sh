@@ -34,17 +34,24 @@ if [ "$1-" == "-" ]; then
 fi
 
 function file_type {
-    x=$(file -b -i  $1|cut -f 1 -d\;|sed "s|.*/||")
-    if [ "$x" == "x-gzip" ]; then echo "gz";
+    ## first check if is a bam file
+    samtools view -H $1 > /dev/null
+    if [ $? -eq 0 ]; then
+	echo "bam"
     else
-	if [ "$x" == "x-bzip2" ]; then echo "bzip2";
+	## 
+	x=$(file -b -i  $1|cut -f 1 -d\;|sed "s|.*/||")
+	if [ "$x" == "x-gzip" ]; then echo "gz";
 	else
-	    if [ "$x" == "plain" ]; then echo "fastq";
+	    if [ "$x" == "x-bzip2" ]; then echo "bzip2";
 	    else
-		echo "Unsupported file type $x" > /dev/stderr
-		exit 4
+		if [ "$x" == "plain" ]; then echo "fastq";
+		else
+		    echo "Unsupported file type $x" > /dev/stderr
+		    exit 4
+		fi
 	    fi
-	fi
+	fi	
     fi
 }
 
