@@ -69,7 +69,7 @@ int has_gz_extension(const char *s) {
 }
 
 FASTQ_FILE* validate_interleaved(char *f) {
-  unsigned long cline=1;
+  //unsigned long cline=1;
 
   fprintf(stderr,"Paired-end interleaved\n");
 
@@ -110,7 +110,7 @@ FASTQ_FILE* validate_interleaved(char *f) {
     if (fastq_validate_entry(fd1,m2)) {
       exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
-    PRINT_READS_PROCESSED(cline/4,100000);
+    PRINT_READS_PROCESSED(fd1->cline/4,100000);
     nreads1+=2;
   }
   printf("\n");
@@ -181,6 +181,7 @@ int main(int argc, char **argv ) {
   if ( is_interleaved ) {
     // interleaved    
     fd1=validate_interleaved(argv[1+nopt]);
+    num_reads1=fd1->num_rds;
   } else {
     // single or pair of fastq file(s)
     //unsigned long cline=1;
