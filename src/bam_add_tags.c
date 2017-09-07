@@ -29,6 +29,7 @@
 #include <assert.h>
 
 #include "fastq.h"
+#include "hash.h"
 
 #define MAX_FEAT_LEN 50
 typedef struct trans_gene_map {
