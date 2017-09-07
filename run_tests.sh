@@ -24,9 +24,6 @@ function must_succeed {
 }
 
 #############################################
-export GCOV_PREFIX="$PWD/src"
-
-#############################################
 ##
 ##
 echo "*** fastq_trim_poly_at"
