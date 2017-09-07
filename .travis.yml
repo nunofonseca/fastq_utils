@@ -9,4 +9,7 @@ before_script:
   - export CFLAGS="-I`pwd`/include -L`pwd`/lib $CFLAGS"
 
   
-script: pwd && ls && make install
+script: pwd && ls && DO_COV_TEST=1 make install && make tests
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
