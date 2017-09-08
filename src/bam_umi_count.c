@@ -471,12 +471,13 @@ int main(int argc, char *argv[])
       break;
     }
   }
-  if ( bam_file == NULL ) print_usage(1);
-  if ( ucounts_file == NULL ) print_usage(1);
-  
   if (help ) {
     print_usage(0);
   }
+
+  if ( bam_file == NULL ) print_usage(1);
+  if ( ucounts_file == NULL ) print_usage(1);
+  
   
   // fprintf(stderr,"HASHSIZE=%u\n",HASHSIZE);
   hashtable ht=new_hashtable(HASHSIZE);
