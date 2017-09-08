@@ -84,7 +84,7 @@ must_fail "./src/fastq_not_empty /dev/null"
 must_fail "./src/fastq_not_empty --help"
 must_fail "./src/fastq_not_empty"
 
-gcov src/fastq_truncate
+gcov src/fastq_not_empty
 
 echo "*** fastq_info"
 must_fail ./src/fastq_info tests/test_e1.fastq.gz 
