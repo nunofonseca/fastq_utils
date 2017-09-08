@@ -170,15 +170,16 @@ int main(int argc, char *argv[])   {
     default: break;
     }
   }
+  if (help ) {
+    print_usage(0);
+    exit(0);
+  }
+
   if ( inbam_file == NULL ) print_usage(1);
   if ( outbam_file == NULL ) print_usage(1);
   if ( !tx_tag && map_file != NULL ) {
     PRINT_ERROR("missing  --tx when --tx_2_gx is provided\n");
     print_usage(PARAMS_ERROR_EXIT_STATUS);
-  }
-  if (help ) {
-    print_usage(0);
-    exit(0);
   }
 
   
