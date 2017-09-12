@@ -123,8 +123,9 @@ must_succeed 	time -p ./src/fastq_info tests/solexa_1.fastq.gz tests/solexa_2.fa
 
 must_fail "./src/fastq_info --help"
 ##
-
 gcov src/fastq_info
+
+
 echo "*** fastq_filterpair"
 must_succeed "./src/fastq_filterpair tests/test_2.fastq.gz tests/test_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz && diff <(zcat f1.fastq.gz) <(zcat tests/test_2.fastq.gz)"
 must_succeed "./src/fastq_filterpair tests/a_1.fastq.gz tests/a_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz && diff <(zcat f2.fastq.gz) <(zcat tests/a_2.fastq.gz) && diff <(zcat f1.fastq.gz) <(zcat tests/a_1.fastq.gz)"
@@ -154,6 +155,11 @@ must_succeed "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  
 must_succeed "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read1 tests/barcode_test2_2.fastq.gz --outfile1 test.fastq.gz && diff -q  <(zcat test.fastq.gz)  <(zcat tests/pre3.fastq.gz)"
 
 must_fail "./src/fastq_pre_barcodes"
+
+must_fail "./src/fastq_pre_barcodes --index1 tests/test_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read1 tests/barcode_test2_2.fastq.gz --outfile1 test.fastq.gz "
+
+must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read1 tests/barcode_test2_2.fastq.gz --outfile1 test.fastq.gz --read2 tests/test1_1.fastq.gz"
+
 must_succeed "./src/fastq_pre_barcodes --help"
 
 gcov src/fastq_pre_barcodes
@@ -189,6 +195,16 @@ must_succeed "./src/bam_add_tags --help"
 
 
 gcov src/bam_add_tags
+
+echo "*** fastq_split_interleaved"
+must_succeed 	time -p ./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz   out_prefix
+must_fail 	./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz a1 a2
+must_fail 	./src/fastq_split_interleaved
+must_fail 	./src/fastq_split_interleaved tests/one.fastq.gz out_prefix
+
+rm -f out_prefix_*.fastq.gz
+
+gcov src/fastq_split_interleaved
 
 echo Failed tests: $num_failed
 exit $num_failed
