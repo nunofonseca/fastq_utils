@@ -622,7 +622,7 @@ int is_casava_1_8_readname(const char *s) {
   regex_t regex;
   int reti;
   int is_casava_1_8=FALSE;
-  reti = regcomp(&regex,"[A-Z0-9:]* [12]:[YN]:[0-9]*:.*",0);  
+  reti = regcomp(&regex,"[A-Z0-9:]* [1234]:[YN]:[0-9]*:.*",0);  
   if ( reti ) { 
     PRINT_ERROR("Internal error: Could not compile regex"); 
     exit(SYS_INT_ERROR_EXIT_STATUS); 
