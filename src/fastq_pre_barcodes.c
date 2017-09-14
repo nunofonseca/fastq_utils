@@ -34,14 +34,15 @@
 #include "hash.h"
 #include "fastq.h"
 
-typedef enum  { READ1=1, READ2=2, READ3=3 , READ4=4 } READ_IDX;
+typedef enum  { READ1=1, READ2=2, READ3=3 , READ4=4, READ5=5 } READ_IDX;
 #define INDEX1 3
 #define INDEX2 4
+#define INDEX3 5
 
 typedef long FASTQ_SIZE;
 
 struct params_s {
-  char *file[4+1];
+  char *file[INDEX3+1];
   char *outfile[2+1]; // index files are not touched
   short phred_encoding; //33/64 - map the ascii code to the 0 phred value
   FASTQ_BOOLEAN paired; // maximum read length
@@ -72,8 +73,9 @@ READ_IDX read_index2read_idx(const char *s) {
   if (!strcmp(s,"read2")) return READ2;
   if (!strcmp(s,"index1")) return READ3;
   if (!strcmp(s,"index2")) return READ4;
+  if (!strcmp(s,"index3")) return READ5;
 
-  PRINT_ERROR("invalid file reference %s (valid values are read1,read2, index1,index2)\n",s);
+  PRINT_ERROR("invalid file reference %s (valid values are read1,read2, index1,index2,index3)\n",s);
   exit(1);    
 }
 
@@ -107,6 +109,7 @@ Params* Params_new(void) {
   new->file[READ2]=NULL;
   new->file[READ3]=NULL;
   new->file[READ4]=NULL;
+  new->file[READ5]=NULL;
   new->outfile[READ1]=NULL;
   new->outfile[READ2]=NULL;
   new->phred_encoding=64;
@@ -131,7 +134,7 @@ Params* Params_new(void) {
 }
 
 void set_input_file(Params* p,char* filename,READ_IDX rdx) {
-  if (rdx<READ1 || rdx>READ4 ) {
+  if (rdx<READ1 || rdx>READ5 ) {
     PRINT_ERROR("internal error set_input_file");
     exit(SYS_INT_ERROR_EXIT_STATUS);
   }
@@ -235,7 +238,7 @@ short get_barcode(const FASTQ_ENTRY *m1,
 }
 // Extract all required information from a read based on the given configuration
 int extract_info(const FASTQ_ENTRY *m1,const Params *p,
-		 const READ_IDX read,// 1/2/3/4
+		 const READ_IDX read,// 1/2/3/4/5
 		 char *cell,
 		 char *umi,
 		 char *sample) {
@@ -278,18 +281,19 @@ void print_usage(void) {
   --read2 <filename> :fastq (optional gzipped) file name \n\
   --index1 <filename> :fastq (optional gzipped) file name \n\
   --index2 <filename> :fastq (optional gzipped) file name \n\
+  --index3 <filename> :fastq (optional gzipped) file name \n\
   --phred_encoding (33|64) :phred encoding used in the input files\n\
   --min_qual [0-40]        :defines the minimum quality that all bases in the UMI, CELL or Sample should have (reads that do not pass the criteria are discarded). 0 disables the filter. \n\
   --outfile1 <filename>    :file name for ouputing the reads from file1\n\
   --outfile2 <filename>    :file name for ouputing the reads from file2\n\
   --outfile3 <filename>    :file name for ouputing the reads from file3\n\
-  --umi_read (read1|read2|index1|index2)       :in which input file can the UMI be found\n\
+  --umi_read (read1|read2|index1|index2|index3)       :in which input file can the UMI be found\n\
   --umi_offset integer     :offset \n\
   --umi_size               :number of bases after the offset\n\
-  --cell_read (read1|read2|index1|index2)      :in which input file can the cell be found\n\
+  --cell_read (read1|read2|index1|index2|index3)      :in which input file can the cell be found\n\
   --cell_offset integer    :offset \n\
   --cell_size integer      :number of bases after the offset\n\
-  --sample_read (read1|read2|index1|index2)    :in which input file can the sample barcode be found\n\
+  --sample_read (read1|read2|index1|index2|index3)    :in which input file can the sample barcode be found\n\
   --sample_offset integer  :offset \n\
   --sample_size integer    :number of bases after the offset\n\
   --read1_offset integer   :\n\
@@ -336,6 +340,7 @@ int main(int argc, char **argv ) {
     {"read2",  required_argument, 0, 'm'},
     {"index1",  required_argument, 0, 't'},
     {"index2",  required_argument, 0, 'v'},
+    {"index3",  required_argument, 0, 'u'},
     {"outfile1",  required_argument, 0, 'n'},
     {"outfile2",  required_argument, 0, 'o'},
     {"sample_read",     required_argument,       0, 'p'},
@@ -418,6 +423,10 @@ int main(int argc, char **argv ) {
       set_input_file(p,optarg,READ4);
       break;
 
+    case 'u':
+      set_input_file(p,optarg,READ5);
+      break;
+
     case 'n':
       p->outfile[READ1]=optarg;
       break;
@@ -477,12 +486,12 @@ int main(int argc, char **argv ) {
   // 
   short x;
   FASTQ_BOOLEAN skip;
-  FASTQ_FILE* fdi[READ4+1]={NULL,NULL,NULL,NULL,NULL};
-  FASTQ_ENTRY* m[READ4+1]={NULL,NULL,NULL,NULL,NULL};
-  FASTQ_FILE* fdw[READ4+1]={NULL,NULL,NULL,NULL,NULL}; // out files
-  char rnames[READ4+1][MAX_LABEL_LENGTH];
+  FASTQ_FILE* fdi[INDEX3+1]={NULL,NULL,NULL,NULL,NULL};
+  FASTQ_ENTRY* m[INDEX3+1]={NULL,NULL,NULL,NULL,NULL};
+  FASTQ_FILE* fdw[INDEX3+1]={NULL,NULL,NULL,NULL,NULL}; // out files
+  char rnames[INDEX3+1][MAX_LABEL_LENGTH];
   
-  for (x=1;x<=READ4;++x) {
+  for (x=READ1;x<=INDEX3;++x) {
     if ( p->file[x] != NULL ) {
       PRINT_VERBOSE(p,"Opening %s",p->file[x]);    
       fdi[x]=fastq_new(p->file[x],FALSE,"r");
@@ -491,26 +500,26 @@ int main(int argc, char **argv ) {
   PRINT_VERBOSE(p,"done\n");
   
   // initialize the objects to hold an entry
-  for (x=1;x<=READ4;++x) m[x]=fastq_new_entry();
+  for (x=READ1;x<=INDEX3;++x) m[x]=fastq_new_entry();
 
   // output files
-  for (x=1;x<=READ2;++x) {
+  for (x=READ1;x<=READ2;++x) {
     if ( p->outfile[x]!=NULL)
       fdw[x]=fastq_new(p->outfile[x],FALSE,"w4"); 
   }
 
   //
-  while(!fastq_files_eof(fdi,READ4) ) {
+  while(!fastq_files_eof(fdi,INDEX3) ) {
     skip=FALSE;
 
-    for (x=1;x<=READ4;++x) // read one entry from each input  file
+    for (x=READ1;x<=INDEX3;++x) // read one entry from each input  file
       if ( p->file[x] != NULL )
 	if (fastq_read_next_entry(fdi[x],m[x])==0) goto end_loop; // EOF
 
     // check if the read names match
     if (p->num_input_files>1) {
       unsigned long len;
-      for (x=1;x<=READ4;++x)
+      for (x=READ1;x<=INDEX3;++x)
 	if ( p->file[x] != NULL )
 	  fastq_get_readname(fdi[x],m[x],&rnames[x][0],&len,TRUE);
 
@@ -532,12 +541,17 @@ int main(int argc, char **argv ) {
 	  exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
 	}
 
+      if ( p->file[READ5] != NULL )
+	if (strcmp(rnames[READ1],rnames[READ5]) ) {
+	  PRINT_ERROR("Readnames do not match across files (read #%ld)",processed_reads+1);
+	  exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+	}     
     }
     //
     ++processed_reads;
     // initialize
     cell[0]=sample[0]=umi[0]='\0';
-    for (x=1;x<=READ4;++x) // extract the tags from each file
+    for (x=READ1;x<=INDEX3;++x) // extract the tags from each file
       if ( p->file[x]!=NULL)
 	if (extract_info(m[x],p,x,&cell[0],&umi[0],&sample[0])==FALSE ) {
 	  // failed due to bad quality
@@ -563,7 +577,7 @@ int main(int argc, char **argv ) {
   //   extract the info, change read name, trim the read, write
   PRINT_INFO("Reads processed: %ld",processed_reads);
   PRINT_INFO("Reads discarded: %ld",discarded_reads);
-  for (x=1;x<=READ3;++x)
+  for (x=READ1;x<=READ2;++x)
     if (fdw[x]!=NULL) 
       fastq_destroy(fdw[x]);
   
