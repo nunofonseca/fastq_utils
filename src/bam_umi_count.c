@@ -36,8 +36,8 @@
 #include "hash.h"
 #include "fastq.h"
 
-#define FEAT_ID_MAX_LEN 21
-#define MAX_BARCODE_LEN 25
+#define FEAT_ID_MAX_LEN 25
+#define MAX_BARCODE_LEN 30
 
 
 typedef struct count_ENTRY {
@@ -256,6 +256,7 @@ UNIQ_KEYS_HT* add_to_list(UNIQ_KEYS_HT* keys, COUNT_ENTRY *e) {
 	 f->sample==e->sample &&
 	 !strcmp(f->feat_id,e->feat_id)
 	 ) return(keys);
+    f=f->next;
   }
   UNIQ_KEYS *new=(UNIQ_KEYS*)malloc(sizeof(UNIQ_KEYS));
   if (new==NULL) { return(NULL);}
