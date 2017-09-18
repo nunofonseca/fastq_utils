@@ -220,6 +220,9 @@ must_fail "./src/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam --tx --tx
 rm -f tmp.bam
 
 must_fail "./src/bam_add_tags"
+must_fail "./src/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam  --tx_2_gx tests/mapTrans2Gene.tsv"
+must_fail "./src/bam_add_tags --inbam tests/trans.bam_missing --outbam tmp.bam  --tx --tx_2_gx tests/mapTrans2Gene.tsv"
+must_fail "./src/bam_add_tags --inbam tests/trans.bam_missing --outbam folder/does/not/exist/tmp.bam  --tx --tx_2_gx tests/mapTrans2Gene.tsv"
 must_succeed "./src/bam_add_tags --help"
 
 
