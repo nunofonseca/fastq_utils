@@ -180,6 +180,8 @@ must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --k
 
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx"
 
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx --uniq_mapped"
+
 must_succeed  " ./src/bam_umi_count --min_reads 10 --bam tests/test_annot2.bam --ucounts xx"
 
 must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx"
@@ -187,6 +189,12 @@ must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --
 must_fail "./src/bam_umi_count --min_reads 1"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam -x"
+
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing"
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts folder/missing_path/xx"
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts xx --dump folder/missing_path/xxx"
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt_missing --ucounts /dev/null --dump xx "
+
 rm -f xx xy
 
 must_fail "./src/bam_umi_count"
