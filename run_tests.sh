@@ -178,6 +178,12 @@ must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam 
 
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt --ucounts /dev/null --dump xx && diff -q xx tests/out_known_umis.txt"
 
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx"
+
+must_succeed  " ./src/bam_umi_count --min_reads 10 --bam tests/test_annot2.bam --ucounts xx"
+
+must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx"
+
 must_fail "./src/bam_umi_count --min_reads 1"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam -x"
