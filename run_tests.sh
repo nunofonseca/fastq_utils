@@ -63,6 +63,7 @@ must_succeed "[ `./src/fastq_num_reads tests/c18_10000_1.fastq.gz` -eq 10000 ]"
 must_fail "[ `./src/fastq_num_reads tests/c18_10000_1.fastq.gz` -ne 10000 ]"
 must_succeed "[ `./src/fastq_num_reads tests/one.fastq.gz` -eq 1 ]"
 must_fail "./src/fastq_num_reads --help"
+must_fail "./src/fastq_num_reads"
 
 gcov src/fastq_num_reads
 
