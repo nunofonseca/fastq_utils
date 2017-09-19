@@ -45,7 +45,7 @@ FASTQ_FILE* new_fastq_file(const char* filename,const int);
 // functions
 static int is_casava_1_8_readname(const char *s);
 static int is_int_readname(const char *s);
-
+static int is_nosuffix_readname(const char *s);
 static READ_SPACE is_color_space(char *seq,FASTQ_FILE* f);
 
 void free_indexentry(INDEX_ENTRY *e);
@@ -445,7 +445,12 @@ char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *
 	  fprintf(stderr,"Read name provided as an integer\n");
 	  fd->readname_format=INTEGERNAME;
 	} else {
-	  fd->readname_format=DEFAULT;
+	  int no_suffix=is_nosuffix_readname(rn);
+	  if ( no_suffix ) {
+	    fprintf(stderr,"Read name provided as is\n");
+	    fd->readname_format=NOP;
+	  } else 
+	    fd->readname_format=DEFAULT;
 	}
       }
   }
@@ -466,7 +471,8 @@ char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *
       len--;
     rn[len-1]='\0';
     break;
-  case INTEGERNAME:
+    
+  case INTEGERNAME: // == NOP
     // keep the sequence unchanged
     len=strlen(rn);
     rn[len-1]='\0';
@@ -677,6 +683,27 @@ static int is_int_readname(const char *s) {
   regfree(&regex);
   return is_int_name;
 }
+
+static int is_nosuffix_readname(const char *s) {
+  regex_t regex;
+  int reti;
+  int is_nosuffix_name=TRUE;
+  // @ was alread removed
+  reti = regcomp(&regex,"[# \t/:][0-9abAB][\n\r]?$",REG_EXTENDED);  
+  if ( reti ) { 
+    PRINT_ERROR("Internal error: Could not compile regex"); 
+    exit(SYS_INT_ERROR_EXIT_STATUS); 
+  }
+  /* Execute regular expression */
+  //fprintf(stderr,">%s<\n",s);
+  reti = regexec(&regex, s, 0, NULL, 0);
+  if ( !reti ) {    // match
+    is_nosuffix_name=FALSE;
+  } 
+  regfree(&regex);
+  return is_nosuffix_name;
+}
+
 
 /* check if the read is in colour space or sequence space */
 READ_SPACE is_color_space(char *seq,FASTQ_FILE* f) {
