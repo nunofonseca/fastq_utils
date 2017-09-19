@@ -43,6 +43,7 @@
 #define MIN_READ_LENGTH 1
 #define UNDEF -1
 
+typedef enum  { COLORSPACE=1, SEQSPACE=0 } READ_SPACE;
 typedef enum  { TRUE=1, FALSE=0 } FASTQ_BOOLEAN;
 typedef long FASTQ_READ_OFFSET;
 
@@ -118,6 +119,7 @@ struct fastq_file {
   int is_pe;
   int readname_format;
   int is_casava_18;
+  READ_SPACE space;
 };
 typedef struct fastq_file  FASTQ_FILE;
 
