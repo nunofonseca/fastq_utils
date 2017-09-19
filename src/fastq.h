@@ -25,6 +25,7 @@
 #define DEFAULT  0
 #define CASAVA18 1
 #define INTEGERNAME 2
+#define NOP 2
 
 #ifndef MAX_READ_LENGTH
 // 500000 bases should cover most of the cases for now :)
