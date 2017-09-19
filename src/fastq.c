@@ -447,7 +447,7 @@ char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *
 	} else {
 	  int no_suffix=is_nosuffix_readname(rn);
 	  if ( no_suffix ) {
-	    fprintf(stderr,"Read name provided as is\n");
+	    fprintf(stderr,"Read name provided with no suffix\n");
 	    fd->readname_format=NOP;
 	  } else 
 	    fd->readname_format=DEFAULT;
