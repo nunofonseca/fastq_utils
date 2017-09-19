@@ -30,7 +30,7 @@
 #include <limits.h>
 #include <float.h>
 
-#define HASHSIZE 1000001
+#define HASHSIZE 50000001
 #define uint_64 unsigned long long
 
 #include "hash.h"
@@ -184,7 +184,7 @@ void print_count_entry(const COUNT_ENTRY *e,const char* sep,FILE *stream,short p
     else if (x==2)
       fprintf(stream,"%s%s%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,vl[1],sep,"COUNT",sep,"NUM READS");
     else
-      fprintf(stream,"%s%s%s%s%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,vl[1],sep,vl[2],sep,"COUNT",sep,"NUM READS");
+      fprintf(stream,"%s%s%s%s%s%s%s%s%s%s%s\n","Feature",sep,vl[0],"::",vl[1],sep,vl[2],sep,"COUNT",sep,"NUM READS");
   }
   if ( e->reads_obs <min_num_reads) return;
 
@@ -196,7 +196,7 @@ void print_count_entry(const COUNT_ENTRY *e,const char* sep,FILE *stream,short p
   else if (x==2)
     fprintf(stream,"%s%s%s%s%s%s%.1f%s%.1f\n",e->feat_id,sep,v[0],sep,v[1],sep,e->umi_obs,sep,e->reads_obs);
   else   
-    fprintf(stream,"%s%s%s%s%s%s%s%s%.1f%s%.1f\n",e->feat_id,sep,v[0],sep,v[1],sep,v[2],sep,e->umi_obs,sep,e->reads_obs);  
+    fprintf(stream,"%s%s%s%s%s%s%s%s%.1f%s%.1f\n",e->feat_id,sep,v[0],sep,v[1],"::",v[2],sep,e->umi_obs,sep,e->reads_obs);  
 }
 
 void print_ukey(const UNIQ_KEYS *e) {
@@ -222,14 +222,13 @@ void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream
   if ( cell[0]!='\0') { v[x]=&cell[0];vl[x]=labels[0];++x;}
   if ( sample[0]!='\0') { v[x]=&sample[0];vl[x]=labels[1];++x;}
 
-    
-  if (print_header) {
+  if (print_header==TRUE) {
     if (x==0)
       fprintf(stream,"%s%s%s\n","Feature",sep,"COUNT");    
     else if (x==1) 
       fprintf(stream,"%s%s%s%s%s\n","Feature",sep,vl[0],sep,"COUNT");    
     else
-      fprintf(stream,"%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,vl[1],sep,"COUNT");
+      fprintf(stream,"%s%s%s%s%s%s%s\n","Feature",sep,vl[0],"::",vl[1],sep,"COUNT");
   }
 
   if (x==0)
@@ -237,14 +236,14 @@ void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream
   else if (x==1) 
     fprintf(stream,"%s%s%s%s%lu\n",e->feat_id,sep,v[0],sep,n);
   else 
-    fprintf(stream,"%s%s%s%s%s%s%lu\n",e->feat_id,sep,v[0],sep,v[1],sep,n);
+    fprintf(stream,"%s%s%s%s%s%s%lu\n",e->feat_id,sep,v[0],"::",v[1],sep,n);
 }
 
 
 UNIQ_KEYS_HT* add_to_list(UNIQ_KEYS_HT* keys, COUNT_ENTRY *e) {
   if (keys==NULL) {
     UNIQ_KEYS_HT *new=(UNIQ_KEYS_HT*)malloc(sizeof(UNIQ_KEYS_HT));
-    new->ht=new_hashtable(20231);
+    new->ht=new_hashtable(100001);
     new->keys=NULL;
     keys=new;
   }
@@ -493,7 +492,7 @@ int main(int argc, char *argv[])
       exit(1);
     }
     // known UMIs
-    kumi_ht=new_hashtable(20341);
+    kumi_ht=new_hashtable(1000001);
     char buf[200];
     unsigned long num_read_umis=0;
     while (!feof(kumi_fd) ) {
@@ -661,12 +660,13 @@ int main(int argc, char *argv[])
     UNIQ_KEYS *ukey=NULL;
     if ( key_list!=NULL) ukey=key_list->keys;
     uint_64 ctr=0;
-    int pheader=TRUE;  
+    short pheader=TRUE;  
     while ( ukey!=NULL ) {
       ulong n=count_uniq_entries(uniq_ht,ukey,min_num_reads);
-      if ( n>=min_num_reads)
+      if ( n>=min_num_reads) {
 	print_ucount(ukey,n,"\t",ucounts_fd,pheader);
-      pheader&=FALSE;
+	pheader=FALSE;
+      }
       ukey=ukey->next;
       ++ctr;
     }
@@ -681,10 +681,10 @@ int main(int argc, char *argv[])
   if ( dump_file != NULL ) {
     init_hash_traversal(ht);
     COUNT_ENTRY* e;
-    int pheader=TRUE;  
+    short pheader=TRUE;  
     while((e=(COUNT_ENTRY*)next_hash_object(ht))!=NULL) {
       print_count_entry(e,"\t",dump_fd,pheader,min_num_reads);
-      pheader&=FALSE;
+      pheader=FALSE;
     }
     fclose(dump_fd);
   }
