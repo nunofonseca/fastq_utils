@@ -121,7 +121,9 @@ must_succeed 	time -p ./src/fastq_info tests/pe_bug14.fastq.gz tests/pe_bug14.fa
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_2.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz tests/c18_1M_1.fastq.gz 
-must_succeed 	time -p ./src/fastq_info tests/casava.1.8i.fastq.gz pe 
+must_succeed 	time -p ./src/fastq_info tests/casava.1.8i.fastq.gz pe
+must_succeed 	time -p ./src/fastq_info tests/test_solid_1.fastq.gz tests/test_solid_2.fastq.gz
+must_succeed 	time -p ./src/fastq_info tests/test_solid2_1.fastq.gz tests/test_solid2_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info tests/solexa_1.fastq.gz tests/solexa_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info  tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_readname_trunc_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info  tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_2.fastq.gz
@@ -185,7 +187,7 @@ must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts /de
 must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts /dev/stdout |wc -l |cut -f 1 -d\ ` ==  83 ]"
 #must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt --ucounts /dev/null --dump xx && diff -q xx tests/out_known_umis.txt"
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt --ucounts /dev/null --dump xx && diff -q <(sort -k 1,2 xx) <(sort -k1,2 tests/out_known_umis.txt)"
 
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx"
 
