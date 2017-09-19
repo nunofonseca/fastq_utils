@@ -43,7 +43,7 @@
 #define MIN_READ_LENGTH 1
 #define UNDEF -1
 
-typedef enum  { COLORSPACE=1, SEQSPACE=0 } READ_SPACE;
+typedef enum  { COLORSPACE=1, SEQSPACE=0, UNDEFSPACE=-1 } READ_SPACE;
 typedef enum  { TRUE=1, FALSE=0 } FASTQ_BOOLEAN;
 typedef long FASTQ_READ_OFFSET;
 

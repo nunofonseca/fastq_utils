@@ -46,7 +46,7 @@ FASTQ_FILE* new_fastq_file(const char* filename,const int);
 static int is_casava_1_8_readname(const char *s);
 static int is_int_readname(const char *s);
 
-
+static READ_SPACE is_color_space(char *seq,FASTQ_FILE* f);
 
 void free_indexentry(INDEX_ENTRY *e);
 INDEX_ENTRY* new_indexentry(hashtable ht,char*hdr,int len,long start_pos);
@@ -179,6 +179,7 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
   new->is_pe=FALSE;
   new->readname_format=UNDEF;
   new->is_casava_18=UNDEF;
+  new->space=UNDEFSPACE;
   strncpy(new->filename,filename,MAX_FILENAME_LENGTH-1);
   new->filename[MAX_FILENAME_LENGTH-1]='\0';
   new->fd=fastq_open(filename,mode);
@@ -355,8 +356,15 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
     qlen++;    
   }  
 
-  if ( qlen!=slen ) {
+  if ( fd->space==SEQSPACE && qlen!=slen ) {
     PRINT_ERROR("Error in file %s: line %lu: sequence and quality don't have the same length %lu!=%lu",fd->filename,fd->cline,slen,qlen);
+    return 1;
+  }
+  
+  if ( fd->space==COLORSPACE &&  qlen==(slen-1) ) return(0);
+  if ( fd->space==COLORSPACE &&  qlen==slen ) return(0);
+  if ( fd->space==COLORSPACE ) {
+    PRINT_ERROR("Error in file %s: line %lu: sequence and quality length don't match %lu!=%lu",fd->filename,fd->cline,slen,qlen);
     return 1;
   }
   return 0;
@@ -408,6 +416,7 @@ void fastq_index_readnames(FASTQ_FILE* fd1,hashtable index,long long start_offse
   return;
 }
 
+			  
 char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *len_p,int is_header1) {
   unsigned long len=0;
   char *hdr;
@@ -440,6 +449,14 @@ char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *
 	}
       }
   }
+  
+  if ( fd->space==UNDEFSPACE ) {
+    fd->space=is_color_space(e->seq,fd);
+    if ( fd->space==COLORSPACE ) {
+      fprintf(stderr,"Color space\n");
+    }
+  }
+  
   
   switch(fd->readname_format) {
   case DEFAULT:
@@ -660,6 +677,33 @@ static int is_int_readname(const char *s) {
   regfree(&regex);
   return is_int_name;
 }
+
+/* check if the read is in colour space or sequence space */
+READ_SPACE is_color_space(char *seq,FASTQ_FILE* f) {
+  regex_t regex;
+  int reti;
+  if (f->space!=UNDEFSPACE)
+    return(f->space);
+  //fprintf(stderr,">>%s<<\n",seq);
+  reti = regcomp(&regex,"^[GT]?[0123n\\.NtT]+\n?$",REG_EXTENDED);  
+  if ( reti ) { 
+    PRINT_ERROR("Internal error: Could not compile regex"); 
+    exit(SYS_INT_ERROR_EXIT_STATUS); 
+  }
+  /* Execute regular expression */
+  //fprintf(stderr,">%s<\n",s);
+  reti = regexec(&regex, seq, 0, NULL, 0);
+  regfree(&regex);
+  READ_SPACE rs;
+  if ( !reti ) {    // match
+    rs=COLORSPACE;
+  } else {
+    rs=SEQSPACE;
+  }
+  f->space=rs;
+  return(rs);  
+}
+
 
 inline long replace_dot_by_N(char* seq) {
   long n=0;  
