@@ -102,6 +102,12 @@ if [ "$ext-" == "bam-" ]; then
 	echo "ERROR: No unaligned reads found in $f." > /dev/stderr
 	exit 1
     fi
+    UN=`samtools view -c -F 4 $f`
+    if [ "$UN-" != "0-" ]; then
+	echo "ERROR: Aligned reads found in $f." > /dev/stderr
+	exit 1
+    fi
+
     named_pipe=.`basename .$f`.pipe.fastq
     mkfifo $named_pipe
     echo "Converting BAM to fastq"
