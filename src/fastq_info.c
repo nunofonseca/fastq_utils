@@ -53,20 +53,6 @@ static inline unsigned int median_rl(FASTQ_FILE* fd1,FASTQ_FILE* fd2) {
 
   return(crl);
 }
-int has_gz_extension(const char *s) {
-  regex_t regex;
-  int reti;
-  reti = regcomp(&regex,".gz$",0);  
-  if ( reti ) { 
-    PRINT_ERROR("Internal error: Could not compile regex"); 
-    exit(SYS_INT_ERROR_EXIT_STATUS); 
-  }
-  /* Execute regular expression */
-  //fprintf(stderr,"%s\n",hdr);
-  reti = regexec(&regex, s, 0, NULL, 0);
-  regfree(&regex);
-  return(!reti);
-}
 
 FASTQ_FILE* validate_interleaved(char *f) {
   //unsigned long cline=1;
