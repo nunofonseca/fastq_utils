@@ -141,6 +141,10 @@ must_succeed "./src/fastq_filterpair tests/casava.1.8_2.fastq.gz tests/casava.1.
 must_succeed "./src/fastq_filterpair tests/casava.1.8_1.fastq.gz tests/casava.1.8_1.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz"
 must_succeed ./src/fastq_filterpair tests/c18_10000_1.fastq.gz tests/c18_10000_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz
 
+must_fail ./src/fastq_filterpair tests/c18_10000_1.fastq_missing.gz tests/c18_10000_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz
+
+must_fail ./src/fastq_filterpair tests/c18_10000_1.fastq.gz tests/c18_10000_2.fastq.gz  folder/does/not/exist/f1.fastq.gz f2.fastq.gz up.fastq.gz
+
 must_fail "./src/fastq_filterpair --help"
 #must_succeed ./src/fastq_filterpair tests/c18_1M_2.fastq.gz tests/c18_1M_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz 
 #must_succeed ./src/fastq_filterpair tests/c18_1M_1.fastq.gz tests/c18_1M_1.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz 
@@ -201,6 +205,9 @@ must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --
 
 must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx"
 
+must_succeed  "[ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt --ucounts /dev/stdout --dump xx | wc -l ` -eq 3 ]"
+
+
 must_fail "./src/bam_umi_count --min_reads 1"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam -x"
@@ -209,6 +216,9 @@ must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts folder/missing_path/xx"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts xx --dump folder/missing_path/xxx"
 must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt_missing --ucounts /dev/null --dump xx "
+
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt_missing --ucounts /dev/null --dump xx "
+
 
 rm -f xx xy
 
@@ -235,6 +245,8 @@ gcov src/bam_add_tags
 
 echo "*** fastq_split_interleaved"
 must_succeed 	time -p ./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz   out_prefix
+
+must_fail 	time -p ./src/fastq_split_interleaved tests/casava.1.8i_e1.fastq.gz   out_prefix
 must_fail 	./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz a1 a2
 must_fail 	./src/fastq_split_interleaved
 must_fail 	./src/fastq_split_interleaved tests/one.fastq.gz out_prefix
