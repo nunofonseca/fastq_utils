@@ -380,23 +380,24 @@ char *get_tag(bam1_t *aln,const char tagname[2]) {
   return(s2);
 }
 
-int valid_umi(hashtable ht,char *umi_s) {
-  if (ht==NULL) return(TRUE); // by default all UMIs are valid
-  uint_64 umi=char2uint_64(umi_s);
+int valid_barcode(hashtable ht,char *barcode_s) {
+  if (ht==NULL) return(TRUE); // by default all BARCODEs are valid
+  uint_64 barcode=char2uint_64(barcode_s);
   ulong key;
-  if ( umi> 4294967296) {
-    key=umi/1000000000;// convert to ulong
+  if ( barcode> 4294967296) {
+    key=barcode/1000000000;// convert to ulong
   } else {
-    key=umi;
+    key=barcode;
   }
   uint_64 *ptr=(uint_64*)get_object(ht,key);
   while ( ptr!=NULL ) {
-    if ( *ptr==umi) return(TRUE);
+    if ( *ptr==barcode) return(TRUE);
     ptr=(uint_64*)get_next_object(ht,key);
   }
   //fprintf(stderr,"not valid %s\n",umi_s);
   return(FALSE);
 }
+
 
 
 void print_usage(int exit_status) {
@@ -414,12 +415,14 @@ int main(int argc, char *argv[])
   unsigned long long num_alns=0;
   unsigned long long num_tags_found=0;
   unsigned long long num_umis_discarded=0;
+  unsigned long long num_cells_discarded=0;
   UNIQ_KEYS_HT* key_list=NULL;
 
   char *bam_file=NULL;
   char *ucounts_file=NULL;
   char *dump_file=NULL;
   char *known_umi_file=NULL;
+  char *known_cells_file=NULL;
   static int verbose=0;  
   static int help=FALSE;
   static struct option long_options[] = {
@@ -429,6 +432,7 @@ int main(int argc, char *argv[])
     {"help",   no_argument, &help, TRUE},
     {"bam",  required_argument, 0, 'b'},
     {"known_umi",  required_argument, 0, 'k'},
+    {"known_cells",  required_argument, 0, 'c'},
     {"ucounts",  required_argument, 0, 'u'},
     {"dump",  required_argument, 0, 'd'},
     {"tag",  required_argument, 0, 'x'},
@@ -442,7 +446,7 @@ int main(int argc, char *argv[])
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    int c = getopt_long (argc, argv, "b:u:d:t:x:",
+    int c = getopt_long (argc, argv, "b:u:d:t:x:c:",
 		     long_options, &option_index);      
     if (c == -1) // no more options
       break;
@@ -459,6 +463,9 @@ int main(int argc, char *argv[])
       break;
     case 'k':
       known_umi_file=optarg;
+      break;
+    case 'c':
+      known_cells_file=optarg;
       break;
     case 'x':
       strncpy(feat_tag,optarg,3);
@@ -483,8 +490,10 @@ int main(int argc, char *argv[])
   hashtable ht=new_hashtable(HASHSIZE);
   // uniq=feature|cell|sample 
   hashtable uniq_ht=new_hashtable(HASHSIZE);
-  hashtable kumi_ht=NULL;
-  
+  hashtable kumi_ht=NULL;   // UMIs white list
+  hashtable kcells_ht=NULL; // cells white list
+
+  // known UMIs
   if ( known_umi_file!=NULL ) {
     FILE *kumi_fd;
     if ((kumi_fd=fopen(known_umi_file,"r"))==NULL) {
@@ -523,8 +532,50 @@ int main(int argc, char *argv[])
       }
     }
     fclose(kumi_fd);
-    fprintf(stderr,"unique UMIs %lu\n",kumi_ht->n_entries);
+    fprintf(stderr,"UMIs whitelist %lu\n",kumi_ht->n_entries);
   }
+  // known cells
+  if ( known_cells_file!=NULL ) {
+    FILE *kcells_fd;
+    if ((kcells_fd=fopen(known_cells_file,"r"))==NULL) {
+      PRINT_ERROR("Failed to open file %s", known_cells_file);  
+      exit(1);
+    }
+    // known CELLS
+    kcells_ht=new_hashtable(1000001);
+    char buf[200];
+    unsigned long num_read_cells=0;
+    while (!feof(kcells_fd) ) {
+      char *cell=fgets(&buf[0],200,kcells_fd);
+      if (cell==NULL || cell[0]=='\0') continue;
+      ++num_read_cells;
+      uint_64 cell_num=char2uint_64(cell);
+      //fprintf(stderr,"%s->%llu\n",umi,umi_num);
+      ulong key;
+      if ( cell_num> 4294967296) {
+	key=cell_num/1000000000;// convert to ulong
+      } else {
+	key=cell_num;
+      }
+      uint_64 *ptr=(uint_64*)get_object(kcells_ht,key);
+      while ( ptr!=NULL ) {
+	if ( *ptr==cell_num) continue;
+	ptr=(uint_64*)get_next_object(kcells_ht,key);
+      }
+      if ( ptr==NULL ) {
+	uint_64 *e=(uint_64*)malloc(sizeof(uint_64));
+	if ( e==NULL ) {
+	  PRINT_ERROR("Failed to allocate memory\n");
+	  exit(1);
+	}
+	*e=cell_num;
+	insere(kcells_ht,key,e);// create a dummy entry (key is unique)
+      }
+    }
+    fclose(kcells_fd);
+    fprintf(stderr,"cells whitelist %lu\n",kcells_ht->n_entries);
+  }
+
   
   // Open file and exit if error
   in = strcmp(bam_file, "-")? bam_open(bam_file, "rb") : bam_dopen(fileno(stdin), "rb"); 
@@ -598,10 +649,15 @@ int main(int argc, char *argv[])
       fprintf(stderr,"umi2-->%s %s %s %s",umi,cell,sample,feat);
 #endif
       // skip if the UMI is not valid
-      if ( !valid_umi(kumi_ht,umi) ) {
+      if ( !valid_barcode(kumi_ht,umi) ) {
 	num_umis_discarded++;
         continue;
       }
+      if ( !valid_barcode(kcells_ht,cell) ) {
+	num_cells_discarded++;
+        continue;
+      }
+
       //
       // feature id
       char *f=strtok(feat,",");
@@ -650,6 +706,7 @@ int main(int argc, char *argv[])
   fprintf(stderr,"Alignments processed: %llu\n",num_alns);
   fprintf(stderr,"%s encountered  %llu times\n",feat_tag,num_tags_found);
   fprintf(stderr,"%lld UMIs discarded\n",num_umis_discarded);
+  fprintf(stderr,"%lld cells discarded\n",num_cells_discarded);
   if ( !num_tags_found ) {
     fprintf(stderr,"ERROR: no valid alignments tagged with %s were found in %s.\n",feat_tag,bam_file);
     exit(1);
