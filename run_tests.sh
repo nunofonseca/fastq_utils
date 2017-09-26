@@ -181,6 +181,10 @@ must_fail "./src/fastq_pre_barcodes --index1 tests/test_1.fastq.gz  --phred_enco
 
 must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read1 tests/barcode_test2_2.fastq.gz --outfile1 test.fastq.gz --read2 tests/test1_1.fastq.gz"
 
+must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read1 tests/barcode_test2_2.fastq.gz "
+
+must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read2_offset 0 --read2_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read2 tests/barcode_test2_2.fastq.gz "
+
 must_succeed "./src/fastq_pre_barcodes --help"
 
 gcov src/fastq_pre_barcodes
