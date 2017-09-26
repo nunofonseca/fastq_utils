@@ -203,6 +203,14 @@ must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam 
 
 must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts lixo --ucounts_MM"
 
+must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3.bam  --ucounts lixo --ucounts_MM"
+
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam  --ucounts lixo --ucounts_MM"
+
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo --ucounts_MM"
+
+must_fail  "./src/bam_umi_count --min_reads 10 --bam tests/trans.bam  --ucounts lixo --ucounts_MM"
+
 #must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt --ucounts /dev/null --dump xx && diff -q <(sort -k 1,2 xx) <(sort -k1,2 tests/out_known_umis.txt)"
