@@ -10,7 +10,7 @@ Programs:
    5. [fastq_trim_poly_at](#fastq_trim_poly_at---trims-poly-a-stretches-at-the-3-end-and-poly-t-at-5-end-of-each-read-optionally-discarding-reads-with-a-length-below-the-given-threshold)
    6. [fastq_pre_barcodes](#fastq_pre_barcodes---preprocess-the-reads-to-move-the-barcodes-umi-cell--to-the-respective-readname-optionally-discarding-reads-with-bases-in-the-barcode-regions-below-a-given-threshold)
    7. [bam_add_tags](#bam_add_tags---companion-program-to-fastq_pre_barcodes)
-   8. [bam_umi_count](#bam_umi_count---companion-program-to-fastq_pre_barcodes/bam_add_tags)
+   8. [bam_umi_count](#bam_umi_count---count-the-number-of-unique UMIs)
 
 ### Building
 
