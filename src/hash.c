@@ -29,7 +29,7 @@
 #define LAST_ENTRY(table,i) table->buckets_last[i]
 #define HASHSIZE(table) table->size
 
-static unsigned int mhash(hashtable,ulong);
+static ulong mhash(hashtable,ulong);
 static hashnode* hash_lookup(hashtable,ulong);
 
 
@@ -59,7 +59,7 @@ __ptr_t get_next_object(hashtable table,ulong key)
 __ptr_t delete(hashtable table,ulong key,__ptr_t obj)
 {
   hashnode *b,*prev=NULL;
-  unsigned int c=mhash(table,key);
+  ulong c=mhash(table,key);
   b=BUCKET(table,c); /* set a pointer to the first bucket */
   while( b!=NULL) {
     if( b->value==key && b->obj==obj){
@@ -97,13 +97,14 @@ __ptr_t get_object(hashtable table,ulong key){
    hashnode *b=hash_lookup(table,key); 
    if(b==NULL)
        return NULL;
+
    return b->obj; 
 }
 
 /* Allocates space to a new hash table */
 hashtable new_hashtable(ulong hashsize) {
   hashtable new;
-  register int i;
+  register ulong i;
 
   if( (new = (hashtable)malloc(sizeof(struct hashtable_s)))==NULL) return NULL;
   
@@ -111,24 +112,55 @@ hashtable new_hashtable(ulong hashsize) {
      return NULL;
   if( (new->buckets_last = (hashnode**)malloc(sizeof(hashnode*)*hashsize))==NULL) 
      return NULL;
+  memset(new->buckets,0,sizeof(hashnode*)*hashsize);
+  memset(new->buckets_last,0,sizeof(hashnode*)*hashsize);
   new->size=hashsize;
   new->last_bucket=0;
   new->last_node=NULL;
   new->n_entries=0;
-  for(i=0;i<hashsize;++i) { BUCKET(new,i) = NULL; LAST_ENTRY(new,i) = NULL; }
+  //for(i=0;i<hashsize;++i) { BUCKET(new,i) = NULL; LAST_ENTRY(new,i) = NULL; }
   return new;
 }
 
+void hashtable_stats(hashtable table) {
+  ulong zbuckets=0;
+  ulong collisions=0;
+  ulong max_col=0;
+  ulong i,ctr;
+  for(i=0;i<HASHSIZE(table);++i) {
+    hashnode *b=BUCKET(table,i);
+    if ( b==NULL ) ++zbuckets;
+    else {
+      ctr=0;
+      while (b!=NULL) {
+	b=b->next;
+	++ctr;
+      }
+      if ( ctr > 1 ) {
+	collisions+=ctr;
+	if ( ctr > max_col ) max_col=ctr;
+	//fprintf(stderr,"%llu %llu\n",i,ctr);
+      }
+    }
+  }
+  fprintf(stderr,"size: %llu\n",HASHSIZE(table));
+  fprintf(stderr,"max. col: %llu\n",max_col);
+  fprintf(stderr,"zbuckets: %llu\n",zbuckets);
+  fprintf(stderr,"% zbuckets: %.2f\n",zbuckets*1.0/HASHSIZE(table));
+  fprintf(stderr,"collisions: %llu\n",collisions);
+  fprintf(stderr,"avg. collisions: %.2f\n",collisions*1.0/(HASHSIZE(table)-zbuckets));
+}
+
 /* A very simple hashing function */
-static unsigned int mhash(hashtable table,ulong key)
+static ulong mhash(hashtable table,ulong key)
 {
-  return (unsigned int)(key%HASHSIZE(table));
+  return (ulong)(key%HASHSIZE(table));
 }
 
 /* inserts a new element in the hash table*/
 int insere(hashtable table,ulong key,__ptr_t obj)
 {
-   unsigned int ind;
+   ulong ind;
    hashnode *new;
    if((new=(hashnode *)malloc(sizeof(hashnode)))==NULL) return -1;
    ind=mhash(table,key);
@@ -153,7 +185,7 @@ int insere(hashtable table,ulong key,__ptr_t obj)
 
 void free_hashtable(hashtable table)
 {
-   register int i;
+   register ulong i;
    hashnode *n,*tmp;
    //fprintf(stderr,"free_hashtable\n");fflush(stderr);
    if (table==NULL) return;
@@ -229,4 +261,5 @@ __ptr_t next_hashnode(hashtable table)
   if (table->last_node==NULL) return next_hashnode(table);
   return table->last_node;
 }
+
 

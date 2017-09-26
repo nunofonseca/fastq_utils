@@ -29,7 +29,7 @@
 #endif /* C++ or ANSI C.  */           
 
 #ifndef ulong
-#define ulong unsigned long int
+#define ulong unsigned long long
 #endif
 
 #ifndef NULL
@@ -69,4 +69,5 @@ void free_hashtable(hashtable);
 void init_hash_traversal(hashtable table);
 __ptr_t next_hash_object(hashtable table);
 __ptr_t next_hashnode(hashtable table);
+void hashtable_stats(hashtable table);
 #endif
