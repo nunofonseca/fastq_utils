@@ -717,7 +717,7 @@ void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable 
 
 
 void print_usage(int exit_status) {
-    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag GX|TX] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv]");
+    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag GX|TX] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv]");
     if ( exit_status>=0) exit(exit_status);
 }
 
