@@ -141,6 +141,8 @@ must_succeed "./src/fastq_filterpair tests/casava.1.8_2.fastq.gz tests/casava.1.
 must_succeed "./src/fastq_filterpair tests/casava.1.8_1.fastq.gz tests/casava.1.8_1.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz"
 must_succeed ./src/fastq_filterpair tests/c18_10000_1.fastq.gz tests/c18_10000_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz
 
+must_fail ./src/fastq_filterpair tests/c18_10000_1.fastq.gz tests/casava.1.8_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz
+
 must_fail ./src/fastq_filterpair tests/c18_10000_1.fastq_missing.gz tests/c18_10000_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz
 
 must_fail ./src/fastq_filterpair tests/c18_10000_1.fastq.gz tests/c18_10000_2.fastq.gz  folder/does/not/exist/f1.fastq.gz f2.fastq.gz up.fastq.gz
@@ -262,6 +264,7 @@ must_fail 	time -p ./src/fastq_split_interleaved tests/casava.1.8i_e1.fastq.gz  
 must_fail 	./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz a1 a2
 must_fail 	./src/fastq_split_interleaved
 must_fail 	./src/fastq_split_interleaved tests/one.fastq.gz out_prefix
+must_fail 	./src/fastq_split_interleaved tests/test_e1.fastq.gz
 
 rm -f out_prefix_*.fastq.gz
 
