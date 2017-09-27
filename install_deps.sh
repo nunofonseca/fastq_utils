@@ -25,12 +25,14 @@ popd
 
 ###############################################
 # Downloads were failing often so keep a local copy to speedup the installation
-if [ ! -e deps/samtools-1.4.1.tar.bz2 ] ; then
-    wget -c https://sourceforge.net/projects/samtools/files/samtools/1.4.1/samtools-1.4.1.tar.bz2/download -O deps/samtools-1.4.1.tar.bz2
+echo "Installing samtools 1.x" 
+if [ ! -e deps/samtools-1.5.tar.bz2 ] ; then
+    wget -c https://sourceforge.net/projects/samtools/files/samtools/1.5/samtools-1.5.tar.bz2/download -O deps/samtools-1.5.tar.bz2
 fi
 
-tar xvjf deps/samtools-1.4.1.tar.bz2
-pushd samtools-1.4.1
-#./configure  prefix=$TOPLEVEL_DIR
-make -j $J prefix=$TOPLEVEL_DIR
+tar xvjf deps/samtools-1.5.tar.bz2
+pushd samtools-1.5
+./configure  prefix=$TOPLEVEL_DIR
+make -j $J
+#prefix=$TOPLEVEL_DIR
 make install prefix:=$TOPLEVEL_DIR
