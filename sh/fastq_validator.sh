@@ -47,8 +47,12 @@ function file_type {
 	    else
 		if [ "$x" == "plain" ]; then echo "fastq";
 		else
-		    echo "Unsupported file type $x" > /dev/stderr
-		    exit 4
+		    x=$(file -b  $1| grep -c CRAM)
+		    if [ $x -eq 1 ]; then echo "cram"
+		    else
+			echo "Unsupported file type $x" > /dev/stderr
+			exit 4
+		    fi		    
 		fi
 	    fi
 	fi	
@@ -90,11 +94,11 @@ fi
 
 set -eT
 #x
-if [ "$ext-" == "bam-" ]; then
+if [ "$ext-" == "bam-" ] || [ "$ext-" == "cram-" ]; then
     #hmm, this now validates bams...kind of
     # samtools version should be 1 or above
     f=$1    
-    echo "BAM file"
+    echo "BAM/CRAM file ($ext)"
     # check if the BAM contains unaligned reads
     echo "Checking for unmapped reads"
     UN=`samtools view -c -F 4 $f`
