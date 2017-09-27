@@ -1,4 +1,4 @@
-VERSION=0.12.9
+VERSION=0.13.0
 # Requires zlib and samtools 0.1.9
 all:
 	make -C src
