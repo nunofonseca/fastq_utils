@@ -34,8 +34,8 @@ if [ "$1-" == "-" ]; then
 fi
 
 function file_type {
-    ## first check if is a bam file
-    samtools view -H $1 &> /dev/null
+    ## first check if is a bam/cram file
+    samtools quickcheck $1 &> /dev/null
     if [ $? -eq 0 ]; then
 	echo "bam"
     else
