@@ -215,7 +215,11 @@ int main(int argc, char **argv ) {
 	exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
       }
       fastq_index_delete(readname,index);
-      // TODO
+      //
+      if (fastq_validate_entry(fd1,m2)) {
+	exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+      }
+
       //replace_dots(start_pos,seq,hdr,hdr2,qual,fdf);
       PRINT_READS_PROCESSED(fd2->cline/4,100000);
     }
