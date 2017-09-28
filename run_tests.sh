@@ -127,7 +127,7 @@ must_succeed 	time -p ./src/fastq_info tests/pe_bug14.fastq.gz tests/pe_bug14.fa
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz tests/c18_1M_1.fastq.gz 
 must_succeed 	time -p ./src/fastq_info tests/casava.1.8i.fastq.gz pe
 must_succeed 	time -p ./src/fastq_info tests/test_solid_1.fastq.gz tests/test_solid_2.fastq.gz
-must_succeed 	time -p ./src/fastq_info tests/test_solid2_1.fastq.gz tests/test_solid2_2.fastq.gz
+must_fail 	time -p ./src/fastq_info tests/test_solid2_1.fastq.gz tests/test_solid2_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info tests/solexa_1.fastq.gz tests/solexa_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info  tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_readname_trunc_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info  tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_2.fastq.gz
