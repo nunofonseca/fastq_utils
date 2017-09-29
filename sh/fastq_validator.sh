@@ -152,11 +152,30 @@ else
 	fi
     done
 fi
-fastq_info $FILES2PROCESS $PE_PARAMETER
+## validating
+failed=0
+
+if [ $(echo $FILES2PROCESS|wc -w) -gt 1 ]; then
+    echo "Checking each fastq file independently..."
+    for f in $FILES2PROCESS; do
+	echo "Checking $f..."
+	set +e
+	fastq_info $f
+	estatus=$?
+	let failed=failed+$estatus
+	set -eT
+	echo "Checking $f ($estatus)...done."
+    done
+fi
+
+if [ $failed -eq 0 ]; then
+    echo "Checking $FILES2PROCESS"
+    fastq_info $FILES2PROCESS $PE_PARAMETER
+fi
 
 if [ "-$FILES2DELETE" != "-" ]; then
     #echo -n "Removing named pipes..."
     rm -f $FILES2DELETE
     #echo "done."
 fi
-exit 0
+exit $failed
