@@ -547,8 +547,8 @@ int main(int argc, char **argv ) {
   else {
     PRINT_SAM("@HD\tVN:1.0 SO:unknown\n");    
     PRINT_SAM("@PG\tID:1 PN:fastq_pre_barcodes CL:%s",argv[0]);
-    for(int i=1;i<argc-1;i++) {
-      PRINT_SAM(" %s",argv[i]);
+    for(c=1;c<argc-1;c++) {
+      PRINT_SAM(" %s",argv[c]);
     }
     PRINT_SAM("\n");
   }
