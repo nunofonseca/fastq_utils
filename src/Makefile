@@ -15,10 +15,10 @@ ifeq ($(DEBUG),1)
 CFLAGS+= -g -DDEBUG=1
 endif
 
-TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_info fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at fastq_split_interleaved
+TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at fastq_split_interleaved
 
 ifdef SAMTOOLS_PATH
-TARGETS+= bam_add_tags bam_umi_count
+TARGETS+= bam_add_tags bam_umi_count bam2fastq fastq_info
 endif
 
 ############################################################################
