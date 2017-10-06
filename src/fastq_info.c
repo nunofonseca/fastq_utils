@@ -187,6 +187,11 @@ int main(int argc, char **argv ) {
     fprintf(stderr,"Reads processed: %ld\n",index->n_entries);    
     fprintf(stderr,"Memory used in indexing: ~%ld MB\n",index_mem/1024/1024);
   }
+  if (num_reads1 == 0 ) {
+    PRINT_ERROR("No reads found in %s.",argv[1+nopt]);
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+  }
+
   min_rl=fd1->min_rl;
   max_rl=fd1->max_rl;
   min_qual=fd1->min_qual;
@@ -219,7 +224,6 @@ int main(int argc, char **argv ) {
       if (fastq_validate_entry(fd1,m2)) {
 	exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
       }
-
       //replace_dots(start_pos,seq,hdr,hdr2,qual,fdf);
       PRINT_READS_PROCESSED(fd2->cline/4,100000);
     }
@@ -247,10 +251,7 @@ int main(int argc, char **argv ) {
   } else {
     fprintf(out,"Number of reads: %lu\n",num_reads1);
   }
-  if (num_reads1 == 0 ) {
-    PRINT_ERROR("No reads found.");
-    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
-  }
+
   fprintf(out,"Quality encoding range: %lu %lu\n",min_qual,max_qual);
   char *enc=fastq_qualRange2enc(min_qual,max_qual);
   if ( enc == NULL ) {
