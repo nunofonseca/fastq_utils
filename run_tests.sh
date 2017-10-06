@@ -107,7 +107,8 @@ must_fail ./src/fastq_info tests/test_e16.fastq.gz
 must_fail ./src/fastq_info tests/test_e17.fastq.gz
 must_fail ./src/fastq_info tests/test_e19_1.fastq.gz  tests/test_e19_2.fastq.gz
 must_fail ./src/fastq_info tests/test_e19_2.fastq.gz  tests/test_e19_1.fastq.gz 
-must_fail ./src/fastq_info -f tests/test_dot.fastq.gz 
+must_fail ./src/fastq_info -f tests/test_dot.fastq.gz
+must_fail ./src/fastq_info tests/test_empty.fastq.gz
 ##must_fail ./src/fastq_info tests/c18_1M_1.fastq.gz tests/c18_1M_2.fastq.gz 
 ##
 ## just checks the exit status
