@@ -148,3 +148,5 @@ char* fastq_qualRange2enc(int min_qual,int max_qual);
 void fastq_rewind(FASTQ_FILE* fd);
 
 void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to);
+gzFile fastq_open(const char* filename,const char *mode);
+void GZ_WRITE(gzFile fd,char *s);
