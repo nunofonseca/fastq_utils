@@ -66,6 +66,9 @@ bam_add_tags: hash.o bam_add_tags.o
 bam_umi_count:   hash.o  bam_umi_count.o 
 	gcc  $(CFLAGS)  $^ -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
 
+bam2fastq:   bam2fastq.o fastq.o hash.o
+	gcc  $(CFLAGS)  $^ -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
+
 
 ##################################################
 
