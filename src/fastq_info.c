@@ -247,6 +247,10 @@ int main(int argc, char **argv ) {
   } else {
     fprintf(out,"Number of reads: %lu\n",num_reads1);
   }
+  if (num_reads1 == 0 ) {
+    PRINT_ERROR("No reads found.");
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+  }
   fprintf(out,"Quality encoding range: %lu %lu\n",min_qual,max_qual);
   char *enc=fastq_qualRange2enc(min_qual,max_qual);
   if ( enc == NULL ) {
