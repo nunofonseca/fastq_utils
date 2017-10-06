@@ -31,8 +31,11 @@
 #include <zlib.h> 
 #include <getopt.h>
 
+#include "bam.h"
+
 #include "hash.h"
 #include "fastq.h"
+#include "sam_tags.h" 
 
 typedef enum  { READ1=1, READ2=2, READ3=3 , READ4=4, READ5=5 } READ_IDX;
 #define INDEX1 3
@@ -65,6 +68,8 @@ typedef struct params_s Params;
 
 
 #define PRINT_VERBOSE(p,s...) {if (p->verbose) fprintf(stderr,##s );  }
+
+#define PRINT_SAM(s...) {fprintf(stdout,##s );}
 
 
 READ_IDX read_index2read_idx(const char *s) {
@@ -207,8 +212,10 @@ short get_barcode(const FASTQ_ENTRY *m1,
 		  const READ_IDX  read,
 		  const FASTQ_READ_OFFSET offset,
 		  const FASTQ_SIZE size,
-		  const short min_qual,
-		  char* dest) {
+		  const short min_qual,		  
+		  char* dest,
+		  char* qual,
+		  int get_qual) {
   dest[0]='\0';
    
   if ( read==UNDEF || offset==UNDEF || size==0 )
@@ -234,25 +241,34 @@ short get_barcode(const FASTQ_ENTRY *m1,
   //
   strncpy(dest,&m1->seq[offset],size);
   dest[size]='\0';
+  if ( get_qual ) {
+    strncpy(qual,&m1->qual[offset],size);
+    qual[size]='\0';
+  }
   return(TRUE);
 }
+
 // Extract all required information from a read based on the given configuration
 int extract_info(const FASTQ_ENTRY *m1,const Params *p,
 		 const READ_IDX read,// 1/2/3/4/5
 		 char *cell,
 		 char *umi,
-		 char *sample) {
+		 char *sample,
+		 char *cell_qual,
+		 char *umi_qual,
+		 char *sample_qual,
+		 int keep_qual) {
   // UMI
   if ( p->umi_read==read) 
-    if (!get_barcode(m1,p->phred_encoding,p->umi_read,p->umi_offset,p->umi_size,p->min_qual, umi))
+    if (!get_barcode(m1,p->phred_encoding,p->umi_read,p->umi_offset,p->umi_size,p->min_qual, umi,umi_qual,keep_qual))
       return(FALSE);    		    
   // sample
   if ( p->sample_read==read) 
-    if (!get_barcode(m1,p->phred_encoding,p->sample_read,p->sample_offset,p->sample_size,p->min_qual, sample))
+    if (!get_barcode(m1,p->phred_encoding,p->sample_read,p->sample_offset,p->sample_size,p->min_qual, sample,sample_qual,keep_qual))
       return(FALSE);
   // cell
   if ( p->cell_read==read) 
-    if (!get_barcode(m1,p->phred_encoding,p->cell_read,p->cell_offset,p->cell_size,p->min_qual, cell))
+    if (!get_barcode(m1,p->phred_encoding,p->cell_read,p->cell_offset,p->cell_size,p->min_qual, cell,cell_qual, keep_qual))
       return(FALSE);
     
   return(TRUE);
@@ -269,6 +285,18 @@ FASTQ_BOOLEAN fastq_files_eof(FASTQ_FILE** fdi,int n) {
   }
   return FALSE;
 }
+
+
+char* format_read_name(char *s) {
+  unsigned int i=0;
+  while ( s[i]!='\0' ) {
+    if ( s[i]==' ' ) s[i]='@';
+    if ( s[i]=='\n' ) s[i]='\0';
+    i++;
+  }
+  return(&s[1]);
+}
+      
 
 void print_usage(void) {
 
@@ -312,6 +340,7 @@ int main(int argc, char **argv ) {
   static int verbose=FALSE;
   static int paired=FALSE;
   static int help=FALSE;
+  static int out_sam=FALSE;
   opterr = 0;
 
   fastq_print_version();
@@ -322,6 +351,8 @@ int main(int argc, char **argv ) {
     {"brief",   no_argument,       &verbose, FALSE},
     {"paired_end",   no_argument,       &paired, TRUE},
     {"single_end",   no_argument,       &paired, FALSE},
+    {"sam",   no_argument,       &out_sam, TRUE},
+    {"fastq",   no_argument,       &out_sam, FALSE},
     {"help",   no_argument, &help, TRUE},
     /* These options don’t set a flag.
        We distinguish them by their indices. */
@@ -481,6 +512,9 @@ int main(int argc, char **argv ) {
   char sample[MAX_BARCODE_LENGTH];
   char umi[MAX_BARCODE_LENGTH];
   char cell[MAX_BARCODE_LENGTH];
+  char sample_qual[MAX_BARCODE_LENGTH];
+  char umi_qual[MAX_BARCODE_LENGTH];
+  char cell_qual[MAX_BARCODE_LENGTH];
 
   PRINT_INFO("input files %d",p->num_input_files);
   // 
@@ -488,7 +522,9 @@ int main(int argc, char **argv ) {
   FASTQ_BOOLEAN skip;
   FASTQ_FILE* fdi[INDEX3+1]={NULL,NULL,NULL,NULL,NULL};
   FASTQ_ENTRY* m[INDEX3+1]={NULL,NULL,NULL,NULL,NULL};
+
   FASTQ_FILE* fdw[INDEX3+1]={NULL,NULL,NULL,NULL,NULL}; // out files
+
   char rnames[INDEX3+1][MAX_LABEL_LENGTH];
   
   for (x=READ1;x<=INDEX3;++x) {
@@ -503,9 +539,18 @@ int main(int argc, char **argv ) {
   for (x=READ1;x<=INDEX3;++x) m[x]=fastq_new_entry();
 
   // output files
-  for (x=READ1;x<=READ2;++x) {
-    if ( p->outfile[x]!=NULL)
-      fdw[x]=fastq_new(p->outfile[x],FALSE,"w4"); 
+  if ( ! out_sam ) 
+    for (x=READ1;x<=READ2;++x) {
+      if ( p->outfile[x]!=NULL)
+	fdw[x]=fastq_new(p->outfile[x],FALSE,"w4"); 
+    }
+  else {
+    PRINT_SAM("@HD\tVN:1.0 SO:unknown\n");    
+    PRINT_SAM("@PG\tID:1 PN:fastq_pre_barcodes CL:%s",argv[0]);
+    for(int i=1;i<argc-1;i++) {
+      PRINT_SAM(" %s",argv[i]);
+    }
+    PRINT_SAM("\n");
   }
 
   //
@@ -551,9 +596,10 @@ int main(int argc, char **argv ) {
     ++processed_reads;
     // initialize
     cell[0]=sample[0]=umi[0]='\0';
+    cell_qual[0]=sample_qual[0]=umi_qual[0]='\0';
     for (x=READ1;x<=INDEX3;++x) // extract the tags from each file
-      if ( p->file[x]!=NULL)
-	if (extract_info(m[x],p,x,&cell[0],&umi[0],&sample[0])==FALSE ) {
+      if ( p->file[x]!=NULL) {
+	if (extract_info(m[x],p,x,&cell[0],&umi[0],&sample[0],&cell_qual[0],&umi_qual[0],&sample_qual[0],out_sam)==FALSE ) {
 	  // failed due to bad quality
 	  // other errors would have resulted in the exit of the program
 	  PRINT_VERBOSE(p,"Discarded %s %s %s <- %s\n",cell,umi,sample,m[x]->hdr1);
@@ -561,25 +607,87 @@ int main(int argc, char **argv ) {
 	  skip=TRUE;
 	  break;
 	}
-
+      }
+  
     if(skip) continue;
     // output the read(s) with the modified read name
     PRINT_VERBOSE(p,"_STAGS_CELL=%s_UMI=%s_SAMPLE=%s_ETAGS\n",cell,umi,sample);
-    for (x=1;x<=READ2;++x)
-      if (fdw[x]!=NULL) {
-	add_tags2readname(m[x],cell,umi,sample);
-	slice_read(m[x],p,x);
-	fastq_write_entry(fdw[x],m[x]);
+    
+    if ( out_sam ) {
+      int se=(p->outfile[READ2]!=NULL?FALSE: TRUE);
+      int sample_len, umi_len,cell_len;
+      // prepare the "alignment"
+      // slice_read(m[x],p,x);
+      int flag=0;
+      flag=BAM_FUNMAP; 
+      if ( !se ) flag=BAM_FUNMAP|BAM_FMUNMAP|BAM_FPAIRED|BAM_FREAD1; // mate is unmapped
+      
+      // readname, quality and seq
+      slice_read(m[READ1],p,READ1);
+      // qname flag RNAME@* POS@0 MAPQ@255 CIGAR@* RNEXT(next mate*) PNEXT@0 TLEN@0 SEQ  QUAL Z:QX Z:OQ  ...      
+      // rname = unsigned int
+      unsigned int len=strlen(m[READ1]->seq);
+      m[READ1]->seq[len-1]='\0';
+      m[READ1]->qual[strlen(m[READ1]->qual)-1]='\0';
+      char *rn1=format_read_name(m[READ1]->hdr1);
+      PRINT_SAM("%ld\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%u",
+	processed_reads,flag,RNAME,POS,MAPQ,CIGAR,RNEXT,PNEXT,len-1);
+
+
+      PRINT_SAM("\t%s\t%s\t%s:Z:%s",m[READ1]->seq,&m[READ1]->qual,ORIG_RN_TAG,rn1);
+      PRINT_SAM("\t%s:Z:%s",ORIG_QUAL_TAG,m[READ1]->qual);
+      //
+      if ( umi[0]!='\0'  ) 
+        PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",UMI_TAG,umi,UMI_QUAL_TAG,umi_qual);
+      if ( cell[0]!='\0'  ) 
+        PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",CELL_TAG,cell,CELL_QUAL_TAG,cell_qual);
+      if ( sample[0]!='\0'  ) 
+        PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",SAMPLE_TAG,sample,SAMPLE_QUAL_TAG,sample_qual);
+    
+      PRINT_SAM("\n");
+    
+      if ( !se ) {      // 2nd mate
+        flag=BAM_FUNMAP|BAM_FMUNMAP|BAM_FPAIRED|BAM_FREAD2; // mate is unmapped
+         slice_read(m[READ2],p,READ2);
+	 // qname flag RNAME@* POS@0 MAPQ@255 CIGAR@* RNEXT(next mate*) PNEXT@0 TLEN@0 SEQ  QUAL Z:QX Z:OQ  ...      
+	 // rname = unsigned int
+	 len=strlen(m[READ2]->seq);
+	 m[READ2]->seq[len-1]='\0';
+	 m[READ2]->qual[strlen(m[READ2]->qual)-1]='\0';
+	 char *rn=format_read_name(m[READ2]->hdr1);
+	 PRINT_SAM("%ld\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%u",processed_reads,flag,RNAME,POS,MAPQ,CIGAR,RNEXT,PNEXT,len);
+	 PRINT_SAM("\t%s\t%s\t%s:Z:%s",m[READ2]->seq,m[READ2]->qual,ORIG_RN_TAG,rn);
+	 PRINT_SAM("\t%s:Z:%s",ORIG_QUAL_TAG,m[READ2]->qual);
+	 //
+	 if ( umi[0]!='\0'  ) 
+	   PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",UMI_TAG,umi,UMI_QUAL_TAG,umi_qual);
+	 if ( cell[0]!='\0'   ) 
+	   PRINT_SAM(" %s:Z:%s\t%s:Z:%s",CELL_TAG,cell,CELL_QUAL_TAG,cell_qual);
+	 if ( sample[0]!='\0'  ) 
+	   PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",SAMPLE_TAG,sample,SAMPLE_QUAL_TAG,sample_qual);
+	 
+	 PRINT_SAM("\n");
       }
+    } else {
+      // fastq
+      for (x=1;x<=READ2;++x)
+	if (fdw[x]!=NULL) {
+	  add_tags2readname(m[x],cell,umi,sample);
+	  slice_read(m[x],p,x);	
+	  fastq_write_entry(fdw[x],m[x]);
+	}
+    }
     PRINT_READS_PROCESSED(fdi[READ1]->cline/4,100000);
   }
  end_loop: 
   //   extract the info, change read name, trim the read, write
   PRINT_INFO("Reads processed: %ld",processed_reads);
   PRINT_INFO("Reads discarded: %ld",discarded_reads);
-  for (x=READ1;x<=READ2;++x)
-    if (fdw[x]!=NULL) 
-      fastq_destroy(fdw[x]);
+  if ( !out_sam )
+    for (x=READ1;x<=READ2;++x)
+      if (fdw[x]!=NULL) 
+	fastq_destroy(fdw[x]);
+  
   
   exit(0);
 }
