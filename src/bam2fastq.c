@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
   uint min_num_reads=0;
   char *bam_file=NULL;
   char *out_file_prefix=NULL;
+  int i;
   static int verbose=0;  
   static int help=FALSE;
   static struct option long_options[] = {
@@ -227,8 +228,8 @@ int main(int argc, char *argv[])
      } 
   }
   // TODO: catch errors
-  for (int j=0;j<=4;j++)
-    if (fd[j]!=NULL) gzclose(fd[j]);
+  for (i=0;i<=4;i++)
+    if (fd[i]!=NULL) gzclose(fd[i]);
   
   fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\n");fflush(stderr);
   bam_destroy1(aln);
