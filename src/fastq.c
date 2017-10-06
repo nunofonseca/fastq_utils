@@ -55,7 +55,7 @@ static inline int compare_headers(const char *hdr1,const char *hdr2); //?
 
 
 static inline char* GZ_READ(gzFile fd,char *s,long max);
-static inline void GZ_WRITE(gzFile fd,char *s);
+//void GZ_WRITE(gzFile fd,char *s);
 
 //
 gzFile fastq_open(const char* filename,const char *mode);
@@ -208,7 +208,7 @@ static inline char* GZ_READ(gzFile fd,char *s,long max) {
   //exit(1);
 }
 
-static inline void GZ_WRITE(gzFile fd,char *s) {
+void GZ_WRITE(gzFile fd,char *s) {
   int n=gzputs(fd,s);
   if ( n>0 ) return;
   if ( *s=='\0' ) return;
@@ -606,7 +606,7 @@ static inline void fastq_close(gzFile fd) {
   }
 }
 
-inline gzFile fastq_open(const char* filename,const char *mode) {
+gzFile fastq_open(const char* filename,const char *mode) {
   gzFile fd1;
 
   if ( filename[0]=='-' && filename[1]=='\0' ) {
