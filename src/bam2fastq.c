@@ -40,12 +40,12 @@
 #define BUF_SIZE 10000
 typedef enum { R1=0,R2=1,CELL=2,SAMPLE=3,UMI=4} FILE_LOC;
 
-char EMPTY_STRING[]="";
+char EMPTY_STRING[1]="\0";
 
 char *get_tag(bam1_t *aln,const char tagname[2]) {
 
   uint8_t *s=bam_aux_get(aln,tagname);
-  if (s==0) return(EMPTY_STRING);
+  if (s==0) return(NULL);
 
   char *s2=bam_aux2Z(s);
   if (s2==0) return(EMPTY_STRING);
@@ -215,13 +215,13 @@ int main(int argc, char *argv[])
        // read1
        QWRITE(get_fp(fd, R1 , out_file_prefix),R1, hdr,seq,qual);
        // cell
-       if (get_tag(aln,CELL_TAG)!="")	
+       if (get_tag(aln,CELL_TAG)!=NULL)
 	 QWRITE(get_fp(fd, CELL, out_file_prefix),CELL, hdr,get_tag(aln,CELL_TAG),get_tag(aln,CELL_QUAL_TAG));
        // umi
-       if (get_tag(aln,UMI_TAG)!="")
+       if (get_tag(aln,UMI_TAG)!=NULL)
 	 QWRITE(get_fp(fd, UMI, out_file_prefix),UMI,hdr,get_tag(aln,UMI_TAG),get_tag(aln,UMI_QUAL_TAG));
        // sample
-       if (get_tag(aln,SAMPLE_TAG)!="")
+       if (get_tag(aln,SAMPLE_TAG)!=NULL)
 	 QWRITE(get_fp(fd, SAMPLE, out_file_prefix),SAMPLE,hdr,get_tag(aln,SAMPLE_TAG),get_tag(aln,SAMPLE_QUAL_TAG));
      } else { //R2
        QWRITE(get_fp(fd, R2 , out_file_prefix),R2,hdr,seq,qual);
