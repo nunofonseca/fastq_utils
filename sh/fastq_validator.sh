@@ -162,7 +162,7 @@ if [ $(echo $FILES2PROCESS|wc -w) -gt 1 ]; then
 	set +e
 	fastq_info $f
 	estatus=$?
-	let failed=failed+$estatus
+	let failed=(failed*10)+$estatus
 	set -eT
 	echo "Checking $f ($estatus)...done."
     done
