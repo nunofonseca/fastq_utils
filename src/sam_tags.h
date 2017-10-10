@@ -22,14 +22,14 @@
 */
 // TAGS used in unaligned SAM/BAM files
 #define RNAME "*"
-#define POS "0"
+#define POS   "0"
 #define CIGAR "*"
 #define RNEXT "*"
 #define PNEXT "0"
 #define MAPQ "255" 
 
-#define CELL_TAG "QR" 
-#define CELL_QUAL_TAG "QC" 
+#define CELL_TAG "CR" 
+#define CELL_QUAL_TAG "CY" 
 
 #define UMI_TAG "QX" 
 #define UMI_QUAL_TAG "OQ" 
@@ -37,5 +37,5 @@
 #define SAMPLE_TAG "BC"
 #define SAMPLE_QUAL_TAG  "QT"
 
-#define ORIG_RN_TAG "ON"
-#define ORIG_QUAL_TAG "OP" 
+#define ORIG_RN_TAG "on"
+#define ORIG_QUAL_TAG "op" 
