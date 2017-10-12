@@ -17,7 +17,7 @@ function perror {
 
 function usage() {
     echo "Usage: fastq2bam -a scheme -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]"
-    echo "scheme: 10xV1 10xV1p 10xV2 drop-seq none"
+    echo "scheme: 10xV1 10xV1a 10xV2 drop-seq none"
 }
 
 function gen_bam() {
@@ -96,7 +96,7 @@ if [ "$scheme-"  == "10xV1-" ]; then
 fi
 
 
-if [ "$scheme-"  == "10xV1p-" ]; then
+if [ "$scheme-"  == "10xV1a-" ]; then
     # index1=*I1*
     # index2=*I2*
     # index3=read_RA*_2
