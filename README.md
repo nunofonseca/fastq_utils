@@ -12,7 +12,7 @@ Programs:
    7. [bam_add_tags](#bam_add_tags---companion-program-to-fastq_pre_barcodes)
    8. [bam_umi_count](#bam_umi_count---count-the-number-of-unique-umis)
    9. [fastq2bam](#fastq2bam---lossless-fastq-to-bam-convertor)
-   10. [bam2fastq](#bam2fastq---generates-fastq-file(s)-(from-a-bam-generated-by-fastq2bam))	
+   10. [bam2fastq](#bam2fastq---generates-fastq-file(s)-from-a-bam-(generated-by-fastq2bam))	
 
 ### Building
 
