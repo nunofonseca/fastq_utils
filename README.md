@@ -141,8 +141,8 @@ Examples:
     fastq2bam -a none -b test_pe.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz
     fastq2bam -a 10xV1 -b test_10xv1.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz 
     fastq2bam -a 10xV1 -b test_10xv1.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz -3 x_I5.fastq.gz
-    fastq2bam -a 10xV1 -b test_10xv1a.bam  -1 x_RA_1.fastq.gz -2 x_RA_2.fastq.gz -3 x_I1.fastq.gz
-    fastq2bam -a 10xV1 -b test_10xv1a.bam  -1 x_RA_1.fastq.gz -2 x_RA_2.fastq.gz -3 x_I1.fastq.gz -4 x_I2.fastq.gz		
+    fastq2bam -a 10xV1a -b test_10xv1a.bam  -1 x_RA_1.fastq.gz -2 x_RA_2.fastq.gz -3 x_I1.fastq.gz
+    fastq2bam -a 10xV1a -b test_10xv1a.bam  -1 x_RA_1.fastq.gz -2 x_RA_2.fastq.gz -3 x_I1.fastq.gz -4 x_I2.fastq.gz		
     fastq2bam -a 10xV2 -b test_10xv2.bam  -1 x_R1.fastq.gz -2 x_R2.fastq.gz -3 x_I5.fastq.gz
     fastq2bam -a 10xV2 -b test_10xv2.bam  -1 x_R1.fastq.gz -2 x_R2.fastq.gz -3 x_I5.fastq.gz -4 x_I1.fastq.gz
     fastq2bam -a drop-seq -b test_ds.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz
