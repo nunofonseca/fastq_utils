@@ -4,7 +4,7 @@ all:
 	make -C src
 
 install:
-	mkdir -p bin && make -C src install && cp sh/*.sh bin
+	mkdir -p bin && make -C src install && cp sh/*.sh sh/fastq2bam bin
 
 release:
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.c
