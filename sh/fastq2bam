@@ -16,7 +16,7 @@ function perror {
 }
 
 function usage() {
-    echo "Usage: fastq2bam -a fornat -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]"
+    echo "Usage: fastq2bam -a format -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]"
     echo "scheme: 10xV1 10xV1p 10xV2 drop-seq none"
 }
 
@@ -80,20 +80,34 @@ if [ "$scheme-"  == "10xV2-" ]; then
     exit 0
 fi
 
+if [ "$scheme-"  == "10xV1-" ]; then
+    # index1=read2/I7, index2=I5
+    if [ "$fastq_file2-"  == "-" ]; then
+	echo "Missing files for $scheme"
+	usage
+	exit 1
+    fi
+    cmd="fastq_pre_barcodes --read1 $fastq_file1 --index1 $fastq_file2 --index1 $fastq_file2 --umi_read index1 --umi_offset 14 --umi_size 10 --cell_read index1 --cell_offset 0 --cell_size 14"
+    if [ "$fastq_file3-" != "-" ]; then
+	cmd="$cmd  --index2 $fastq_file2 --sample_read index2 --sample_offset 0 --sample_size 8" 
+    fi
+    gen_bam $cmd
+    exit 0
+fi
+
+
 if [ "$scheme-"  == "10xV1p-" ]; then
     # index1=*I1*
     # index2=*I2*
     # index3=read_RA*_2
-    if [ "$fastq_file2-"  == "-" ] || [ "$fastq_file3-" == "-" ]; then
+    if [ "$fastq_file2-"  == "-" ] || [ "$fastq_file3-" == "-" ] || [ "$fastq_file4-" == "-" ]; then
 	echo "Missing files for $scheme"
 	usage
 	exit 1
     fi
 
     cmd="fastq_pre_barcodes --read1 $fastq_file1 --index3 $fastq_file2 --index1 $fastq_file3 --umi_read index3 --umi_offset 0 --umi_size 10 --cell_read index1 --cell_offset 0 --cell_size 14"
-    if [ "$fastq_file4-" != "-" ]; then
-	cmd="$cmd  --index3 $fastq_file2 --sample_read index3 --sample_offset 0 --sample_size 8" 
-    fi
+    cmd="$cmd  --index3 $fastq_file2 --sample_read index3 --sample_offset 0 --sample_size 8" 
     gen_bam $cmd
     exit 0
 fi
