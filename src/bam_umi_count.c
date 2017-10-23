@@ -682,8 +682,8 @@ void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable 
   write_map2fileL(file,"rows",rows_map);
   write_map2fileB(file,"cols",cols_map);
 
-  // 
-  fprintf(fd,"%%MatrixMarket matrix coordinate real general\n");
+  // avoid gziping directly for now
+  fprintf(fd,"%%%%MatrixMarket matrix coordinate real general\n");
   fprintf(fd,"%lu %lu ",rows_map->ctr,cols_map->ctr);
   long loc=ftell(fd);
   fprintf(fd,"%-10lu\n",0L);
