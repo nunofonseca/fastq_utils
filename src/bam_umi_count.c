@@ -239,11 +239,17 @@ void write_map2fileL(const char* file,const char *labname,LABELS* map) {
   fclose(fd);
 }
 
-void write_map2fileB(const char* file,const char *labname,BLABELS* map) {
+void write_map2fileB(const char* file,const char *labname,BLABELS* map,char* suffix) {
   FILE *fd;
   char buf[300];
   sprintf(&buf[0],"%s_%s",file,labname);
   file=buf;
+  char empty[1];
+  if (suffix==NULL) {
+    empty[0]='\0';
+    suffix=&empty[0];
+  }
+  
   if ((fd=fopen(buf,"w+"))==NULL) {
     PRINT_ERROR("Failed to open file %s for writing", buf);  
     exit(1);
@@ -252,7 +258,7 @@ void write_map2fileB(const char* file,const char *labname,BLABELS* map) {
     uint_64 ctr=0;
     BLABEL2ID *e=map->first;    
     while ( e!=NULL ) {
-      fprintf(fd,"%lu%s%s\n",e->id,MAPSEP,blabel_id2str(e));
+      fprintf(fd,"%lu%s%s%s\n",e->id,MAPSEP,blabel_id2str(e),suffix);
       e=e->next;
       ++ctr;
     }
@@ -381,13 +387,19 @@ static ulong hash_countkey(const uint feat_id,const uint_64 umi,const uint_64 ce
   return(hash);
 }
 //
-void print_count_entry(const COUNT_ENTRY *e,const char* sep,FILE *stream,LABELS* feat_map, short print_header,unsigned int min_num_reads) {
+void print_count_entry(const COUNT_ENTRY *e,const char* sep,FILE *stream,LABELS* feat_map, short print_header,unsigned int min_num_reads,char *col_suffix) {
   char umi[MAX_BARCODE_LEN+1];
   char cell[MAX_BARCODE_LEN+1];
   char sample[MAX_BARCODE_LEN+1];
   char *labels[]={"UMI","CELL","SAMPLE"};
   char *v[3]={NULL,NULL,NULL};
   char *vl[3]={NULL,NULL,NULL};
+
+  char empty[1];
+
+  if ( col_suffix==NULL ) {
+    col_suffix=&empty[0];
+  }
 
   int x=0;
   uint_642char(e->umi,&umi[0]);
@@ -407,7 +419,7 @@ void print_count_entry(const COUNT_ENTRY *e,const char* sep,FILE *stream,LABELS*
     else if (x==2)
       fprintf(stream,"%s%s%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,vl[1],sep,"COUNT",sep,"NUM READS");
     else
-      fprintf(stream,"%s%s%s%s%s%s%s%s%s%s%s\n","Feature",sep,vl[0],"::",vl[1],sep,vl[2],sep,"COUNT",sep,"NUM READS");
+      fprintf(stream,"%s%s%s%s%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,vl[1],sep,vl[2],sep,"COUNT",sep,"NUM READS");
   }
   if ( e->reads_obs <min_num_reads) return;
 
@@ -415,11 +427,11 @@ void print_count_entry(const COUNT_ENTRY *e,const char* sep,FILE *stream,LABELS*
   if ( x==0 )
     fprintf(stream,"%s%s%.1f%s%1.f\n",label_id2str(e->feat_id,feat_map),sep,e->umi_obs,sep,e->reads_obs);
   else if (x==1) 
-    fprintf(stream,"%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],sep,e->umi_obs,sep,e->reads_obs);
+    fprintf(stream,"%s%s%s%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],col_suffix,sep,e->umi_obs,sep,e->reads_obs);
   else if (x==2)
-    fprintf(stream,"%s%s%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],sep,v[1],sep,e->umi_obs,sep,e->reads_obs);
+    fprintf(stream,"%s%s%s%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],sep,v[1],col_suffix,sep,e->umi_obs,sep,e->reads_obs);
   else   
-    fprintf(stream,"%s%s%s%s%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],sep,v[1],"::",v[2],sep,e->umi_obs,sep,e->reads_obs);  
+    fprintf(stream,"%s%s%s%s%s%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],sep,v[1],col_suffix,"::",v[2],sep,e->umi_obs,sep,e->reads_obs);  
 }
 
 void print_ukey(const UNIQ_KEYS *e) {
@@ -431,16 +443,20 @@ void print_ukey(const UNIQ_KEYS *e) {
   fprintf(stdout,"%lu %s %s\n",e->feat_id,cell,sample);
 }
 
-void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream,LABELS* feat_map,const short print_header) {
+void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream,LABELS* feat_map,const short print_header,char* col_suffix) {
   char cell[MAX_BARCODE_LEN+1];
   char sample[MAX_BARCODE_LEN+1];
   char *labels[]={"CELL","SAMPLE"};
   char *v[2]={NULL,NULL};
   char *vl[2]={NULL,NULL};
-
+  char empty[1];
+  
   uint_642char(e->cell,&cell[0]);
   uint_642char(e->sample,&sample[0]);
-
+  if ( col_suffix==NULL ) {
+    col_suffix=&empty[0];
+  }
+  
   int x=0;
   if ( cell[0]!='\0') { v[x]=&cell[0];vl[x]=labels[0];++x;}
   if ( sample[0]!='\0') { v[x]=&sample[0];vl[x]=labels[1];++x;}
@@ -457,9 +473,9 @@ void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream
   if (x==0)
     fprintf(stream,"%s%s%lu\n",label_id2str(e->feat_id,feat_map),sep,n);
   else if (x==1) 
-    fprintf(stream,"%s%s%s%s%lu\n",label_id2str(e->feat_id,feat_map),sep,v[0],sep,n);
+    fprintf(stream,"%s%s%s%s%s%lu\n",label_id2str(e->feat_id,feat_map),sep,v[0],col_suffix,sep,n);
   else 
-    fprintf(stream,"%s%s%s%s%s%s%lu\n",label_id2str(e->feat_id,feat_map),sep,v[0],"::",v[1],sep,n);
+    fprintf(stream,"%s%s%s%s%s%s%s%lu\n",label_id2str(e->feat_id,feat_map),sep,v[0],"::",v[1],col_suffix,sep,n);
 }
 
 
@@ -671,7 +687,7 @@ hashtable load_whitelist(const char* file,uint hashsize) {
 // Matrix Market format
 // Header: rows columns entries
 #define MM_SEP " "
-void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable uniq_ht, UNIQ_KEYS* ukey, uint min_num_reads) {
+void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable uniq_ht, UNIQ_KEYS* ukey, uint min_num_reads,char *cell_suffix) {
 
   FILE *fd=NULL;
   if ((fd=fopen(file,"w+"))==NULL) {
@@ -681,7 +697,7 @@ void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable 
   //
   fprintf(stderr,"Saving MM file %s...\n",file);
   write_map2fileL(file,"rows",rows_map);
-  write_map2fileB(file,"cols",cols_map);
+  write_map2fileB(file,"cols",cols_map,cell_suffix);
 
   // avoid gziping directly for now
   fprintf(fd,"%%%%MatrixMarket matrix coordinate real general\n");
@@ -718,7 +734,7 @@ void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable 
 
 
 void print_usage(int exit_status) {
-    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag GX|TX] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample]");
+    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag GX|TX] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample] [--cell_suffix suffix]");
     if ( exit_status>=0) exit(exit_status);
 }
 
@@ -742,6 +758,7 @@ int main(int argc, char *argv[])
   char *dump_file=NULL;
   char *known_umi_file=NULL;
   char *known_cells_file=NULL;
+  char *cell_suffix=NULL;
   static int  mm_format=FALSE; // tsv by default
   static int verbose=0;  
   static int help=FALSE;
@@ -755,6 +772,7 @@ int main(int argc, char *argv[])
     {"ucounts_tsv",  no_argument, &mm_format, FALSE},
     {"help",   no_argument, &help, TRUE},
     {"bam",  required_argument, 0, 'b'},
+    {"cell_suffix",  required_argument, 0, 's'},
     {"known_umi",  required_argument, 0, 'k'},
     {"known_cells",  required_argument, 0, 'c'},
     {"ucounts",  required_argument, 0, 'u'},
@@ -770,7 +788,7 @@ int main(int argc, char *argv[])
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    int c = getopt_long (argc, argv, "b:u:d:t:x:c:",
+    int c = getopt_long (argc, argv, "b:u:d:t:x:c:s:",
 		     long_options, &option_index);      
     if (c == -1) // no more options
       break;
@@ -784,6 +802,9 @@ int main(int argc, char *argv[])
       break;
     case 'd':
       dump_file=optarg;
+      break;
+    case 's':
+      cell_suffix=optarg;
       break;
     case 'k':
       known_umi_file=optarg;
@@ -849,7 +870,8 @@ int main(int argc, char *argv[])
   fprintf(stderr,"@uniq mapped reads=%u\n",uniq_mapped_only);
   fprintf(stderr,"@tag=%s\n",feat_tag);
   fprintf(stderr,"@unique counts file=%s\n",ucounts_file);
-
+  if (cell_suffix!=NULL)
+    fprintf(stderr,"@cell_suffix=%s\n",cell_suffix);
   features_map=init_labels(1000001);
   cols_map=init_blabels(100001);
 
@@ -996,7 +1018,7 @@ int main(int argc, char *argv[])
     UNIQ_KEYS *ukey=NULL;
     if ( key_list!=NULL) ukey=key_list->keys;
     if (mm_format ) {
-      write2MM(ucounts_file,features_map,cols_map,uniq_ht,ukey,min_num_reads);
+      write2MM(ucounts_file,features_map,cols_map,uniq_ht,ukey,min_num_reads,cell_suffix);
     } else {
       // TSV
       if ((ucounts_fd=fopen(ucounts_file,"w+"))==NULL) {
@@ -1008,7 +1030,7 @@ int main(int argc, char *argv[])
       while ( ukey!=NULL ) {
 	ulong n=count_uniq_entries(uniq_ht,ukey,min_num_reads);
 	if ( n>=min_num_reads) {
-	  print_ucount(ukey,n,"\t",ucounts_fd,features_map,pheader);
+	  print_ucount(ukey,n,"\t",ucounts_fd,features_map,pheader,cell_suffix);
 	  pheader=FALSE;
 	}
 	ukey=ukey->next;
@@ -1027,7 +1049,7 @@ int main(int argc, char *argv[])
     COUNT_ENTRY* e;
     short pheader=TRUE;  
     while((e=(COUNT_ENTRY*)next_hash_object(ht))!=NULL) {
-      print_count_entry(e,"\t",dump_fd,features_map,pheader,min_num_reads);
+      print_count_entry(e,"\t",dump_fd,features_map,pheader,min_num_reads,cell_suffix);
       pheader=FALSE;
     }
     fclose(dump_fd);

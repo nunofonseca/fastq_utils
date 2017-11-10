@@ -245,6 +245,9 @@ must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --
 
 must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx --ignore_sample"
 
+must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot4.bam --ucounts xx --ignore_sample --cell_suffix '-123456789' && grep -c 123456789 xx ` -eq  12 ]"
+
+
 must_succeed  "[ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt --ucounts /dev/stdout --dump xx | wc -l ` -eq 3 ]"
 
 
