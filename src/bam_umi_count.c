@@ -346,8 +346,9 @@ static ulong hash_uniq_umi_key(const uint feat_id,const uint_64 cell,const uint_
 
   ulong hash = 0L;
   //hash+=feat_id+cell+sample;
-  srand((unsigned)cell*feat_id);
-  hash=rand()+(sample*100000)+feat_id;
+  //srand((unsigned)cell*feat_id);
+  //hash=rand()+(sample*10000)+feat_id;
+  hash=sample+feat_id+10000+cell+1000000;
   /*  hash=cell*feat_id;
   if ( sample>0 ) {   hash*=sample;}
   hash=2166136261;
@@ -465,7 +466,7 @@ void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream
 UNIQ_KEYS_HT* add_to_list(UNIQ_KEYS_HT* keys, COUNT_ENTRY *e) {
   if (keys==NULL) {
     UNIQ_KEYS_HT *new=(UNIQ_KEYS_HT*)malloc(sizeof(UNIQ_KEYS_HT));
-    new->ht=new_hashtable(100001);
+    new->ht=new_hashtable(1000001);
     new->keys=NULL;
     keys=new;
   }
@@ -717,7 +718,7 @@ void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable 
 
 
 void print_usage(int exit_status) {
-    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag GX|TX] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv]");
+    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag GX|TX] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample]");
     if ( exit_status>=0) exit(exit_status);
 }
 
@@ -744,10 +745,12 @@ int main(int argc, char *argv[])
   static int  mm_format=FALSE; // tsv by default
   static int verbose=0;  
   static int help=FALSE;
+  static int ignore_sample=FALSE;
   static struct option long_options[] = {
     {"verbose", no_argument,       &verbose, TRUE},
     {"multi_mapped", no_argument,      &uniq_mapped_only, FALSE},
     {"uniq_mapped", no_argument,       &uniq_mapped_only, TRUE},
+    {"ignore_sample", no_argument,       &ignore_sample, TRUE},
     {"ucounts_MM",  no_argument, &mm_format, TRUE},
     {"ucounts_tsv",  no_argument, &mm_format, FALSE},
     {"help",   no_argument, &help, TRUE},
@@ -847,8 +850,8 @@ int main(int argc, char *argv[])
   fprintf(stderr,"@tag=%s\n",feat_tag);
   fprintf(stderr,"@unique counts file=%s\n",ucounts_file);
 
-  features_map=init_labels(100001);
-  cols_map=init_blabels(50001);
+  features_map=init_labels(1000001);
+  cols_map=init_blabels(100001);
 
   //
   // 
@@ -864,7 +867,7 @@ int main(int argc, char *argv[])
   char buf2[500];
   uint8_t *nh;
   char *feat,*umi,*cell,*sample;
-  //
+  // TODO: change alns to entries
   num_alns=0;
   while(bam_read1(in,aln)>=0) { // read alignment
     if ( num_alns == ULLONG_MAX ) {
@@ -876,7 +879,7 @@ int main(int argc, char *argv[])
 
     if (aln->core.tid < 0) continue;//ignore unaligned reads
     if (aln->core.flag & BAM_FUNMAP) continue;
-    if (aln->core.flag & BAM_FSECONDARY) continue; // use only primary alignments
+    //if (aln->core.flag & BAM_FSECONDARY) continue; // use only primary alignments
     if (aln->core.flag & BAM_FPAIRED & BAM_FPROPER_PAIR & BAM_FREAD2 ) continue; // avoid double counting
 
     //assert(r!=NULL);
@@ -890,12 +893,15 @@ int main(int argc, char *argv[])
 
     //fprintf(stderr,"aaaa1 %s\n",feat_tag);
     feat=get_tag(aln,feat_tag);
+
     if (feat[0]!='\0') {
       num_tags_found++;
       umi=get_tag(aln,"UM");
       cell=get_tag(aln,"CR");
-      sample=get_tag(aln,"BC");
-      
+      if ( !ignore_sample)
+	sample=get_tag(aln,"BC");
+      else
+	sample=NULL;
 #ifdef DEBUG      
       fprintf(stderr,"umi2-->%s %s %s %s",umi,cell,sample,feat);
 #endif
@@ -910,7 +916,6 @@ int main(int argc, char *argv[])
 	}
 
       uint_64 cell_i=char2uint_64(cell);
-
       if ( kcells_ht!=NULL) 
 	if ( !valid_barcode(kcells_ht,cell_i) ) {
 	  num_cells_discarded++;
@@ -919,9 +924,9 @@ int main(int argc, char *argv[])
 
       uint_64 sample_i=char2uint_64(sample);
 	    
-      // column
+      // 
       get_col_id(cell_i,sample_i, cols_map);
-      
+
       //
       // feature id
       char *f=strtok(feat,",");
@@ -934,7 +939,7 @@ int main(int argc, char *argv[])
 	prev_f=f;
 	f=strtok(NULL,",");
       }
-      
+
       f=strtok(feat,",");
       prev_f=NULL;
       while (f !=NULL ) {
