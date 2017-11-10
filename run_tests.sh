@@ -211,10 +211,10 @@ echo "*** bam_umi_count"
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx --ucounts_MM -x TX"
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx --ucounts_tsv -x TX"
 
-must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts /dev/stdout |wc -l |cut -f 1 -d\ ` ==  90 ]"
+must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts /dev/stdout |wc -l |cut -f 1 -d\ ` ==  373 ]"
 #must_succeed  "./src/bam_umi_count --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
-must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts /dev/stdout |wc -l |cut -f 1 -d\ ` ==  83 ]"
+must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts /dev/stdout |wc -l |cut -f 1 -d\ ` ==  366 ]"
 
 must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts lixo --ucounts_MM"
 
@@ -223,6 +223,8 @@ must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3.bam  --
 must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam  --ucounts lixo --ucounts_MM"
 
 must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo --ucounts_MM"
+
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo --ucounts_MM --ignore_sample"
 
 must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans.bam  --ucounts lixo --ucounts_MM"
 
@@ -240,6 +242,8 @@ must_succeed  " ./src/bam_umi_count --min_reads 10 --bam tests/test_annot2.bam -
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx -x TX"
 
 must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx"
+
+must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx --ignore_sample"
 
 must_succeed  "[ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt --ucounts /dev/stdout --dump xx | wc -l ` -eq 3 ]"
 
