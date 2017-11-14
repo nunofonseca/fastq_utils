@@ -117,7 +117,6 @@ void print_usage(int exit_status) {
 int main(int argc, char *argv[])  
 {  
   bamFile in; 
-  uint min_num_reads=0;
   char *bam_file=NULL;
   char *out_file_prefix=NULL;
   int i;
@@ -178,14 +177,12 @@ int main(int argc, char *argv[])
   bam_header_read(in);
   
   // tmp buffers
-  char buf[BUF_SIZE];
-  char buf2[BUF_SIZE];
   char seq_buf[BUF_SIZE];
-  char qual_buf[BUF_SIZE];  
+
   
   //
   int is_pe=-1;
-  unsigned long num_alns=0;
+  unsigned long long num_alns=0;
   
   while( bam_read1(in,aln)>=0 ) {
     if ( num_alns == ULLONG_MAX ) {       
@@ -202,7 +199,7 @@ int main(int argc, char *argv[])
 	 is_pe=FALSE;
        } else { // PE
 	 is_pe=TRUE;
-	 assert(aln->core.flag==BAM_FUNMAP|BAM_FMUNMAP|BAM_FPAIRED|BAM_FREAD1);
+	 assert(aln->core.flag==(BAM_FUNMAP|BAM_FMUNMAP|BAM_FPAIRED|BAM_FREAD1));
        }
      }
      // read/qual (se/pe/first/second)
