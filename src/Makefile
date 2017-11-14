@@ -1,7 +1,7 @@
 # Note: avoid having boost in  -I : it may result on including the wrong regexp.h
 # zlib is required
 #CFLAGS+= -g -Wunused-result  -pg -Wall
-CFLAGS+=  -O3
+CFLAGS+=  -O3 -Wunused-result  -Wall
 ifdef DO_COV_TEST
 CFLAGS+= -fprofile-arcs -ftest-coverage
 endif
@@ -56,7 +56,7 @@ fastq_trim_poly_at: fastq_trim_poly_at.o hash.o fastq.o
 	gcc  $(CFLAGS) $^  -o $@  -lz
 
 fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
-	gcc  $(CFLAGS) -g  $^ -o $@ -lz
+	gcc  $(CFLAGS)  $^ -o $@ -lz
 
 
 # Companion of fastq preprocess barcodes fastq_pre_barcodes
@@ -65,6 +65,11 @@ bam_add_tags: hash.o bam_add_tags.o
 
 bam_umi_count:   hash.o  bam_umi_count.o 
 	gcc  $(CFLAGS)  $^ -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
+
+
+bam_umi_count_old:   hash.o  bam_umi_count_old.o 
+	gcc  $(CFLAGS)  $^ -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
+
 
 bam2fastq:   bam2fastq.o fastq.o hash.o
 	gcc  $(CFLAGS)  $^ -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
