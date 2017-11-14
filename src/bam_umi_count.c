@@ -551,14 +551,15 @@ void write2MM(const char* file, DB*db,LABELS *rows_map, BLABELS *cols_map,uint m
 	// do not go down through the samples
 	if ( fe->tot_reads_obs>=min_num_reads*1.0 &&
 	     fe->tot_umi_obs>=min_num_umis*1.0 ) {	  
-	  if ( UMI==TRUE) {
+	  if ( UMI==TRUE && (uint)fe->tot_umi_obs>1 ) {
 	    fprintf(fd,"%u%s%u%s%u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_umi_obs));
 	    tot_ctr+=(uint)fe->tot_umi_obs;
-	  } else {
+	    ++tot_feat_cells;
+	  } else if ( (uint)fe->tot_reads_obs>=1)  {
 	    fprintf(fd,"%u%s%u%s%u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_reads_obs));
 	    tot_ctr+=(uint)fe->tot_reads_obs;
+	    ++tot_feat_cells;
 	  }
-	  ++tot_feat_cells;
 	}
       }
     }
