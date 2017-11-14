@@ -31,38 +31,58 @@
 #include <float.h>
 
 #define HASHSIZE 50000000
-#define uint_64 unsigned long long
 
+
+//#########################################
+#define uint_64 unsigned long long
 #include "hash.h"
 #include "fastq.h"
+#include "sam_tags.h"
 
 #define FEAT_ID_MAX_LEN 25
 #define MAX_BARCODE_LEN 19
 
+// default values
+#define MAX_CELLS    1000000
+#define MAX_FEATURES 100000
+#define MAX_SAMPLES  1
 
+
+// 
 typedef struct count_ENTRY {
-  uint feat_id;
-  uint_64 cell;
   uint_64 umi;
-  uint_64 sample;
+  uint sample;
   float umi_obs;
   float reads_obs;
+  struct count_ENTRY* next;
 } COUNT_ENTRY;
 
-typedef struct uniq_keys {
+typedef struct feature_ENTRY {
   uint feat_id;
-  uint_64 cell;
-  uint_64 sample;
-  struct uniq_keys* next;
-} UNIQ_KEYS;
+  float tot_umi_obs;
+  float tot_reads_obs;
+  COUNT_ENTRY** samples; //the array should be close  to the number of expected samples
+} FEATURE_ENTRY;
 
+typedef struct cell_ENTRY {
+ // uint_64 cell;
+  hashtable features;
+  float tot_umi_obs;
+  float tot_reads_obs;
+} CELL;
 
-typedef struct uniq_keys_ht {
-  hashtable ht;
-  UNIQ_KEYS* keys;
-} UNIQ_KEYS_HT;
+typedef struct db {
+  CELL* cells;
+  uint max_features;
+  uint max_cells;
+  uint features_cell;
+  float tot_umi_obs;
+  float tot_reads_obs;
+} DB;
 
+// ---------------------------------------------
 // single label => feature
+// uint max 4,294,967,295
 typedef struct label2id {
   uint id;
   char *label;
@@ -76,11 +96,10 @@ typedef struct labels {
   hashtable ht;
 } LABELS;
 
-// possibly two barcode labels
+// barcodes as uint_64
 typedef struct blabel2id {
   uint id;
   uint_64 label;
-  uint_64 label2;
   struct blabel2id* next;
 } BLABEL2ID;
 
@@ -91,10 +110,14 @@ typedef struct blabels {
   hashtable ht;
 } BLABELS;
 
+// ------------------------------------------------
+
 
 static ulong hash_str(const char *str);
-static ulong hash_uniq_umi_key(const uint feat_id,const uint_64 cell,const uint_64 sample);
+
+
 char* uint_642char(const uint_64 i,char *s);
+
 
 // Map labels (e.g. genes) to ids (1,...N)
 LABELS* init_labels(uint hashsize) {
@@ -162,17 +185,21 @@ BLABELS* init_blabels(uint hashsize) {
   new->ht=new_hashtable(hashsize);
   return(new);
 }
+uint blabel_entries(const BLABELS *lm) {
+  return(lm->ctr);
+}
+
 // barcode based label to id
-uint_64 blabel2id(const uint_64 lab,const uint_64 lab2,BLABELS* lm ) {
+uint_64 blabel2id(const uint_64 lab,BLABELS* lm ) {
   //
   assert(lm!=NULL);
   // lookup
-  ulong ikey=hash_uniq_umi_key(0,lab,lab2);
+  ulong ikey=lab;
   BLABEL2ID *e=(BLABEL2ID*)get_object(lm->ht,ikey);
   
   // look for the match
   while (e!=NULL) {
-    if ( e->label==lab && e->label2==lab2) break;
+    if ( e->label==lab ) break;
     e=e->next;
   }
 
@@ -187,7 +214,6 @@ uint_64 blabel2id(const uint_64 lab,const uint_64 lab2,BLABELS* lm ) {
     new->id=lm->ctr;
     new->next=NULL;
     new->label=lab;
-    new->label2=lab2;
     if(insere(lm->ht,ikey,new)<0) {
       fprintf(stderr,"ERROR: unable to add entry to hash table");
       exit(1);
@@ -200,20 +226,8 @@ uint_64 blabel2id(const uint_64 lab,const uint_64 lab2,BLABELS* lm ) {
 char buf[MAX_BARCODE_LEN*2+2+1];
 const char* blabel_id2str(const BLABEL2ID *e) {
   assert(e!=NULL);
-  if (e->label2==0) {
-    uint_642char(e->label,&buf[0]);	      
-  } else {
-    char buf2[MAX_BARCODE_LEN+1];
-    char buf3[MAX_BARCODE_LEN+1];
-    uint_642char(e->label,&buf2[0]);
-    uint_642char(e->label2,&buf3[0]);	
-    sprintf(&buf[0],"%s::%s",buf2,buf3);
-  }
+  uint_642char(e->label,&buf[0]);	      
   return(&buf[0]);
-}
-
-uint blabel_entries(const BLABELS *lm) {
-  return(lm->ctr);
 }
 
 
@@ -231,7 +245,7 @@ void write_map2fileL(const char* file,const char *labname,LABELS* map) {
     uint_64 ctr=0;
     LABEL2ID *e=map->first;    
     while ( e!=NULL ) {
-      fprintf(fd,"%lu%s%s\n",e->id,MAPSEP,e->label);
+      fprintf(fd,"%u%s%s\n",(uint)e->id,MAPSEP,e->label);
       e=e->next;
       ++ctr;
     }
@@ -258,7 +272,7 @@ void write_map2fileB(const char* file,const char *labname,BLABELS* map,char* suf
     uint_64 ctr=0;
     BLABEL2ID *e=map->first;    
     while ( e!=NULL ) {
-      fprintf(fd,"%lu%s%s%s\n",e->id,MAPSEP,blabel_id2str(e),suffix);
+      fprintf(fd,"%u%s%s%s\n",e->id,MAPSEP,blabel_id2str(e),suffix);
       e=e->next;
       ++ctr;
     }
@@ -326,15 +340,7 @@ uint_64 char2uint_64(const char* s) {
     i=i*10+base;
     --pos;
   }
-#ifdef DEBUG  
-  char test[30];
-  char *res=uint_642char(i,&test[0]);
-  fprintf(stderr,"%s<-%llu<<\n",res,i);
-  if ( strcmp(res,s) ) {
-    fprintf(stderr,"Internal error\nline 120: mismatch %s->%llu<<\n",res,i);
-    exit(1);
-  }
-#endif
+
   return(i);
 }
 
@@ -348,258 +354,85 @@ static ulong hash_str(const char *str) {
 }
 
 //
-static ulong hash_uniq_umi_key(const uint feat_id,const uint_64 cell,const uint_64 sample) {
+DB* new_db(uint max_cells,uint max_features,uint features_cell) {
 
-  ulong hash = 0L;
-  //hash+=feat_id+cell+sample;
-  //srand((unsigned)cell*feat_id);
-  //hash=rand()+(sample*10000)+feat_id;
-  hash=sample+feat_id+10000+cell+1000000;
-  /*  hash=cell*feat_id;
-  if ( sample>0 ) {   hash*=sample;}
-  hash=2166136261;
-  hash=(hash*16777619) ^ cell+rand();
-  hash=(hash*16777619) ^ feat_id+rand();
-  if ( sample>0 ) {   hash=(hash*16777619) ^ sample+rand(); }*/
-  //fprintf(stdout,"%llu %llu %lu %lu %lu\n",hash%5000000,hash,feat_id,cell,sample);
-  //hash=cell;
-  /* hash+=feat_id;  hash+=(hash<<10); hash^=(hash>>6); */
-  /* hash+=cell;  hash+=(hash<<10); hash^=(hash>>6); */
-  /* if ( sample>0 ) { hash+=sample;  hash+=(hash<<10); hash^=(hash>>6);} */
-  /* hash+=(hash<<3); */
-  /* hash^=(hash>>11); */
-  /* hash+=(hash<<15); */
-  /*  hash+=(hash<<10);
-  hash^=(hash>>6);
-  hash^=cell;
-  hash+=(hash<<10);
-  hash^=(hash>>6);
-  hash+=hash ^ (ulong)sample;*/
-  return(hash);
-}
-
-
-
-static ulong hash_countkey(const uint feat_id,const uint_64 umi,const uint_64 cell,const uint_64 sample) {
-
-  ulong hash = 0L;
-  hash=umi+hash_uniq_umi_key(feat_id,cell,sample);
-  return(hash);
-}
-//
-void print_count_entry(const COUNT_ENTRY *e,const char* sep,FILE *stream,LABELS* feat_map, short print_header,unsigned int min_num_reads,char *col_suffix) {
-  char umi[MAX_BARCODE_LEN+1];
-  char cell[MAX_BARCODE_LEN+1];
-  char sample[MAX_BARCODE_LEN+1];
-  char *labels[]={"UMI","CELL","SAMPLE"};
-  char *v[3]={NULL,NULL,NULL};
-  char *vl[3]={NULL,NULL,NULL};
-
-  char empty[1];
-
-  if ( col_suffix==NULL ) {
-    col_suffix=&empty[0];
-  }
-
-  int x=0;
-  uint_642char(e->umi,&umi[0]);
-  uint_642char(e->cell,&cell[0]);
-  uint_642char(e->sample,&sample[0]);
-
-  if ( umi[0]!='\0') { v[x]=&umi[0];vl[x]=labels[0];++x;}  
-  if ( cell[0]!='\0') { v[x]=&cell[0];vl[x]=labels[1];++x;}
-  if ( sample[0]!='\0') { v[x]=&sample[0];vl[x]=labels[2];++x;}
-
-    
-  if (print_header) {
-    if ( x==0 )
-      fprintf(stream,"%s%s%s%s%s\n","Feature",sep,"COUNT",sep,"NUM READS");
-    else if (x==1) 
-      fprintf(stream,"%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,"COUNT",sep,"NUM READS");    
-    else if (x==2)
-      fprintf(stream,"%s%s%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,vl[1],sep,"COUNT",sep,"NUM READS");
-    else
-      fprintf(stream,"%s%s%s%s%s%s%s%s%s%s%s\n","Feature",sep,vl[0],sep,vl[1],sep,vl[2],sep,"COUNT",sep,"NUM READS");
-  }
-  if ( e->reads_obs <min_num_reads) return;
-
-
-  if ( x==0 )
-    fprintf(stream,"%s%s%.1f%s%1.f\n",label_id2str(e->feat_id,feat_map),sep,e->umi_obs,sep,e->reads_obs);
-  else if (x==1) 
-    fprintf(stream,"%s%s%s%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],col_suffix,sep,e->umi_obs,sep,e->reads_obs);
-  else if (x==2)
-    fprintf(stream,"%s%s%s%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],sep,v[1],col_suffix,sep,e->umi_obs,sep,e->reads_obs);
-  else   
-    fprintf(stream,"%s%s%s%s%s%s%s%s%s%.1f%s%.1f\n",label_id2str(e->feat_id,feat_map),sep,v[0],sep,v[1],col_suffix,"::",v[2],sep,e->umi_obs,sep,e->reads_obs);  
-}
-
-void print_ukey(const UNIQ_KEYS *e) {
-  char cell[MAX_BARCODE_LEN+1];
-  char sample[MAX_BARCODE_LEN+1];
-
-  uint_642char(e->cell,&cell[0]);
-  uint_642char(e->sample,&sample[0]);
-  fprintf(stdout,"%lu %s %s\n",e->feat_id,cell,sample);
-}
-
-void print_ucount(const UNIQ_KEYS *e, const ulong n,const char* sep,FILE *stream,LABELS* feat_map,const short print_header,char* col_suffix) {
-  char cell[MAX_BARCODE_LEN+1];
-  char sample[MAX_BARCODE_LEN+1];
-  char *labels[]={"CELL","SAMPLE"};
-  char *v[2]={NULL,NULL};
-  char *vl[2]={NULL,NULL};
-  char empty[1];
-  
-  uint_642char(e->cell,&cell[0]);
-  uint_642char(e->sample,&sample[0]);
-  if ( col_suffix==NULL ) {
-    col_suffix=&empty[0];
-  }
-  
-  int x=0;
-  if ( cell[0]!='\0') { v[x]=&cell[0];vl[x]=labels[0];++x;}
-  if ( sample[0]!='\0') { v[x]=&sample[0];vl[x]=labels[1];++x;}
-
-  if (print_header==TRUE) {
-    if (x==0)
-      fprintf(stream,"%s%s%s\n","Feature",sep,"COUNT");    
-    else if (x==1) 
-      fprintf(stream,"%s%s%s%s%s\n","Feature",sep,vl[0],sep,"COUNT");    
-    else
-      fprintf(stream,"%s%s%s%s%s%s%s\n","Feature",sep,vl[0],"::",vl[1],sep,"COUNT");
-  }
-
-  if (x==0)
-    fprintf(stream,"%s%s%lu\n",label_id2str(e->feat_id,feat_map),sep,n);
-  else if (x==1) 
-    fprintf(stream,"%s%s%s%s%s%lu\n",label_id2str(e->feat_id,feat_map),sep,v[0],col_suffix,sep,n);
-  else 
-    fprintf(stream,"%s%s%s%s%s%s%s%lu\n",label_id2str(e->feat_id,feat_map),sep,v[0],"::",v[1],col_suffix,sep,n);
-}
-
-
-UNIQ_KEYS_HT* add_to_list(UNIQ_KEYS_HT* keys, COUNT_ENTRY *e) {
-  if (keys==NULL) {
-    UNIQ_KEYS_HT *new=(UNIQ_KEYS_HT*)malloc(sizeof(UNIQ_KEYS_HT));
-    new->ht=new_hashtable(1000001);
-    new->keys=NULL;
-    keys=new;
-  }
-  ulong ikey=hash_countkey(e->feat_id,0,e->cell,e->sample);
-  UNIQ_KEYS *f=(UNIQ_KEYS*)get_object(keys->ht,ikey);
-  while (f!=NULL) {
-    if ( 
-	 f->cell==e->cell &&
-	 f->sample==e->sample &&
-	 f->feat_id==e->feat_id
-	 ) return(keys);
-    f=f->next;
-  }
-  UNIQ_KEYS *new=(UNIQ_KEYS*)malloc(sizeof(UNIQ_KEYS));
+  DB *new=(DB*)malloc(sizeof(DB));
   if (new==NULL) { return(NULL);}
-  new->cell=e->cell;
-  new->sample=e->sample;
-  new->feat_id=e->feat_id;
+  new->max_cells=max_cells;
+  new->max_features=max_features;
+  new->features_cell=features_cell;
+  new->tot_umi_obs=new->tot_reads_obs=0;
+  // cells array
+  new->cells=(CELL*)malloc(max_cells*sizeof(CELL));
+  if (new->cells==NULL) { return(NULL);}
+  memset(new->cells,0L,sizeof(CELL)*max_cells);
+  return(new);
+}
 
-  new->next=keys->keys;
-  keys->keys=new;
-  if(insere(keys->ht,ikey,new)<0) {
-    fprintf(stderr,"ERROR: unable to add entry to hash table");
+/* // check if an entry exists, returns a pointer for the the existing COUNT_ENTRY if available or creates a new one and increments the read/umis counters with the incr value */
+COUNT_ENTRY* get_count_entry(const uint feat_id,const uint_64 umii,const uint cell_id,const uint sample_id,DB* db,float incr) {
+
+  if( cell_id>db->max_cells ) {
+    PRINT_ERROR("Too many cells %u - please rerun and increase the cells using the --max_cells parameter\n",cell_id);
     exit(1);
   }
-  return(keys);
-}
-
-COUNT_ENTRY* new_count_entry(const uint feat_id,const uint_64 umi,const uint_64 cell,const uint_64 sample) {
-
-  // 64
-  //fprintf(stderr,"size=%d\n",sizeof(COUNT_ENTRY));
-  COUNT_ENTRY *ck=(COUNT_ENTRY*)malloc(sizeof(COUNT_ENTRY));
-  if (ck==NULL) { return(NULL);}  
-
-  ck->feat_id=feat_id;
-  ck->cell=cell;
-  ck->umi=umi;
-  ck->sample=sample;
-  ck->umi_obs=0;
-  ck->reads_obs=0;
-  return(ck);
-}
-
-// return 1 if entry exists, 0 if a new entry is created
-hashtable add_count_entry_to_uht(hashtable uniq_ht,COUNT_ENTRY *e) {
-
-  ulong key=hash_uniq_umi_key(e->feat_id,e->cell,e->sample);
-  COUNT_ENTRY* obj=(COUNT_ENTRY*)get_object(uniq_ht,key);
-  while (obj!=NULL) {     
-    if (
-	obj->umi==e->umi &&
-	obj->cell==e->cell &&
-	obj->sample==e->sample &&
-	obj->feat_id==e->feat_id
-	) return(uniq_ht);
-    obj=(COUNT_ENTRY*)get_next_object(uniq_ht,key);
-  }
-
-  if ( obj == NULL ) {
-    // add object
-    if(insere(uniq_ht,key,e)<0) {
-      fprintf(stderr,"ERROR: unable to add entry to hash table");
-      exit(1);
-    }
-    //bin/fprintf(stderr,"miss\n");
-    return(uniq_ht);
-  }
-  //fprintf(stderr,"hit\n");
-  return(uniq_ht);
-}
-
-ulong count_uniq_entries(hashtable uniq_ht,UNIQ_KEYS *key,ulong min_num_reads) {
-
-  ulong hkey=hash_uniq_umi_key(key->feat_id,key->cell,key->sample);
-  ulong uniq_entries=0;
-  //print_ukey(key);
-  COUNT_ENTRY* e=(COUNT_ENTRY*)get_object(uniq_ht,hkey);
-  while (e!=NULL) {     
-    if (
-	key->cell==e->cell &&
-	key->sample==e->sample &&
-	key->feat_id==e->feat_id &&
-	e->reads_obs >= min_num_reads
-	) ++uniq_entries;
-    e=(COUNT_ENTRY*)get_next_object(uniq_ht,hkey);
-  }
-  return(uniq_entries);
-}
-
-// check if an entry exists, returns a pointer for the the existing COUNT_ENTRY if available
-COUNT_ENTRY* get_count_key(const uint feat_id,const uint_64 umii,const uint_64 celli,const uint_64 samplei,hashtable ht) {
-
-  uint feat_i=feat_id;
-
   // lookup
-  ulong key=hash_countkey(feat_id,umii,celli,samplei);
-  COUNT_ENTRY* e=(COUNT_ENTRY*)get_object(ht,key);
-  while (e!=NULL) {     
-    if (
-	umii==e->umi &&
-	celli==e->cell &&
-	samplei==e->sample &&
-	feat_id == e->feat_id 
-	) break;
-    e=(COUNT_ENTRY*)get_next_object(ht,key);
-  }
-  if ( e!=NULL) return(e);
-  // new entry
-  
-  e=new_count_entry(feat_id,umii,celli,samplei);
-  if(insere(ht,key,e)<0) {
-    fprintf(stderr,"ERROR: unable to add entry to hash table");
-    exit(1);
+  uint cell_idx=cell_id;
+  if ( db->cells[cell_idx].features==NULL ) {
+    // initialize entry
+    //db->cells[cell_idx]->features=new_hashtable(db->max_features/2);
+    // only a fraction of the genes are expressed
+    db->cells[cell_idx].features=new_hashtable(db->features_cell);
+    db->cells[cell_idx].tot_umi_obs=0;
+    db->cells[cell_idx].tot_reads_obs=0;
   }
 
-  return(e);
+  
+  // lookup for the feature
+  ulong key=feat_id;
+  FEATURE_ENTRY* e=(FEATURE_ENTRY*)get_object(db->cells[cell_idx].features,key);
+  while (e!=NULL) {
+    if ( feat_id == e->feat_id ) break;
+    e=(FEATURE_ENTRY*)get_next_object(db->cells[cell_idx].features,key);
+  }
+  
+  if ( e==NULL) {
+    // new feature entry
+    e=(FEATURE_ENTRY*)malloc(sizeof(FEATURE_ENTRY));
+    if (e==NULL) return(NULL);
+    e->tot_umi_obs=e->tot_reads_obs=0;
+    e->feat_id=feat_id;
+    if (insere(db->cells[cell_idx].features,feat_id,e)<0) {
+      return(NULL);
+    }    
+    e->samples=(COUNT_ENTRY**)malloc(sizeof(COUNT_ENTRY*)*MAX_SAMPLES);
+    if (e->samples==NULL) return(NULL);
+    memset(e->samples,0L,sizeof(COUNT_ENTRY*)*MAX_SAMPLES);    
+  }
+  ulong sample_key=sample_id%MAX_SAMPLES;
+  COUNT_ENTRY *ce=e->samples[sample_key];
+  while(ce!=NULL) {
+    if ( ce->sample==sample_id && ce->umi==umii ) break;
+    ce=ce->next;
+  }
+  if (ce==NULL ) {
+    COUNT_ENTRY *new_ce=(COUNT_ENTRY*)malloc(sizeof(COUNT_ENTRY));
+    if (new_ce==NULL) return(NULL);
+    new_ce->umi=umii;
+    new_ce->sample=sample_id;
+    new_ce->umi_obs=incr;
+    new_ce->reads_obs=incr;
+    new_ce->next=e->samples[sample_key];
+    e->samples[sample_key]=new_ce;       
+    e->tot_umi_obs+=incr;
+    db->tot_umi_obs+=incr;
+
+    ce=new_ce;
+  }
+  e->tot_reads_obs+=incr;
+  db->tot_reads_obs+=incr;
+
+  return(ce);
 }
 
 char EMPTY_STRING[]="";
@@ -614,30 +447,27 @@ char *get_tag(bam1_t *aln,const char tagname[2]) {
   return(s2);
 }
 
-int valid_barcode(hashtable ht,const uint_64 barcode) {
+int valid_barcode(hashtable ht,const uint_64 barcode_id) {
   if (ht==NULL) return(TRUE); // by default all BARCODEs are valid
 
   ulong key;
-  //if ( barcode> 4294967296) {
-  //  key=barcode/1000000000;// convert to ulong
-  //} else {
-    key=barcode;
-    //}
+  key=barcode_id;
+
   uint_64 *ptr=(uint_64*)get_object(ht,key);
   while ( ptr!=NULL ) {
-    if ( *ptr==barcode) return(TRUE);
+    if ( *ptr==barcode_id) return(TRUE);
     ptr=(uint_64*)get_next_object(ht,key);
   }
   return(FALSE);
 }
 
 // get a column id - based on the cell/sample name
-uint_64 get_col_id(const uint_64 cell, const uint_64 sample,BLABELS *map) {
-  return(blabel2id(cell,sample,map));
-}
+//uint_64 get_col_id(const uint_64 cell, const uint_64 sample,BLABELS *map) {
+//  return(blabel2id(cell,sample,map));
+//}
 
 
-hashtable load_whitelist(const char* file,uint hashsize) {
+hashtable load_whitelist(const char* file,uint hashsize,BLABELS* map) {
 
   FILE *fd;
   if ((fd=fopen(file,"r"))==NULL) {
@@ -654,13 +484,10 @@ hashtable load_whitelist(const char* file,uint hashsize) {
     if (l==NULL || l[0]=='\0') continue;
     ++num_read_b;
     uint_64 num=char2uint_64(l);
-    //fprintf(stderr,"%s->%llu\n",umi,umi_num);
-    ulong key;
-    //if ( num> 4294967296) {
-    //  key=num/1000000000;// convert to ulong
-    //} else {
-      key=num;
-      //}
+    ulong key=num;
+    if ( map!=NULL ) {
+      num=key=blabel2id(num,map);
+    }
     uint_64 *ptr=(uint_64*)get_object(ht,key);
     while ( ptr!=NULL ) {
       if ( *ptr==num) break;
@@ -673,7 +500,7 @@ hashtable load_whitelist(const char* file,uint hashsize) {
 	  exit(1);
       }
       *e=num;
-      insere(ht,key,e);
+      insere(ht,num,e);
     }
   }
   fclose(fd);
@@ -687,11 +514,11 @@ hashtable load_whitelist(const char* file,uint hashsize) {
 // Matrix Market format
 // Header: rows columns entries
 #define MM_SEP " "
-void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable uniq_ht, UNIQ_KEYS* ukey, uint min_num_reads,char *cell_suffix) {
+void write2MM(const char* file, DB*db,LABELS *rows_map, BLABELS *cols_map,uint min_num_reads,uint min_num_umis,char *cell_suffix,int UMI) { 
 
   FILE *fd=NULL;
   if ((fd=fopen(file,"w+"))==NULL) {
-    PRINT_ERROR("Failed to open file %s", file);  
+    PRINT_ERROR("Failed to open file %s", file);
     exit(1);
   }
   //
@@ -701,40 +528,67 @@ void write2MM(const char* file, LABELS *rows_map, BLABELS *cols_map,  hashtable 
 
   // avoid gziping directly for now
   fprintf(fd,"%%%%MatrixMarket matrix coordinate real general\n");
-  fprintf(fd,"%lu %lu ",rows_map->ctr,cols_map->ctr);
+  fprintf(fd,"%u %u ",rows_map->ctr,cols_map->ctr);
   long loc=ftell(fd);
-  fprintf(fd,"%-10lu\n",0L);
+  fprintf(fd,"%-15lu\n",0L);
 
-  uint_64 ctr=0;
-  while ( ukey!=NULL ) {
-    ulong n=count_uniq_entries(uniq_ht,ukey,min_num_reads);
-    if ( n>=min_num_reads) {
-      fprintf(fd,"%lu%s%lu%s%lu\n",ukey->feat_id,MM_SEP,get_col_id(ukey->cell, ukey->sample,cols_map),MM_SEP,n);
+  // traverse the full DB
+  // todo: handle samples
+  uint cell_id=0;
+  uint_64 tot_ctr=0;
+  uint_64 tot_cells=0;
+  uint_64 tot_feat_cells=0;
+  
+
+  FEATURE_ENTRY *fe;
+  while ( cell_id<=cols_map->ctr) {
+    // traverse the feature hashtable
+    if (db->cells[cell_id].features!=NULL) {
+      init_hash_traversal(db->cells[cell_id].features);
+      ++tot_cells;
+      while ( (fe=(FEATURE_ENTRY*)next_hash_object(db->cells[cell_id].features))!=NULL) {
+	//fprintf(stderr,">>%u%s%u%s%f %f %u %u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,fe->tot_umi_obs,fe->tot_reads_obs,min_num_reads,min_num_umis);
+	// do not go down through the samples
+	if ( fe->tot_reads_obs>=min_num_reads*1.0 &&
+	     fe->tot_umi_obs>=min_num_umis*1.0 ) {	  
+	  if ( UMI==TRUE) {
+	    fprintf(fd,"%u%s%u%s%u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_umi_obs));
+	    tot_ctr+=(uint)fe->tot_umi_obs;
+	  } else {
+	    fprintf(fd,"%u%s%u%s%u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_reads_obs));
+	    tot_ctr+=(uint)fe->tot_reads_obs;
+	  }
+	  ++tot_feat_cells;
+	}
+      }
     }
-    ukey=ukey->next;
-    ++ctr;
-  }
-
-  if ( ctr >= 9999999999 ) {
+    ++cell_id;    
+  }  
+  if ( tot_feat_cells >= 9999999999 ) {
     fprintf(stderr,"ERROR: integer overflow (please contact the author of the program).\n");
     exit(1);
   }
   
-  if ( ctr == 0 ) {
-    fprintf(stderr,"ERROR: 0 quantified features.\n");   
+  if ( tot_feat_cells == 0 ) {
+    fprintf(stderr,"ERROR: 0 quantified features.\n");
     exit(1);
   }
   // finish header
   fseek(fd,loc,SEEK_SET);
-  fprintf(fd,"%-10lu",ctr);
+  fprintf(fd,"%-15llu",tot_feat_cells);
   fclose(fd);
   
   fprintf(stderr,"Saving MM file...done.\n");
+  fprintf(stderr,"#cells/features: %llu\n",tot_feat_cells);
+  fprintf(stderr,"#cells: %llu\n",tot_cells);
+  fprintf(stderr,"#tot expr: %llu\n",tot_ctr);
+
+
 }
 
 
 void print_usage(int exit_status) {
-    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag GX|TX] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample] [--cell_suffix suffix]");
+    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--min_umis 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag gx|tx] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample] [--cell_suffix suffix] [--max_cells number] [--max_feat number] [--feat_cell number]");
     if ( exit_status>=0) exit(exit_status);
 }
 
@@ -743,23 +597,33 @@ int main(int argc, char *argv[])
 {  
   bamFile in; 
   uint min_num_reads=0;
+  uint min_num_umis=0;
   static int uniq_mapped_only=FALSE;
-  char feat_tag[]="GX";
+  char feat_tag[]=GENE_ID_TAG;
   unsigned long long num_alns=0;
   unsigned long long num_tags_found=0;
   unsigned long long num_umis_discarded=0;
   unsigned long long num_cells_discarded=0;
-  UNIQ_KEYS_HT* key_list=NULL;
-  LABELS* features_map=NULL;
-  BLABELS* cols_map=NULL;
 
+  // mappings
+  LABELS* features_map=NULL;
+  BLABELS* cells_map=NULL;
+  BLABELS* samples_map=NULL;
+  // TODO: allow these values to be passed as arguments
+  ulong max_features=MAX_FEATURES;
+  ulong max_cells=MAX_CELLS;
+  ulong max_samples=MAX_SAMPLES;
+  ulong features_cell=4000;
+
+  
   char *bam_file=NULL;
   char *ucounts_file=NULL;
-  char *dump_file=NULL;
+  char *rcounts_file=NULL;
+
   char *known_umi_file=NULL;
   char *known_cells_file=NULL;
   char *cell_suffix=NULL;
-  static int  mm_format=FALSE; // tsv by default
+  
   static int verbose=0;  
   static int help=FALSE;
   static int ignore_sample=FALSE;
@@ -768,17 +632,19 @@ int main(int argc, char *argv[])
     {"multi_mapped", no_argument,      &uniq_mapped_only, FALSE},
     {"uniq_mapped", no_argument,       &uniq_mapped_only, TRUE},
     {"ignore_sample", no_argument,       &ignore_sample, TRUE},
-    {"ucounts_MM",  no_argument, &mm_format, TRUE},
-    {"ucounts_tsv",  no_argument, &mm_format, FALSE},
     {"help",   no_argument, &help, TRUE},
     {"bam",  required_argument, 0, 'b'},
     {"cell_suffix",  required_argument, 0, 's'},
     {"known_umi",  required_argument, 0, 'k'},
     {"known_cells",  required_argument, 0, 'c'},
     {"ucounts",  required_argument, 0, 'u'},
-    {"dump",  required_argument, 0, 'd'},
+    {"rcounts",  required_argument, 0, 'r'},
     {"tag",  required_argument, 0, 'x'},
     {"min_reads",  required_argument, 0, 't'},
+    {"min_umis",  required_argument, 0, 'U'},
+    {"max_cells",  required_argument, 0, 'C'},
+    {"max_feat",  required_argument, 0, 'F'},
+    {"feat_cell",  required_argument, 0, 'T'},
     {0,0,0,0}
   };
 
@@ -788,20 +654,23 @@ int main(int argc, char *argv[])
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    int c = getopt_long (argc, argv, "b:u:d:t:x:c:s:",
+    int c = getopt_long (argc, argv, "F:T:C:b:U:u:r:t:x:c:s:h",
 		     long_options, &option_index);      
     if (c == -1) // no more options
       break;
 
-    switch (c) {      
+    switch (c) {
+    case 'h':
+      help=TRUE;
+      break;
     case 'b':
       bam_file=optarg;
       break;
     case 'u':
       ucounts_file=optarg;
       break;
-    case 'd':
-      dump_file=optarg;
+    case 'r':
+      rcounts_file=optarg;
       break;
     case 's':
       cell_suffix=optarg;
@@ -818,6 +687,18 @@ int main(int argc, char *argv[])
     case 't':
       min_num_reads=atol(optarg);
       break;
+    case 'U':
+      min_num_umis=atol(optarg);
+      break;
+    case 'C':
+      max_cells=atol(optarg);
+      break;
+    case 'F':
+      max_features=atol(optarg);
+      break;
+    case 'T':
+      features_cell=atol(optarg);
+      break;
     default:
       //print_usage(1);
       break;
@@ -830,24 +711,27 @@ int main(int argc, char *argv[])
   if ( bam_file == NULL ) print_usage(1);
   if ( ucounts_file == NULL ) print_usage(1);
   
-  
-  // fprintf(stderr,"HASHSIZE=%u\n",HASHSIZE);
-  hashtable ht=new_hashtable(HASHSIZE);
-  // uniq=feature|cell|sample 
-  hashtable uniq_ht=new_hashtable(HASHSIZE);
+
+    // mappings
+  features_map=init_labels(max_features);
+  cells_map=init_blabels(max_cells);
+  if (!ignore_sample)
+    samples_map=init_blabels(max_samples);
+
+  DB *db=new_db(max_cells,max_features,features_cell);
+  // white lists
   hashtable kumi_ht=NULL;   // UMIs white list
   hashtable kcells_ht=NULL; // cells white list
-
   
   // known UMIs
   if ( known_umi_file!=NULL ) {
-    kumi_ht=load_whitelist(known_umi_file,1000001);
-    fprintf(stderr,"UMIs whitelist %lu\n",kumi_ht->n_entries);
+    kumi_ht=load_whitelist(known_umi_file,1000001,NULL);
+    fprintf(stderr,"UMIs whitelist %llu\n",kumi_ht->n_entries);
   }
   // known cells
   if ( known_cells_file!=NULL ) {
-    kcells_ht=load_whitelist(known_cells_file,500001);
-    fprintf(stderr,"Cells whitelist %lu\n",kcells_ht->n_entries);
+    kcells_ht=load_whitelist(known_cells_file,max_cells/2,cells_map);
+    fprintf(stderr,"Cells whitelist %llu\n",kcells_ht->n_entries);
   }
   
   // Open file and exit if error
@@ -858,37 +742,30 @@ int main(int argc, char *argv[])
     return(PARAMS_ERROR_EXIT_STATUS);  
   }  
 
-  FILE *ucounts_fd=NULL,*dump_fd=NULL;
-
-  if ( dump_file!=NULL) 
-    if ((dump_fd=fopen(dump_file,"w+"))==NULL) {
-      PRINT_ERROR("Failed to open file %s", dump_file);  
-      exit(1);
-    }
-
   fprintf(stderr,"@min_num_reads=%u\n",min_num_reads);
+  fprintf(stderr,"@min_num_umis=%u\n",min_num_umis);
   fprintf(stderr,"@uniq mapped reads=%u\n",uniq_mapped_only);
   fprintf(stderr,"@tag=%s\n",feat_tag);
   fprintf(stderr,"@unique counts file=%s\n",ucounts_file);
   if (cell_suffix!=NULL)
     fprintf(stderr,"@cell_suffix=%s\n",cell_suffix);
-  features_map=init_labels(1000001);
-  cols_map=init_blabels(100001);
 
+ 
   //
   // 
   bam1_t *aln=bam_init1();
-
-  fprintf(stderr,"Processing %s\n",bam_file);
-
   // read header
   bam_header_read(in);
+  
+  fprintf(stderr,"Processing %s\n",bam_file);
+
 
   // tmp buffers
-  char buf[500];
-  char buf2[500];
   uint8_t *nh;
   char *feat,*umi,*cell,*sample;
+  // map to ids
+  uint cell_id=0;
+  uint sample_id=0;
   // TODO: change alns to entries
   num_alns=0;
   while(bam_read1(in,aln)>=0) { // read alignment
@@ -906,28 +783,29 @@ int main(int argc, char *argv[])
 
     //assert(r!=NULL);
     nh = bam_aux_get(aln, "NH");
+    int nh_i=1;
     // exclude multimaps?
-    if (nh!=NULL && uniq_mapped_only) {
-      int x=bam_aux2i(nh);
-      if ( x > 1 ) continue;
+    if (nh!=NULL) {
+      nh_i=bam_aux2i(nh);
+      if ( nh_i > 1 && uniq_mapped_only) continue;
     }
     //int is_paired=aln->core.flag & BAM_FPAIRED;
-
-    //fprintf(stderr,"aaaa1 %s\n",feat_tag);
     feat=get_tag(aln,feat_tag);
-
     if (feat[0]!='\0') {
       num_tags_found++;
-      umi=get_tag(aln,"UM");
-      cell=get_tag(aln,"CR");
+      umi=get_tag(aln,UMI_TAG);
+      // TODO: remove support for this tag and update tests
+      if ( umi[0]=='\0') // backwards compatibility
+	umi=get_tag(aln,"UM");
+      cell=get_tag(aln,CELL_TAG);
       if ( !ignore_sample)
-	sample=get_tag(aln,"BC");
+	sample=get_tag(aln,SAMPLE_TAG);
       else
 	sample=NULL;
 #ifdef DEBUG      
       fprintf(stderr,"umi2-->%s %s %s %s",umi,cell,sample,feat);
 #endif
-      // convert the different barcodes to uint_64 ASAP
+      // convert the different barcodes to uint_64 
       uint_64 umi_i=char2uint_64(umi);
       
       // skip if the UMI is not valid
@@ -938,23 +816,27 @@ int main(int argc, char *argv[])
 	}
 
       uint_64 cell_i=char2uint_64(cell);
+      cell_id=blabel2id(cell_i,cells_map);
+      //fprintf(stderr,"aaaa1:%s-->%llu-->%lu\n",cell,cell_i,cell_id);
+      
       if ( kcells_ht!=NULL) 
-	if ( !valid_barcode(kcells_ht,cell_i) ) {
+	if ( !valid_barcode(kcells_ht,cell_id) ) {
 	  num_cells_discarded++;
 	  continue;
 	}
 
       uint_64 sample_i=char2uint_64(sample);
-	    
-      // 
-      get_col_id(cell_i,sample_i, cols_map);
+      // map to ids
+
+      if ( ! ignore_sample )
+	sample_id=blabel2id(sample_i,samples_map);
 
       //
       // feature id
       char *f=strtok(feat,",");
       char *prev_f=NULL;
       int n_feat=0;
-      // number of features
+      // number of features (count the number of , or ;
       while (f !=NULL ) {
 	if (prev_f==NULL || !strcmp(f,prev_f)) 
 	  ++n_feat;
@@ -964,16 +846,19 @@ int main(int argc, char *argv[])
 
       f=strtok(feat,",");
       prev_f=NULL;
+      float incr=1.0/(n_feat*nh_i);
       while (f !=NULL ) {
 	if (prev_f==NULL || !strcmp(f,prev_f)) {
 	  int len1=strlen(f);
 	  assert( len1+1 < FEAT_ID_MAX_LEN );
-
 	  uint feat_id=label_str2id(f,features_map);
-	    
-	  COUNT_ENTRY* lookup=get_count_key(feat_id,umi_i,cell_i,sample_i,ht);
-	  lookup->reads_obs+=1/n_feat; // for now it will be 0 if multiple feat. overlap
-	  lookup->umi_obs+=1/n_feat; // for now it will be 0 if multiple feat. overlap
+
+	  COUNT_ENTRY* lookup=get_count_entry(feat_id,umi_i,cell_id,sample_id,db,incr);
+	  //fprintf(stderr,">>>>%u-->%f\n",cell_id,incr);
+	  if (lookup==NULL) {
+	    fprintf(stderr,"Memory allocation failed!\n");
+	    exit(1);
+	  }
 	  // check for overflow
 	  if ( lookup->reads_obs + 1 >= FLT_MAX ) {
 	    PRINT_ERROR("Counter overflow (umi_obs) %.2lf\n",lookup->reads_obs);	    
@@ -982,14 +867,6 @@ int main(int argc, char *argv[])
 	  if ( lookup->umi_obs + 1 >= FLT_MAX ) {
 	    PRINT_ERROR("Counter overflow (umi_obs) %.2lf\n",lookup->umi_obs);	    
 	    exit(1);
-	  }
-	  // 
-	  uniq_ht=add_count_entry_to_uht(uniq_ht,lookup);
-	  // new entry
-	  key_list=add_to_list(key_list,lookup);
-	  if ( key_list==NULL ) {
-	      PRINT_ERROR("Error: failed to allocate memory\n");
-	      exit(1);
 	  }
 	}
 	prev_f=f;
@@ -1004,55 +881,25 @@ int main(int argc, char *argv[])
   fprintf(stderr,"%s encountered  %llu times\n",feat_tag,num_tags_found);
   fprintf(stderr,"%lld UMIs discarded\n",num_umis_discarded);
   fprintf(stderr,"%lld cells discarded\n",num_cells_discarded);
-  fprintf(stderr,"%lld features\n",label_entries(features_map));
-  fprintf(stderr,"%lld cells/samples\n",blabel_entries(cols_map));
+  fprintf(stderr,"%u features\n",label_entries(features_map));
+  fprintf(stderr,"%u cells\n",blabel_entries(cells_map));
+  if (samples_map!=NULL)
+    fprintf(stderr,"%u samples\n",blabel_entries(samples_map));
+  fprintf(stderr,"%f total reads\n",db->tot_reads_obs);
+  fprintf(stderr,"%f total UMI\n",db->tot_umi_obs);
   if ( !num_tags_found ) {
     fprintf(stderr,"ERROR: no valid alignments tagged with %s were found in %s.\n",feat_tag,bam_file);
     exit(1);
   }
-  hashtable_stats(uniq_ht);
-  //hashtable_stats(key_list->ht);
+
   // uniq UMIs that overlap each gene per cell (and optionally per sample)
-  // traverse the hashtable and count how many distinct UMIs are assigned to each gene (with the number of reads above minimum number of reads threshold)
-  if ( ucounts_file !=NULL) {
-    UNIQ_KEYS *ukey=NULL;
-    if ( key_list!=NULL) ukey=key_list->keys;
-    if (mm_format ) {
-      write2MM(ucounts_file,features_map,cols_map,uniq_ht,ukey,min_num_reads,cell_suffix);
-    } else {
-      // TSV
-      if ((ucounts_fd=fopen(ucounts_file,"w+"))==NULL) {
-	PRINT_ERROR("Failed to open file %s", ucounts_file);  
-	exit(1);
-      }      
-      uint_64 ctr=0;
-      short pheader=TRUE;  
-      while ( ukey!=NULL ) {
-	ulong n=count_uniq_entries(uniq_ht,ukey,min_num_reads);
-	if ( n>=min_num_reads) {
-	  print_ucount(ukey,n,"\t",ucounts_fd,features_map,pheader,cell_suffix);
-	  pheader=FALSE;
-	}
-	ukey=ukey->next;
-	++ctr;
-      }
-      if ( ctr == 0 ) {
-	fprintf(stderr,"ERROR: 0 quantified features.");   
-	exit(1);
-      }
-      fclose(ucounts_fd);
-    }
+  if ( ucounts_file !=NULL) { 
+    // todo: use a cols_map to take the sample barcode into account
+    write2MM(ucounts_file,db,features_map,cells_map,min_num_reads,min_num_umis,cell_suffix,TRUE); 
   }
-  // dump the counts
-  if ( dump_file != NULL ) {
-    init_hash_traversal(ht);
-    COUNT_ENTRY* e;
-    short pheader=TRUE;  
-    while((e=(COUNT_ENTRY*)next_hash_object(ht))!=NULL) {
-      print_count_entry(e,"\t",dump_fd,features_map,pheader,min_num_reads,cell_suffix);
-      pheader=FALSE;
-    }
-    fclose(dump_fd);
-  }
+  // dump the counts */
+  if ( rcounts_file != NULL ) {
+    write2MM(rcounts_file,db,features_map,cells_map,min_num_reads,min_num_umis,cell_suffix,FALSE); 
+  } 
   return(0);
 }
