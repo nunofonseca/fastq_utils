@@ -105,7 +105,6 @@ __ptr_t get_object(hashtable table,ulong key){
 /* Allocates space to a new hash table */
 hashtable new_hashtable(ulong hashsize) {
   hashtable new;
-  register ulong i;
 
   if( (new = (hashtable)malloc(sizeof(struct hashtable_s)))==NULL) return NULL;
   
@@ -147,7 +146,7 @@ void hashtable_stats(hashtable table) {
   fprintf(stderr,"size: %llu\n",HASHSIZE(table));
   fprintf(stderr,"max. col: %llu\n",max_col);
   fprintf(stderr,"zbuckets: %llu\n",zbuckets);
-  fprintf(stderr,"% zbuckets: %.2f\n",zbuckets*1.0/HASHSIZE(table));
+  fprintf(stderr,"%% zbuckets: %.2f\n",zbuckets*1.0/HASHSIZE(table));
   fprintf(stderr,"collisions: %llu\n",collisions);
   fprintf(stderr,"avg. collisions: %.2f\n",collisions*1.0/(HASHSIZE(table)-zbuckets));
 }
