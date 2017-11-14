@@ -115,7 +115,7 @@ fi
 if [ "$trans_bed_file-" != "-" ]; then
     let num_feat_ann_files=num_feat_ann_files+1
     feat_annot_files="$feat_annot_files $trans_bed_file"
-    feat_annot_tags="$feat_annot_tags TX"
+    feat_annot_tags="$feat_annot_tags tx"
     check_file $gene_bed_file "transcript bed" "-t"
     pinfo transcripts=$trans_bed_file       
 fi
@@ -141,7 +141,7 @@ fi
 if  [ $num_feat_ann_files -eq 1 ]; then
     cmd="$cmd1 tagBam -i $input_file  -names -s  -tag $feat_annot_tags  -files $feat_annot_files"
 else
-    cmd="$cmd1 tagBam -i $input_file  -names -s -tag GX  -files $gene_bed_file | tagBam -i stdin  -names  -tag  TX  -files $trans_bed_file"
+    cmd="$cmd1 tagBam -i $input_file  -names -s -tag GX  -files $gene_bed_file | tagBam -i stdin  -names  -tag  tx  -files $trans_bed_file"
 fi
 echo $cmd > /dev/stderr
 exec bash -c "$cmd"

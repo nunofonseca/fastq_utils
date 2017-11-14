@@ -617,7 +617,6 @@ int main(int argc, char **argv ) {
     
     if ( out_sam ) {
       int se=(p->outfile[READ2]!=NULL?FALSE: TRUE);
-      int sample_len, umi_len,cell_len;
       // prepare the "alignment"
       // slice_read(m[x],p,x);
       int flag=0;
@@ -636,7 +635,7 @@ int main(int argc, char **argv ) {
 	processed_reads,flag,RNAME,POS,MAPQ,CIGAR,RNEXT,PNEXT,len-1);
 
 
-      PRINT_SAM("\t%s\t%s\t%s:Z:%s",m[READ1]->seq,&m[READ1]->qual,ORIG_RN_TAG,rn1);
+      PRINT_SAM("\t%s\t%s\t%s:Z:%s",m[READ1]->seq,&m[READ1]->qual[0],ORIG_RN_TAG,rn1);
       PRINT_SAM("\t%s:Z:%s",ORIG_QUAL_TAG,m[READ1]->qual);
       //
       if ( umi[0]!='\0'  ) 

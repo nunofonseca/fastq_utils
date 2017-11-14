@@ -30,6 +30,7 @@
 
 #include "fastq.h"
 #include "hash.h"
+#include "sam_tags.h"
 
 #define MAX_FEAT_LEN 50
 typedef struct trans_gene_map {
@@ -158,7 +159,7 @@ int main(int argc, char *argv[])   {
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    int c = getopt_long (argc, argv, "i:o:m:",
+    int c = getopt_long (argc, argv, "i:o:m:h",
 			 long_options, &option_index);      
     if (c == -1) // no more options
       break;
@@ -167,6 +168,7 @@ int main(int argc, char *argv[])   {
     case 'i': inbam_file=optarg; break;
     case 'o': outbam_file=optarg; break;
     case 'm': map_file=optarg; break;
+    case 'h': help=TRUE; break;
     default: break;
     }
   }
@@ -229,7 +231,7 @@ int main(int argc, char *argv[])   {
       ++num_map_entries;
     }
     fclose(map_fd);
-    fprintf(stderr,"unique gene/transcript pairs %lu\n",t2g_ht->n_entries);
+    fprintf(stderr,"unique gene/transcript pairs %llu\n",t2g_ht->n_entries);
   }
 
   unsigned long num_alns=0;  
@@ -263,22 +265,23 @@ int main(int argc, char *argv[])   {
     if (get_barcodes(qn,&sample[0],&umi[0],&cell[0],&sample_len,&umi_len,&cell_len)) {
 
       if ( umi_len > 0 )   // UMI
-	bam_aux_append(aln, "UM", 'Z', umi_len+1, (uint8_t *)umi);
+	bam_aux_append(aln, UMI_TAG, 'Z', umi_len+1, (uint8_t *)umi);
+
       if ( cell_len > 0 )  // cellular barcode sequence as reported by the sequencer
-	bam_aux_append(aln, "CR", 'Z', cell_len+1, (uint8_t *)cell); 
+	bam_aux_append(aln, CELL_TAG, 'Z', cell_len+1, (uint8_t *)cell); 
       if ( sample_len > 0 ) // sample index
-	bam_aux_append(aln, "BC", 'Z', sample_len+1, (uint8_t *)sample);
+	bam_aux_append(aln, SAMPLE_TAG, 'Z', sample_len+1, (uint8_t *)sample);
       if (tx_tag ) {
 	char *tx=NULL;
 	if ( aln->core.tid >= 0 ) {
 	  tx=header->target_name[aln->core.tid];
 	  //fprintf(stderr,">>>>TX: %s\n",tx);
-	  bam_aux_append(aln,"TX",'Z',strlen(tx)+1,(uint8_t *)tx);
+	  bam_aux_append(aln,TRANSCRIPT_ID_TAG,'Z',strlen(tx)+1,(uint8_t *)tx);
 	  //
 	  if ( map_file != NULL ) {
 	    char* gene=(char*)get_gene(tx,t2g_ht);
 	    if ( gene!=NULL ) {
-	      bam_aux_append(aln,"GX",'Z',strlen(gene)+1,(uint8_t *)gene);
+	      bam_aux_append(aln,GENE_ID_TAG,'Z',strlen(gene)+1,(uint8_t *)gene);
 	    } // else { exit(3); }  should this fail now?
 	  }
 	}
