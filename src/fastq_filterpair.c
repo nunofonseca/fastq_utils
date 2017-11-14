@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
   fprintf(stderr,"Scanning complete.\n");
 
   // print some info
-  fprintf(stderr,"Reads indexed: %ld\n",index->n_entries);
+  fprintf(stderr,"Reads indexed: %llu\n",index->n_entries);
   fprintf(stderr,"Memory used in indexing: %ld MB\n",index_mem/1024/1024);
   // 
   char *p1=argv[3];
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
     PRINT_READS_PROCESSED(fd2->cline/4,10000);
   }
   fprintf(stderr,"\n");
-  fprintf(stderr,"Recording %ld unpaired reads from %s\n",index->n_entries,argv[1]);fflush(stderr);
+  fprintf(stderr,"Recording %llu unpaired reads from %s\n",index->n_entries,argv[1]);fflush(stderr);
 
 
 #ifdef SEEKAPPROACH
@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
   }
 #endif
   fprintf(stderr,"\n");
-  fprintf(stderr,"Unpaired from %s: %ld\n",argv[1],index->n_entries);
+  fprintf(stderr,"Unpaired from %s: %llu\n",argv[1],index->n_entries);
   fprintf(stderr,"Unpaired from %s: %ld\n",argv[2],up2);
   fprintf(stderr,"Paired: %ld\n",paired);
   // close
