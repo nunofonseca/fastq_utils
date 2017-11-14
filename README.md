@@ -23,15 +23,16 @@ The [install_deps.sh](https://github.com/nunofonseca/fastq_utils/blob/master/ins
 
 #### Getting sources
 
-Option 1: to use git to download the repository  with the entire code history, type:
+Option 1: download the latest source release tarball from https://github.com/nunofonseca/fastq_utils/releases, and then from your download directory type:
+
+    tar xzf fastq_utils-x.x.x.tar.gz
+    cd fastq_utils-x.x.x
+
+Option 2: to use git to download the repository  with the entire code history, type:
 
     git clone https://github.com/nunofonseca/fastq_utils.git
     cd fastq_utils
 
-Option 2: download the latest source release tarball from https://github.com/nunofonseca/fastq_utils/releases, and then from your download directory type:
-
-    tar xzf fastq_utils-x.x.x.tar.gz
-    cd fastq_utils-x.x.x
 
 #### Generating the executables
 
