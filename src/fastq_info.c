@@ -162,7 +162,7 @@ int main(int argc, char **argv ) {
 
   FASTQ_FILE* fd1=NULL;
   FASTQ_FILE* fd2=NULL;
-  hashtable index;
+  hashtable index=NULL;
   // ************************************************************
   if ( is_interleaved ) {
     // interleaved    
@@ -184,7 +184,7 @@ int main(int argc, char **argv ) {
     num_reads1=index->n_entries;
     fprintf(stderr,"\n");
     // print some info
-    fprintf(stderr,"Reads processed: %ld\n",index->n_entries);    
+    fprintf(stderr,"Reads processed: %llu\n",index->n_entries);    
     fprintf(stderr,"Memory used in indexing: ~%ld MB\n",index_mem/1024/1024);
   }
   if (num_reads1 == 0 ) {
@@ -230,7 +230,7 @@ int main(int argc, char **argv ) {
     printf("\n");
     //fastq_destroy(fdf);//???
     if (index->n_entries>0 ) {
-      PRINT_ERROR("Error in file %s: found %lu unpaired reads",argv[1+nopt],index->n_entries);
+      PRINT_ERROR("Error in file %s: found %llu unpaired reads",argv[1+nopt],index->n_entries);
       exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
     // stats
