@@ -20,7 +20,7 @@
 #
 # =========================================================
 */
-// TAGS used in unaligned SAM/BAM files
+// SAM TAGS 
 #define RNAME "*"
 #define POS   "0"
 #define CIGAR "*"
@@ -39,3 +39,10 @@
 
 #define ORIG_RN_TAG "on"
 #define ORIG_QUAL_TAG "op" 
+
+// break spec to keep compatibility with some tools
+#define GENE_ID_TAG "GX"
+#define TRANSCRIPT_ID_TAG "tx"
+
+// intronic, exonic
+#define ANNOT_TAG YB
