@@ -212,7 +212,7 @@ echo "*** bam_umi_count"
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX"
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX"
 
-must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts xx && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  373 ]"
+must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts xx && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
 #must_succeed  "./src/bam_umi_count --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
 must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --multi_mapped --ucounts xx && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
@@ -263,7 +263,7 @@ must_fail "./src/bam_umi_count --bam tests/test_annot.bam -x"
 
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing"
 must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts folder/missing_path/xx"
-must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts xx --dump folder/missing_path/xxx"
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts xx --ureads folder/missing_path/xxx"
 must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt_missing --ucounts /dev/null --dump xx "
 
 must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt_missing --ucounts /dev/null --dump xx "
