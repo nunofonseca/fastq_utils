@@ -188,7 +188,21 @@ BLABELS* init_blabels(uint hashsize) {
 uint blabel_entries(const BLABELS *lm) {
   return(lm->ctr);
 }
-
+// return the id or 0 if label is not in the mapping
+uint_64 label2id(const uint_64 lab,BLABELS* lm ) {
+  assert(lm!=NULL);
+  // lookup
+  ulong ikey=lab;
+  BLABEL2ID *e=(BLABEL2ID*)get_object(lm->ht,ikey);
+  
+  // look for the match
+  while (e!=NULL) {
+    if ( e->label==lab ) break;
+    e=e->next;
+  }
+  if (e==NULL) return 0;
+  return(e->id);  
+}
 // barcode based label to id
 uint_64 blabel2id(const uint_64 lab,BLABELS* lm ) {
   //
@@ -202,7 +216,7 @@ uint_64 blabel2id(const uint_64 lab,BLABELS* lm ) {
     if ( e->label==lab ) break;
     e=e->next;
   }
-
+  
   if ( e==NULL ) {
     BLABEL2ID *new=(BLABEL2ID*)malloc(sizeof(BLABEL2ID));
     lm->ctr++;
@@ -358,14 +372,14 @@ DB* new_db(uint max_cells,uint max_features,uint features_cell) {
 
   DB *new=(DB*)malloc(sizeof(DB));
   if (new==NULL) { return(NULL);}
-  new->max_cells=max_cells;
+  new->max_cells=max_cells+1;// index is from 1-max
   new->max_features=max_features;
   new->features_cell=features_cell;
   new->tot_umi_obs=new->tot_reads_obs=0;
   // cells array
-  new->cells=(CELL*)malloc(max_cells*sizeof(CELL));
+  new->cells=(CELL*)malloc(new->max_cells*sizeof(CELL));
   if (new->cells==NULL) { return(NULL);}
-  memset(new->cells,0L,sizeof(CELL)*max_cells);
+  memset(new->cells,0L,sizeof(CELL)*new->max_cells);
   return(new);
 }
 
@@ -450,8 +464,7 @@ char *get_tag(bam1_t *aln,const char tagname[2]) {
 int valid_barcode(hashtable ht,const uint_64 barcode_id) {
   if (ht==NULL) return(TRUE); // by default all BARCODEs are valid
 
-  ulong key;
-  key=barcode_id;
+  ulong key=barcode_id;
 
   uint_64 *ptr=(uint_64*)get_object(ht,key);
   while ( ptr!=NULL ) {
@@ -486,6 +499,7 @@ hashtable load_whitelist(const char* file,uint hashsize,BLABELS* map) {
     uint_64 num=char2uint_64(l);
     ulong key=num;
     if ( map!=NULL ) {
+      //add to the map
       num=key=blabel2id(num,map);
     }
     uint_64 *ptr=(uint_64*)get_object(ht,key);
@@ -541,7 +555,7 @@ void write2MM(const char* file, DB*db,LABELS *rows_map, BLABELS *cols_map,uint m
   
 
   FEATURE_ENTRY *fe;
-  while ( cell_id<=cols_map->ctr) {
+  while ( cell_id<=db->max_cells) {
     // traverse the feature hashtable
     if (db->cells[cell_id].features!=NULL) {
       init_hash_traversal(db->cells[cell_id].features);
@@ -551,7 +565,7 @@ void write2MM(const char* file, DB*db,LABELS *rows_map, BLABELS *cols_map,uint m
 	// do not go down through the samples
 	if ( fe->tot_reads_obs>=min_num_reads*1.0 &&
 	     fe->tot_umi_obs>=min_num_umis*1.0 ) {	  
-	  if ( UMI==TRUE && (uint)fe->tot_umi_obs>1 ) {
+	  if ( UMI==TRUE && (uint)fe->tot_umi_obs>=1 ) {
 	    fprintf(fd,"%u%s%u%s%u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_umi_obs));
 	    tot_ctr+=(uint)fe->tot_umi_obs;
 	    ++tot_feat_cells;
@@ -817,14 +831,17 @@ int main(int argc, char *argv[])
 	}
 
       uint_64 cell_i=char2uint_64(cell);
-      cell_id=blabel2id(cell_i,cells_map);
-      //fprintf(stderr,"aaaa1:%s-->%llu-->%lu\n",cell,cell_i,cell_id);
-      
-      if ( kcells_ht!=NULL) 
+
+      //fprintf(stderr,"aaaa1:%s-->%llu-->%lu\n",cell,cell_i,cell_id);      
+      if ( kcells_ht!=NULL) {
+	cell_id=label2id(cell_i,cells_map);
 	if ( !valid_barcode(kcells_ht,cell_id) ) {
 	  num_cells_discarded++;
 	  continue;
 	}
+      } else {
+	cell_id=blabel2id(cell_i,cells_map);
+      }
 
       uint_64 sample_i=char2uint_64(sample);
       // map to ids
