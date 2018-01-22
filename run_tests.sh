@@ -91,6 +91,7 @@ must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --know
 must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt_missing --ucounts /dev/null --dump xx "
 
 must_fail  "./src/bam_umi_count --sorted_by_cell --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt_missing --ucounts /dev/null --dump xx "
+must_succeed  "./bin/samtools sort -t CR tests/test_annot2.bam > /dev/null"
 must_succeed  "./bin/samtools sort -t CR tests/test_annot2.bam | ./src/bam_umi_count --sorted_by_cell  --min_reads 4 --bam - --ucounts xx --ignore_sample"
 
 must_succeed  "./bin/samtools sort -t CR tests/test_annot2.bam | ./src/bam_umi_count --sorted_by_cell  --min_reads 4 --bam - --ucounts xx --rcounts xy --ignore_sample"
