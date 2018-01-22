@@ -72,13 +72,15 @@ typedef struct cell_ENTRY {
 } CELL;
 
 typedef struct db {
-  CELL* cells;
+  CELL* cells; // only one cell at a time
   uint max_features;
   uint max_cells;
   uint features_cell;
   float tot_umi_obs;
   float tot_reads_obs;
 } DB;
+
+
 
 // ---------------------------------------------
 // single label => feature
@@ -376,22 +378,46 @@ DB* new_db(uint max_cells,uint max_features,uint features_cell) {
   new->max_features=max_features;
   new->features_cell=features_cell;
   new->tot_umi_obs=new->tot_reads_obs=0;
-  // cells array
   new->cells=(CELL*)malloc(new->max_cells*sizeof(CELL));
   if (new->cells==NULL) { return(NULL);}
   memset(new->cells,0L,sizeof(CELL)*new->max_cells);
+  if (max_cells==0) new->max_cells=0; // sorted bam
   return(new);
+}
+
+DB* quick_reset_db(DB *db) {
+
+  db->cells[0].tot_umi_obs=0;
+  db->cells[0].tot_reads_obs=0;
+  if (db->cells[0].features!=NULL ) {
+    // travesse the features
+    init_hash_traversal(db->cells[0].features);
+    FEATURE_ENTRY* e;
+    while ((e=(FEATURE_ENTRY*)next_hash_object(db->cells[0].features))!=NULL) {
+      e->tot_umi_obs=0;
+      e->tot_reads_obs=0;
+      for (int x=0;x<=MAX_SAMPLES;++x) {
+	if (e->samples[x]!=NULL) {
+	  COUNT_ENTRY *todel=e->samples[x];	    
+	  e->samples[x]=e->samples[x]->next;
+	  free(todel);
+	}
+      }
+    }    
+  }
+  return(db);
 }
 
 /* // check if an entry exists, returns a pointer for the the existing COUNT_ENTRY if available or creates a new one and increments the read/umis counters with the incr value */
 COUNT_ENTRY* get_count_entry(const uint feat_id,const uint_64 umii,const uint cell_id,const uint sample_id,DB* db,float incr) {
 
-  if( cell_id>db->max_cells ) {
+  uint cell_idx=cell_id;
+  if( cell_id>db->max_cells && db->max_cells>0 ) {
     PRINT_ERROR("Too many cells %u - please rerun and increase the cells using the --max_cells parameter\n",cell_id);
     exit(1);
   }
   // lookup
-  uint cell_idx=cell_id;
+  if ( db->max_cells==0) cell_idx=0;
   if ( db->cells[cell_idx].features==NULL ) {
     // initialize entry
     //db->cells[cell_idx]->features=new_hashtable(db->max_features/2);
@@ -597,13 +623,53 @@ void write2MM(const char* file, DB*db,LABELS *rows_map, BLABELS *cols_map,uint m
   fprintf(stderr,"#cells/features: %llu\n",tot_feat_cells);
   fprintf(stderr,"#cells: %llu\n",tot_cells);
   fprintf(stderr,"#tot expr: %llu\n",tot_ctr);
-
-
 }
 
 
+void cell2MM(DB*db, FILE *counts_fd,int UMI,uint min_num_reads,uint min_num_umis,uint_64* tot_ctr,uint_64* tot_feat_cells,const uint cell_id) {
+
+  uint cell_idx=cell_id;
+  if ( db->max_cells == 0 ) cell_idx=0;
+  
+  if (db->cells[cell_idx].features!=NULL) {
+    FEATURE_ENTRY *fe;
+    init_hash_traversal(db->cells[cell_idx].features);
+    while ( (fe=(FEATURE_ENTRY*)next_hash_object(db->cells[cell_idx].features))!=NULL) {
+      // do not go down through the samples
+      if ( fe->tot_reads_obs>=min_num_reads*1.0 &&
+	   fe->tot_umi_obs>=min_num_umis*1.0 ) {	  
+	if ( UMI==TRUE && (uint)fe->tot_umi_obs>=1 ) {
+	  fprintf(counts_fd,"%u%s%u%s%u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_umi_obs));
+	  *tot_ctr+=(uint)fe->tot_umi_obs;
+	  ++*tot_feat_cells;
+	} else if ( (uint)fe->tot_reads_obs>=1)  {
+	  fprintf(counts_fd,"%u%s%u%s%u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_reads_obs));
+	  *tot_ctr+=(uint)fe->tot_reads_obs;
+	  ++*tot_feat_cells;
+	}
+      }
+    }
+  }
+}
+
+FILE* MM_header(const char* counts_file,long *header_loc) {
+  FILE *fd;
+  if ((fd=fopen(counts_file,"w+"))==NULL) {
+    PRINT_ERROR("Failed to open file %s", counts_file);
+    exit(1);
+  }
+  //
+  fprintf(stderr,"Creating MM file %s...\n",counts_file);
+  // save the header with estimates of the matrix size
+  // avoid gziping directly for now
+  fprintf(fd,"%%%%MatrixMarket matrix coordinate real general\n");
+  *header_loc=ftell(fd);
+  fprintf(fd,"%-10lu %-10lu %-15llu\n",0L,0L,0LL);
+  return(fd);
+}
+
 void print_usage(int exit_status) {
-    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--min_umis 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag gx|tx] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample] [--cell_suffix suffix] [--max_cells number] [--max_feat number] [--feat_cell number]");
+    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--min_umis 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag gx|tx] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample] [--cell_suffix suffix] [--max_cells number] [--max_feat number] [--feat_cell number] [--cell_tag tag] [--sorted_by_cell]");
     if ( exit_status>=0) exit(exit_status);
 }
 
@@ -613,8 +679,9 @@ int main(int argc, char *argv[])
   bamFile in; 
   uint min_num_reads=0;
   uint min_num_umis=0;
-  static int uniq_mapped_only=FALSE;
+
   char feat_tag[]=GENE_ID_TAG;
+  char cell_tag[]=CELL_TAG;
   unsigned long long num_alns=0;
   unsigned long long num_tags_found=0;
   unsigned long long num_umis_discarded=0;
@@ -629,7 +696,7 @@ int main(int argc, char *argv[])
   ulong max_cells=MAX_CELLS;
   ulong max_samples=MAX_SAMPLES;
   ulong features_cell=4000;
-
+  ulong ncells=0;
   
   char *bam_file=NULL;
   char *ucounts_file=NULL;
@@ -638,7 +705,9 @@ int main(int argc, char *argv[])
   char *known_umi_file=NULL;
   char *known_cells_file=NULL;
   char *cell_suffix=NULL;
-  
+
+  static int bam_sorted_by_cell=FALSE; // reduced memory usage
+  static int uniq_mapped_only=FALSE;
   static int verbose=0;  
   static int help=FALSE;
   static int ignore_sample=FALSE;
@@ -646,6 +715,7 @@ int main(int argc, char *argv[])
     {"verbose", no_argument,       &verbose, TRUE},
     {"multi_mapped", no_argument,      &uniq_mapped_only, FALSE},
     {"uniq_mapped", no_argument,       &uniq_mapped_only, TRUE},
+    {"sorted_by_cell", no_argument,       &bam_sorted_by_cell, TRUE},
     {"ignore_sample", no_argument,       &ignore_sample, TRUE},
     {"help",   no_argument, &help, TRUE},
     {"bam",  required_argument, 0, 'b'},
@@ -655,6 +725,7 @@ int main(int argc, char *argv[])
     {"ucounts",  required_argument, 0, 'u'},
     {"rcounts",  required_argument, 0, 'r'},
     {"tag",  required_argument, 0, 'x'},
+    {"cell_tag",  required_argument, 0, 'X'},
     {"min_reads",  required_argument, 0, 't'},
     {"min_umis",  required_argument, 0, 'U'},
     {"max_cells",  required_argument, 0, 'C'},
@@ -699,6 +770,9 @@ int main(int argc, char *argv[])
     case 'x':
       strncpy(feat_tag,optarg,3);
       break;
+    case 'X':
+      strncpy(cell_tag,optarg,3);
+      break;
     case 't':
       min_num_reads=atol(optarg);
       break;
@@ -733,7 +807,13 @@ int main(int argc, char *argv[])
   if (!ignore_sample)
     samples_map=init_blabels(max_samples);
 
-  DB *db=new_db(max_cells,max_features,features_cell);
+  DB *db=NULL;
+  if ( bam_sorted_by_cell ) {
+    db=new_db(0,max_features,features_cell);
+  } else {
+    db=new_db(max_cells,max_features,features_cell);
+  }
+
   // white lists
   hashtable kumi_ht=NULL;   // UMIs white list
   hashtable kcells_ht=NULL; // cells white list
@@ -743,12 +823,13 @@ int main(int argc, char *argv[])
     kumi_ht=load_whitelist(known_umi_file,1000001,NULL);
     fprintf(stderr,"UMIs whitelist %llu\n",kumi_ht->n_entries);
   }
+    
   // known cells
   if ( known_cells_file!=NULL ) {
     kcells_ht=load_whitelist(known_cells_file,max_cells/2,cells_map);
     fprintf(stderr,"Cells whitelist %llu\n",kcells_ht->n_entries);
   }
-  
+
   // Open file and exit if error
   in = strcmp(bam_file, "-")? bam_open(bam_file, "rb") : bam_dopen(fileno(stdin), "rb"); 
   
@@ -760,12 +841,16 @@ int main(int argc, char *argv[])
   fprintf(stderr,"@min_num_reads=%u\n",min_num_reads);
   fprintf(stderr,"@min_num_umis=%u\n",min_num_umis);
   fprintf(stderr,"@uniq mapped reads=%u\n",uniq_mapped_only);
+  fprintf(stderr,"@sorted bam=%u\n",bam_sorted_by_cell);
   fprintf(stderr,"@tag=%s\n",feat_tag);
   fprintf(stderr,"@unique counts file=%s\n",ucounts_file);
   if (cell_suffix!=NULL)
     fprintf(stderr,"@cell_suffix=%s\n",cell_suffix);
 
- 
+  long header_loc=0;
+  long rheader_loc=0;
+  FILE *counts_fd=NULL;
+  FILE *rcounts_fd=NULL;
   //
   // 
   bam1_t *aln=bam_init1();
@@ -774,22 +859,37 @@ int main(int argc, char *argv[])
   
   fprintf(stderr,"Processing %s\n",bam_file);
 
+  if ( bam_sorted_by_cell ) {
+    if ( ucounts_file !=NULL) { 
+      counts_fd=MM_header(ucounts_file,&header_loc);
+    }
+    if ( rcounts_file !=NULL) { 
+      rcounts_fd=MM_header(rcounts_file,&rheader_loc);
+    }
+  }
 
   // tmp buffers
   uint8_t *nh;
   char *feat,*umi,*cell,*sample;
   // map to ids
   uint cell_id=0;
+  uint prev_cell_id=0;
   uint sample_id=0;
+
+  //
+  uint_64 tot_ctr=0;
+  uint_64 tot_feat_cells=0;
+
   // TODO: change alns to entries
   num_alns=0;
+  if ( bam_sorted_by_cell ) fprintf(stderr,"Cells processed\n");
   while(bam_read1(in,aln)>=0) { // read alignment
     if ( num_alns == ULLONG_MAX ) {
       PRINT_ERROR("counter overflow (number of alignments) - %llu\n",num_alns);
       exit(3);
     }
     ++num_alns;
-    if (num_alns%100000==0) { fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%llu",num_alns); fflush(stderr); }
+    if ( ! bam_sorted_by_cell && num_alns%100000==0) { fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b%llu",num_alns); fflush(stderr); }
 
     if (aln->core.tid < 0) continue;//ignore unaligned reads
     if (aln->core.flag & BAM_FUNMAP) continue;
@@ -812,7 +912,7 @@ int main(int argc, char *argv[])
       // TODO: remove support for this tag and update tests
       if ( umi[0]=='\0') // backwards compatibility
 	umi=get_tag(aln,"UM");
-      cell=get_tag(aln,CELL_TAG);
+      cell=get_tag(aln,cell_tag);
       if ( !ignore_sample)
 	sample=get_tag(aln,SAMPLE_TAG);
       else
@@ -829,7 +929,7 @@ int main(int argc, char *argv[])
 	  num_umis_discarded++;
 	  continue;
 	}
-
+      
       uint_64 cell_i=char2uint_64(cell);
 
       //fprintf(stderr,"aaaa1:%s-->%llu-->%lu\n",cell,cell_i,cell_id);      
@@ -842,13 +942,32 @@ int main(int argc, char *argv[])
       } else {
 	cell_id=blabel2id(cell_i,cells_map);
       }
-
+      if ( bam_sorted_by_cell ) {
+	if ( prev_cell_id != cell_id ) {
+	  if ( cell_id <= prev_cell_id ) {
+	    fprintf(stderr,"Error: The BAM file does not seem to be sorted by CR\n");
+	    exit(1);
+	  }
+	  
+	  if ( prev_cell_id!=0 ) {
+	    ++ncells;
+	    fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-10llu",ncells);
+	    cell2MM(db,counts_fd,TRUE,min_num_reads,min_num_umis,&tot_ctr,&tot_feat_cells,prev_cell_id);
+	    if ( rcounts_fd!=NULL )
+	      cell2MM(db,rcounts_fd,FALSE,min_num_reads,min_num_umis,&tot_ctr,&tot_feat_cells,prev_cell_id);
+	    // init/reset data structures
+	    db=quick_reset_db(db);
+	  }
+	}
+	prev_cell_id=cell_id;
+      }      
+    
       uint_64 sample_i=char2uint_64(sample);
       // map to ids
-
+      
       if ( ! ignore_sample )
 	sample_id=blabel2id(sample_i,samples_map);
-
+      
       //
       // feature id
       char *f=strtok(feat,",");
@@ -892,6 +1011,17 @@ int main(int argc, char *argv[])
       }
     }
   }
+  if ( bam_sorted_by_cell ) {
+    // last cell
+    if ( cell_id!=0 ) {
+      ++ncells;
+      fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-10llu",ncells);
+      cell2MM(db,counts_fd,TRUE,min_num_reads,min_num_umis,&tot_ctr,&tot_feat_cells,cell_id);
+      if ( rcounts_fd!=NULL ) 
+	cell2MM(db,rcounts_fd,FALSE,min_num_reads,min_num_umis,&tot_ctr,&tot_feat_cells,cell_id);
+    }
+  }
+
   fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\n");fflush(stderr);
   bam_destroy1(aln);
   // write output
@@ -901,6 +1031,7 @@ int main(int argc, char *argv[])
   fprintf(stderr,"%lld cells discarded\n",num_cells_discarded);
   fprintf(stderr,"%u features\n",label_entries(features_map));
   fprintf(stderr,"%u cells\n",blabel_entries(cells_map));
+
   if (samples_map!=NULL)
     fprintf(stderr,"%u samples\n",blabel_entries(samples_map));
   fprintf(stderr,"%f total reads\n",db->tot_reads_obs);
@@ -908,6 +1039,28 @@ int main(int argc, char *argv[])
   if ( !num_tags_found ) {
     fprintf(stderr,"ERROR: no valid alignments tagged with %s were found in %s.\n",feat_tag,bam_file);
     exit(1);
+  }
+
+  if ( bam_sorted_by_cell ) {
+    if (counts_fd!=NULL) {
+      // finish header
+      fseek(counts_fd,header_loc,SEEK_SET);
+      // update the header
+      fprintf(counts_fd,"%-10u %-10u %-15llu",features_map->ctr,cells_map->ctr,tot_feat_cells);
+      // write the two aux files
+      write_map2fileL(ucounts_file,"rows",features_map);
+      write_map2fileB(ucounts_file,"cols",cells_map,cell_suffix);  
+      fclose(counts_fd);
+    }
+    if (rcounts_fd!=NULL) {
+      fseek(rcounts_fd,rheader_loc,SEEK_SET);
+      // update the header
+      fprintf(rcounts_fd,"%-10u %-10u %-15llu",features_map->ctr,cells_map->ctr,tot_feat_cells);
+      // write the two aux files
+      write_map2fileL(rcounts_file,"rows",features_map);
+      write_map2fileB(rcounts_file,"cols",cells_map,cell_suffix);
+    }
+    exit(0);
   }
 
   // uniq UMIs that overlap each gene per cell (and optionally per sample)
@@ -919,5 +1072,6 @@ int main(int argc, char *argv[])
   if ( rcounts_file != NULL ) {
     write2MM(rcounts_file,db,features_map,cells_map,min_num_reads,min_num_umis,cell_suffix,FALSE); 
   } 
+
   return(0);
 }
