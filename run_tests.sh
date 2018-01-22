@@ -28,6 +28,82 @@ function must_succeed {
 #############################################
 ##
 ##
+echo "*** bam_umi_count"
+#
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX"
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX"
+
+must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts xx && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
+#must_succeed  "./src/bam_umi_count --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
+
+must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --multi_mapped --ucounts xx && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
+
+must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts lixo "
+
+must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3.bam  --ucounts lixo "
+
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam  --ucounts lixo"
+
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo"
+
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo --ignore_sample"
+
+must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans.bam  --ucounts lixo --ucounts_MM"
+
+#must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
+
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt --ucounts xxu --rcounts xxr && diff -q <(sort -k1,2 xxu) <(sort -k1,2 tests/test_annot.mtx)"
+
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx"
+
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx --uniq_mapped"
+
+must_succeed  " ./src/bam_umi_count --min_reads 10 --bam tests/test_annot2.bam --ucounts xx"
+
+
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx -x TX --max_cells 10 --max_feat 2 --feat_cell 2"
+
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx -x TX --max_cells 20000 --max_feat 2 --feat_cell 2"
+
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx -x TX"
+
+must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx"
+
+must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx --ignore_sample"
+
+must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot4.bam --ucounts xx --ignore_sample --cell_suffix '-123456789' && grep -c 123456789 xx_cols ` -eq  9 ]"
+
+
+must_succeed  "[ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt --ucounts xx && cat xx  | wc -l ` -eq 4 ]"
+
+
+
+must_fail "./src/bam_umi_count --min_reads 1"
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam"
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam -x"
+
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing"
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts folder/missing_path/xx"
+must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts xx --ureads folder/missing_path/xxx"
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt_missing --ucounts /dev/null --dump xx "
+
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt_missing --ucounts /dev/null --dump xx "
+
+must_fail  "./src/bam_umi_count --sorted_by_cell --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt_missing --ucounts /dev/null --dump xx "
+must_succeed  "./bin/samtools sort -t CR tests/test_annot2.bam | ./src/bam_umi_count --sorted_by_cell  --min_reads 4 --bam /dev/stdin --ucounts xx --ignore_sample"
+
+must_succeed  "./bin/samtools sort -t CR tests/test_annot2.bam | ./src/bam_umi_count --sorted_by_cell  --min_reads 4 --bam /dev/stdin --ucounts xx --rcounts xy --ignore_sample"
+
+
+rm -f xx* xy*
+
+must_fail "./src/bam_umi_count"
+must_succeed "./src/bam_umi_count --help"
+must_succeed "./src/bam_umi_count -h"
+
+gcov src/bam_umi_count
+
+
 echo "*** fastq_trim_poly_at"
 must_fail "./src/fastq_trim_poly_at"
 must_succeed "./src/fastq_trim_poly_at --help"
@@ -47,6 +123,7 @@ must_succeed "zcat tests/poly_at.fastq.gz | ./src/fastq_trim_poly_at --file - --
 must_succeed "diff <(zcat tests/poly_at.fastq.gz | ./src/fastq_trim_poly_at --file - --outfile -  --min_poly_at_len 300 --min_len 1|zcat ) <(zcat tests/poly_at.fastq.gz) "
 
 gcov src/fastq_trim_poly_at
+
 
 echo "*** fastq_filter_n"
 must_succeed "./src/fastq_filter_n tests/test_21_2.fastq.gz > tmp && diff /dev/null tmp"
@@ -207,74 +284,6 @@ must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --p
 must_succeed "./src/fastq_pre_barcodes --help"
 
 gcov src/fastq_pre_barcodes
-echo "*** bam_umi_count"
-#
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX"
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX"
-
-must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts xx && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
-#must_succeed  "./src/bam_umi_count --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
-
-must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --multi_mapped --ucounts xx && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
-
-must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts lixo "
-
-must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3.bam  --ucounts lixo "
-
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam  --ucounts lixo"
-
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo"
-
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo --ignore_sample"
-
-must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans.bam  --ucounts lixo --ucounts_MM"
-
-#must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
-
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt --ucounts xxu --rcounts xxr && diff -q <(sort -k1,2 xxu) <(sort -k1,2 tests/test_annot.mtx)"
-
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx"
-
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx --uniq_mapped"
-
-must_succeed  " ./src/bam_umi_count --min_reads 10 --bam tests/test_annot2.bam --ucounts xx"
-
-
-must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx -x TX --max_cells 10 --max_feat 2 --feat_cell 2"
-
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx -x TX --max_cells 20000 --max_feat 2 --feat_cell 2"
-
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx -x TX"
-
-must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx"
-
-must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx --ignore_sample"
-
-must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot4.bam --ucounts xx --ignore_sample --cell_suffix '-123456789' && grep -c 123456789 xx_cols ` -eq  9 ]"
-
-
-must_succeed  "[ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt --ucounts xx && cat xx  | wc -l ` -eq 4 ]"
-
-
-
-must_fail "./src/bam_umi_count --min_reads 1"
-must_fail "./src/bam_umi_count --bam tests/test_annot.bam"
-must_fail "./src/bam_umi_count --bam tests/test_annot.bam -x"
-
-must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing"
-must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts folder/missing_path/xx"
-must_fail "./src/bam_umi_count --bam tests/test_annot.bam_missing --ucounts xx --ureads folder/missing_path/xxx"
-must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_umi tests/known_umis.txt_missing --ucounts /dev/null --dump xx "
-
-must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt_missing --ucounts /dev/null --dump xx "
-
-rm -f xx xy
-
-must_fail "./src/bam_umi_count"
-must_succeed "./src/bam_umi_count --help"
-must_succeed "./src/bam_umi_count -h"
-
-gcov src/bam_umi_count
 echo "*** bam_add_tags"
 
 must_succeed "./src/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam"
