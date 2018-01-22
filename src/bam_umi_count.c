@@ -387,6 +387,7 @@ DB* new_db(uint max_cells,uint max_features,uint features_cell) {
 
 DB* quick_reset_db(DB *db) {
 
+  int x=0;
   db->cells[0].tot_umi_obs=0;
   db->cells[0].tot_reads_obs=0;
   if (db->cells[0].features!=NULL ) {
@@ -396,7 +397,7 @@ DB* quick_reset_db(DB *db) {
     while ((e=(FEATURE_ENTRY*)next_hash_object(db->cells[0].features))!=NULL) {
       e->tot_umi_obs=0;
       e->tot_reads_obs=0;
-      for (int x=0;x<=MAX_SAMPLES;++x) {
+      for (x=0;x<=MAX_SAMPLES;++x) {
 	if (e->samples[x]!=NULL) {
 	  COUNT_ENTRY *todel=e->samples[x];	    
 	  e->samples[x]=e->samples[x]->next;
@@ -876,7 +877,7 @@ int main(int argc, char *argv[])
   uint prev_cell_id=0;
   uint sample_id=0;
 
-  //
+  // 
   uint_64 tot_ctr=0;
   uint_64 tot_feat_cells=0;
 
