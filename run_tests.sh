@@ -18,6 +18,7 @@ function must_succeed {
     bash -c "$cmd" 2> /dev/null
     if [ 0 -ne $? ];  then	
 	STATUS=FAILED
+	bash -c "$cmd"
 	let num_failed=num_failed+1
     fi
     echo $STATUS $cmd
