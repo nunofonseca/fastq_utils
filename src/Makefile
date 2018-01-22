@@ -12,7 +12,7 @@ SAMTOOLS_PATH=../samtools-0.1.19
 
 
 ifeq ($(DEBUG),1)
-CFLAGS+= -g -DDEBUG=1
+CFLAGS+= -g -DDEBUG=1 -O1
 endif
 
 TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at fastq_split_interleaved
