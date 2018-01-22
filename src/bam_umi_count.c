@@ -397,7 +397,7 @@ DB* quick_reset_db(DB *db) {
     while ((e=(FEATURE_ENTRY*)next_hash_object(db->cells[0].features))!=NULL) {
       e->tot_umi_obs=0;
       e->tot_reads_obs=0;
-      for (x=0;x<=MAX_SAMPLES;++x) {
+      for (x=0;x<MAX_SAMPLES;++x) {
 	if (e->samples[x]!=NULL) {
 	  COUNT_ENTRY *todel=e->samples[x];	    
 	  e->samples[x]=e->samples[x]->next;
