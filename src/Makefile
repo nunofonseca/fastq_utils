@@ -1,7 +1,7 @@
 # Note: avoid having boost in  -I : it may result on including the wrong regexp.h
 # zlib is required
 #CFLAGS+= -g -Wunused-result  -pg -Wall
-CFLAGS+=  -O3 -Wunused-result  -Wall
+CFLAGS+=  -O2 -Wunused-result  -Wall
 ifdef DO_COV_TEST
 CFLAGS+= -fprofile-arcs -ftest-coverage
 endif
