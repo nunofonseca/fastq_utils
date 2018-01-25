@@ -132,7 +132,7 @@ void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to) {
     }
     ++ctr_seek;
   } else     ++ctr_noseek;
-  //fprintf(stderr,"%lu / %lu\n",ctr_seek, ctr_noseek);
+  fprintf(stderr,"%lu / %lu\n",ctr_seek, ctr_noseek);
   FASTQ_ENTRY* e=get_tmp_entry();
   if( gzeof(from->fd)) {
     PRINT_ERROR("Error in file %s: line %lu: premature eof",from->filename,from->cline);
@@ -634,7 +634,7 @@ gzFile fastq_open(const char* filename,const char *mode) {
   }
   //gzbuffer(fd1,sizeof(FASTQ_ENTRY)*2);
   // too large value slows down seek
-  gzbuffer(fd1,512000);
+  gzbuffer(fd1,128000);
   return(fd1);
 }
 
