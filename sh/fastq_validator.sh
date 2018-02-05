@@ -41,7 +41,10 @@ function file_type {
     else
 	## 
 	x=$(file -b -i  $1|cut -f 1 -d\;|sed "s|.*/||")
-	if [ "$x" == "x-gzip" ]; then echo "gz";
+	## octet-stream included to handle the bug in the file command
+	## where gzip files are reported as Minix filesystem, V2, 30 char names...
+	## https://bugzilla.redhat.com/show_bug.cgi?id=1014998
+	if [ "$x" == "x-gzip" ] || [ "$x" == "octet-stream" ] ; then echo "gz";	   
 	else
 	    if [ "$x" == "x-bzip2" ]; then echo "bzip2";
 	    else
