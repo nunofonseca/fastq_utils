@@ -28,6 +28,8 @@ else
     FILES=$*
 fi
 
+IS_PE=${#FILES[@]}
+
 if [ "$1-" == "-" ]; then
     echo "ERROR: fastq_validator.sh file1 [file2|pe]" 
     exit 1
@@ -144,7 +146,7 @@ else
 	    fi
 	    set -e
 	    echo "Checking integrity of $f...complete."
-	    named_pipe=.`basename .$f`.pipe.fastq
+	    named_pipe=$(mktemp  --suffix `basename .$f`.pipe2.fastq -p .)
 	    rm -f $named_pipe
 	    mkfifo $named_pipe
 	    bunzip2 -k  -c $f > $named_pipe  &
@@ -169,15 +171,57 @@ if [ $(echo $FILES2PROCESS|wc -w) -gt 1 ]; then
 	set -eT
 	echo "Checking $f ($estatus)...done."
     done
-fi
-
-if [ $failed -eq 0 ]; then
+    ##
+    if [ $failed -eq 0 ]; then
+	## checking both files
+	## recreate the named pipes if necessary
+	## ugggly code :(
+	PREV_EXT=
+	FILES2PROCESS=
+	for f in $FILES; do
+	    ext=`file_extension $f`
+	    if [ "-$ext" == "-" ]; then
+		ext=$(file_type $f)
+		echo "File $f does not have an extension, assuming that it is '.$ext'"
+	    fi
+	    if [ "-$PREV_EXT" == "-" ]; then
+		PREV_EXT=$ext
+	    fi
+	    if [ "-$PREV_EXT" != "-$ext" ]; then
+		echo "ERROR: File types differ $ext vs $PREV_EXT" > /dev/stderr
+		exit 2
+	    fi
+	    if [ "-$ext" == "-bz2" ] || [ "-$ext" == "-bzip2" ] ; then
+		echo BZIP file		
+		named_pipe=$(mktemp  --suffix `basename .$f`.pipe2.fastq -p .)
+		rm -f $named_pipe
+		mkfifo $named_pipe
+		bunzip2 -k  -c $f > $named_pipe  &
+		FILES2PROCESS="$named_pipe"
+		FILES2DELETE="$FILES2DELETE $named_pipe"
+	    else
+		FILES2PROCESS="$FILES2PROCESS $f"
+	    fi
+	done
+	echo "Checking $FILES2PROCESS"
+	set +e
+	fastq_info $FILES2PROCESS
+	estatus=$?
+	let failed=$estatus
+	set -eT
+    fi
+else
+    ## single file
     echo "Checking $FILES2PROCESS"
+    set +e
     fastq_info $FILES2PROCESS $PE_PARAMETER
+    estatus=$?
+    let failed=$estatus
+    set -eT
 fi
 
 if [ "-$FILES2DELETE" != "-" ]; then
-    #echo -n "Removing named pipes..."
+    #echo -n "Removing named pipes...$FILES2DELETE"
     rm -f $FILES2DELETE
     #echo "done."
 fi
