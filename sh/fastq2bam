@@ -22,6 +22,7 @@ function usage() {
 
 function gen_bam() {
     cmd=$*
+    set -o pipefail
     cmd="$cmd --sam --outfile1 - | samtools view -b - > $bam_file.tmp && mv $bam_file.tmp $bam_file"
     echo $cmd
     bash -c "$cmd"
