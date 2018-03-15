@@ -28,35 +28,35 @@ install: $(TARGETS)
 	cp $^ ../bin
 
 fastq_filterpair: hash.o fastq_filterpair.o fastq.o 
-	gcc  $(CFLAGS) $^ -o $@ -lz
+	gcc  $(CFLAGS)  -lz $^ -o $@
 
 fastq_info:  hash.o fastq_info.o fastq.o
-	gcc  $(CFLAGS) $^ -o $@ -lz
+	gcc  $(CFLAGS)  -lz $^ -o $@
 
 fastq_filter_n: fastq_filter_n.o fastq.o hash.o
-	gcc  $(CFLAGS) $^ -o $@  -lz
+	gcc  $(CFLAGS)  -lz $^ -o $@ 
 
 fastq_num_reads: fastq_num_reads.o hash.o fastq.o
-	gcc  $(CFLAGS) $^  -o $@  -lz
+	gcc  $(CFLAGS) -lz $^ -o $@ 
 
 fastq_not_empty: fastq_not_empty.o hash.o fastq.o
-	gcc  $(CFLAGS) $^  -o $@  -lz
+	gcc  $(CFLAGS) -lz $^ -o $@ 
 
 fastq_truncate:  fastq_truncate.o  hash.o fastq.o
-	gcc  $(CFLAGS) $^  -o $@  -lz
+	gcc  $(CFLAGS) -lz $^  -o $@  
 
 fastq_split_interleaved: fastq_split_interleaved.o fastq.o hash.o
-	gcc  $(CFLAGS) $^ -o $@  -lz
+	gcc  $(CFLAGS) -lz $^ -o $@ 
 
 # deprecated
 #fastq_validator:  hash.o fastq_validator.o
 #	gcc  $(CFLAGS) $^ -o $@
 
 fastq_trim_poly_at: fastq_trim_poly_at.o hash.o fastq.o
-	gcc  $(CFLAGS) $^  -o $@  -lz
+	gcc  $(CFLAGS) -lz $^  -o $@
 
 fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
-	gcc  $(CFLAGS)  $^ -o $@ -lz
+	gcc  $(CFLAGS) -lz  $^ -o $@ 
 
 
 # Companion of fastq preprocess barcodes fastq_pre_barcodes
