@@ -43,7 +43,7 @@ fastq_not_empty: fastq_not_empty.o hash.o fastq.o
 	gcc  $(CFLAGS) -lz $^ -o $@ 
 
 fastq_truncate:  fastq_truncate.o  hash.o fastq.o
-	gcc  $(CFLAGS) -lz $^  -o $@  
+	gcc  $(CFLAGS)  $^ -lz -o $@  
 
 fastq_split_interleaved: fastq_split_interleaved.o fastq.o hash.o
 	gcc  $(CFLAGS) -lz $^ -o $@ 
