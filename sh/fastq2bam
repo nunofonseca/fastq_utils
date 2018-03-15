@@ -16,7 +16,7 @@ function perror {
 }
 
 function usage() {
-    echo "Usage: fastq2bam -a scheme -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]"
+    echo "Usage: fastq2bam -s scheme -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]"
     echo "scheme: 10xV1 10xV1a 10xV2 drop-seq none"
 }
 
@@ -36,11 +36,12 @@ fastq_file2=
 fastq_file3=
 fastq_file4=
 
-while getopts "b:s:1:2:3:4:h"  Option
+while getopts "b:s:a:1:2:3:4:h"  Option
 do
     case $Option in
         b ) bam_file=$OPTARG;;
 	s ) scheme=$OPTARG;;
+	a ) scheme=$OPTARG;;
 	1 ) fastq_file1=$OPTARG;;
 	2 ) fastq_file2=$OPTARG;;
 	3 ) fastq_file3=$OPTARG;;
