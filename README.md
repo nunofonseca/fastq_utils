@@ -132,21 +132,21 @@ Usage: bam_umi_count --bam in.bam --ucounts output_filename.tsv [--min_reads 0] 
 
 #### fastq2bam - lossless fastq to bam convertor
 
-Usage: fastq2bam -a scheme -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]
+Usage: fastq2bam -s scheme -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]
 
 Currently supported schemes are: drop-seq, 10xV1, 10xV1a, 10xV2 or none. This will be extended in the near future.
 
 Examples:
 
-    fastq2bam -a none -b test_se.bam  -1 single_end.fastq
-    fastq2bam -a none -b test_pe.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz
-    fastq2bam -a 10xV1 -b test_10xv1.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz 
-    fastq2bam -a 10xV1 -b test_10xv1.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz -3 x_I5.fastq.gz
-    fastq2bam -a 10xV1a -b test_10xv1a.bam  -1 x_RA_1.fastq.gz -2 x_RA_2.fastq.gz -3 x_I1.fastq.gz
-    fastq2bam -a 10xV1a -b test_10xv1a.bam  -1 x_RA_1.fastq.gz -2 x_RA_2.fastq.gz -3 x_I1.fastq.gz -4 x_I2.fastq.gz		
-    fastq2bam -a 10xV2 -b test_10xv2.bam  -1 x_R1.fastq.gz -2 x_R2.fastq.gz -3 x_I5.fastq.gz
-    fastq2bam -a 10xV2 -b test_10xv2.bam  -1 x_R1.fastq.gz -2 x_R2.fastq.gz -3 x_I5.fastq.gz -4 x_I1.fastq.gz
-    fastq2bam -a drop-seq -b test_ds.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz
+    fastq2bam -s none -b test_se.bam  -1 single_end.fastq
+    fastq2bam -s none -b test_pe.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz
+    fastq2bam -s 10xV1 -b test_10xv1.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz 
+    fastq2bam -s 10xV1 -b test_10xv1.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz -3 x_I5.fastq.gz
+    fastq2bam -s 10xV1a -b test_10xv1a.bam  -1 x_RA_1.fastq.gz -2 x_RA_2.fastq.gz -3 x_I1.fastq.gz
+    fastq2bam -s 10xV1a -b test_10xv1a.bam  -1 x_RA_1.fastq.gz -2 x_RA_2.fastq.gz -3 x_I1.fastq.gz -4 x_I2.fastq.gz		
+    fastq2bam -s 10xV2 -b test_10xv2.bam  -1 x_R1.fastq.gz -2 x_R2.fastq.gz -3 x_I5.fastq.gz
+    fastq2bam -s 10xV2 -b test_10xv2.bam  -1 x_R1.fastq.gz -2 x_R2.fastq.gz -3 x_I5.fastq.gz -4 x_I1.fastq.gz
+    fastq2bam -s drop-seq -b test_ds.bam  -1 x_1.fastq.gz -2 x_2.fastq.gz
 
 #### bam2fastq - bam to fastq convertor
 
