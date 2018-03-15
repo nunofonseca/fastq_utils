@@ -79,13 +79,13 @@ bam2fastq:   bam2fastq.o fastq.o hash.o
 
 
 fastq.o: fastq.c fastq.h hash.h
-	gcc $(CFLAGS) -I $(ZLIB_PATH) -c $< -lz
+	gcc $(CFLAGS) -I $(ZLIB_PATH) -lz -c $< 
 
 hash.o: hash.c hash.h
 	gcc $(CFLAGS) -c $<
 
 %.o: %.c
-	gcc -I $(SAMTOOLS_PATH) $(CFLAGS)  -c $<
+	gcc -I $(SAMTOOLS_PATH) $(CFLAGS)   -c $<
 
 clean:
 	rm -f *.o $(TARGETS) *~
