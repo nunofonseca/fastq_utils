@@ -56,7 +56,7 @@ fastq_trim_poly_at: fastq_trim_poly_at.o hash.o fastq.o
 	gcc  $(CFLAGS) $^ -lz -o $@
 
 fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
-	gcc  $(CFLAGS) $^ -lz -o $@ 
+	gcc  $(CFLAGS) $(patsubst %.h,,$^) -lz -o $@ 
 
 
 # Companion of fastq preprocess barcodes fastq_pre_barcodes
