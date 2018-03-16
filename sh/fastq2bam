@@ -69,14 +69,14 @@ pinfo fastq3=$fastq_file3
 
 if [ "$scheme-"  == "10xV2-" ]; then
     # index1=R1 file index2=I1 index3=I5 reads=R2
-    if [ "$fastq_file2-"  == "-" ] || [ "$fastq_file3-" == "-" ]; then
+    if [ "$fastq_file2-"  == "-" ]; then
 	echo "Missing files for $scheme"
 	usage
 	exit 1
     fi
-    cmd="fastq_pre_barcodes --read1 $fastq_file1 --read2 $fastq_file2 --index1 $fastq_file3 --umi_read index1 --umi_offset 16 --umi_size 10 --cell_read index1 --cell_offset 0 --cell_size 16"
+    cmd="fastq_pre_barcodes --read1 $fastq_file2 --index1 $fastq_file1 --umi_read index1 --umi_offset 16 --umi_size 10 --cell_read index1 --cell_offset 0 --cell_size 16"
     if [ "$fastq_file4-" != "-" ]; then
-	cmd="$cmd --index2 $fastq_file4 --sample_read index2 --sample_offset 0 --sample_size 8" 
+	cmd="$cmd --index2 $fastq_file3 --sample_read index2 --sample_offset 0 --sample_size 8" 
     fi
     gen_bam $cmd
     exit 0
