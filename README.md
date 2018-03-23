@@ -1,5 +1,5 @@
 # 
-## fastq utils   ![Build Status](https://travis-ci.org/nunofonseca/fastq_utils.svg?branch=master) ![codecov](https://codecov.io/gh/nunofonseca/fastq_utils/branch/master/graph/badge.svg)  [![Dockerhub](https://img.shields.io/docker/automated/jrottenberg/ffmpeg.svg)](https://hub.docker.com/r/nunofonseca/fastq_utils/tags/)] [![License](http://img.shields.io/badge/license-GPL%203-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-3.0.html)
+## fastq utils   ![Build Status](https://travis-ci.org/nunofonseca/fastq_utils.svg?branch=master) ![codecov](https://codecov.io/gh/nunofonseca/fastq_utils/branch/master/graph/badge.svg)  [![Dockerhub](https://img.shields.io/docker/automated/jrottenberg/ffmpeg.svg)](https://hub.docker.com/r/nunofonseca/fastq_utils/tags/) [![License](http://img.shields.io/badge/license-GPL%203-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-3.0.html)
 
 Set of Linux utilities to validate and manipulate fastq files. It also includes a set of programs to preprocess barcodes (namely UMIs, cells and samples), add the barcodes as tags in BAM files and count UMIs.
 
