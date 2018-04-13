@@ -110,8 +110,9 @@ if [ "$scheme-"  == "10xV1a-" ]; then
     fi
 
     cmd="fastq_pre_barcodes --read1 $fastq_file1 --index3 $fastq_file2 --index1 $fastq_file3 --umi_read index3 --umi_offset 0 --umi_size 10 --cell_read index1 --cell_offset 0 --cell_size 14"
-    cmd="$cmd  --index3 $fastq_file4 --sample_read index2 --sample_offset 0 --sample_size 8"
-
+    if [ "$fastq_file4-"  != "-" ]; then
+	cmd="$cmd  --index3 $fastq_file4 --sample_read index2 --sample_offset 0 --sample_size 8"
+    fi
     gen_bam $cmd
     exit 0
 fi
