@@ -99,9 +99,10 @@ fi
 
 
 if [ "$scheme-"  == "10xV1a-" ]; then
-    # index1=*I1*
-    # index2=*I2*
-    # index3=read_RA*_2
+    # fastq_file1 = read_RA*_1 = cdna
+    # fastq_file2 = index3=read_RA*_2 = UMI
+    # fastq_file3 = index1=*I1* = cell barcode
+    # fastq_file4 = index2=*I2* = sample barcodes
     if [ "$fastq_file2-"  == "-" ] || [ "$fastq_file3-" == "-" ]; then
 	echo "Missing files for $scheme"
 	usage
@@ -109,7 +110,8 @@ if [ "$scheme-"  == "10xV1a-" ]; then
     fi
 
     cmd="fastq_pre_barcodes --read1 $fastq_file1 --index3 $fastq_file2 --index1 $fastq_file3 --umi_read index3 --umi_offset 0 --umi_size 10 --cell_read index1 --cell_offset 0 --cell_size 14"
-    cmd="$cmd  --index3 $fastq_file2 --sample_read index3 --sample_offset 0 --sample_size 8" 
+    cmd="$cmd  --index3 $fastq_file4 --sample_read index2 --sample_offset 0 --sample_size 8"
+
     gen_bam $cmd
     exit 0
 fi
