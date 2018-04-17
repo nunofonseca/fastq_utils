@@ -61,7 +61,7 @@ struct params_s {
   READ_IDX umi_read;  // Read with the UMI (1/2)
   FASTQ_READ_OFFSET umi_offset; //UMI offset
   FASTQ_SIZE umi_size; //
-  short interleaved[2]; //
+  short interleaved[3]; //
   short has_interleaved_entries;
   short min_qual; // discard read if the base quality of the UMI/cell barc code is below the threshold
   short num_input_files;
@@ -138,6 +138,7 @@ Params* Params_new(void) {
   new->has_interleaved_entries=FALSE;
   new->interleaved[0]=0;
   new->interleaved[1]=0;
+  new->interleaved[2]=0;
   new->min_qual=0; // discard read if the base quality of the UMI/cell barc code is below the threshold
   new->num_input_files=0;
   return(new);
@@ -391,25 +392,32 @@ int main(int argc, char **argv ) {
   };
 
   // process arguments
+  char tmps[1024];
+  int xx=0;
+  char *token;
   while (1) {
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
     c = getopt_long (argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:z:",
 		     long_options, &option_index);
-    int xx=0;
-    char *token;
+  
     if (c == -1) // no more options
       break;
       
     switch (c) {
 
     case 'z':
-      token = strtok(optarg,",");
+      xx=0;
+      strncpy(&tmps[0],optarg,1024);
+      token = strtok(&tmps[0],",");
       while( token != NULL ) {
 	p->interleaved[xx]=read_index2read_idx(token);
-	++xx;
-	token = strtok(NULL, ",");
+	if (xx==2)
+	  token=NULL;
+	else
+	  token = strtok(NULL, ",");
+	++xx;			
       }
       if ( xx!=2 ) {
 	PRINT_ERROR("two file references should be passed to --interleaved");
