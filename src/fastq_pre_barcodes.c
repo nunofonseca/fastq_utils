@@ -61,6 +61,8 @@ struct params_s {
   READ_IDX umi_read;  // Read with the UMI (1/2)
   FASTQ_READ_OFFSET umi_offset; //UMI offset
   FASTQ_SIZE umi_size; //
+  short interleaved[2]; //
+  short has_interleaved_entries;
   short min_qual; // discard read if the base quality of the UMI/cell barc code is below the threshold
   short num_input_files;
 };
@@ -99,7 +101,7 @@ void validate_options(Params* options) {
     PRINT_ERROR("if single_end then -outfile1 should be provided");
     exit(PARAMS_ERROR_EXIT_STATUS);
   }
-
+  
 }
 
 
@@ -133,6 +135,9 @@ Params* Params_new(void) {
   new->verbose=FALSE;
   new->umi_offset=UNDEF; //
   new->umi_size=0; //
+  new->has_interleaved_entries=FALSE;
+  new->interleaved[0]=0;
+  new->interleaved[1]=0;
   new->min_qual=0; // discard read if the base quality of the UMI/cell barc code is below the threshold
   new->num_input_files=0;
   return(new);
@@ -317,6 +322,7 @@ void print_usage(void) {
   --outfile1 <filename>    :file name for ouputing the reads from file1\n\
   --outfile2 <filename>    :file name for ouputing the reads from file2\n\
   --outfile3 <filename>    :file name for ouputing the reads from file3\n\
+  --interleaved (read1|read2|index1|index2|index3),(read1|read2|index1|index2|index3)    :interleaved data\n\
   --umi_read (read1|read2|index1|index2|index3)       :in which input file can the UMI be found\n\
   --umi_offset integer     :offset \n\
   --umi_size               :number of bases after the offset\n\
@@ -376,6 +382,7 @@ int main(int argc, char **argv ) {
     {"index3",  required_argument, 0, 'u'},
     {"outfile1",  required_argument, 0, 'n'},
     {"outfile2",  required_argument, 0, 'o'},
+    {"interleaved",  required_argument, 0, 'z'},
     {"sample_read",     required_argument,       0, 'p'},
     {"sample_offset",  required_argument,       0, 'q'},
     {"sample_size",  required_argument, 0, 'r'},
@@ -388,14 +395,27 @@ int main(int argc, char **argv ) {
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    c = getopt_long (argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:",
+    c = getopt_long (argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:z:",
 		     long_options, &option_index);
-      
+    int xx=0;
+    char *token;
     if (c == -1) // no more options
       break;
       
     switch (c) {
-      
+
+    case 'z':
+      token = strtok(optarg,",");
+      while( token != NULL ) {
+	p->interleaved[xx]=read_index2read_idx(token);
+	++xx;
+	token = strtok(NULL, ",");
+      }
+      if ( xx!=2 ) {
+	PRINT_ERROR("two file references should be passed to --interleaved");
+      }
+      p->has_interleaved_entries=TRUE;
+      break;
     case 'a':
       p->umi_read=read_index2read_idx(optarg);
       break;
@@ -531,8 +551,9 @@ int main(int argc, char **argv ) {
   
   for (x=READ1;x<=INDEX3;++x) {
     if ( p->file[x] != NULL ) {
-      PRINT_VERBOSE(p,"Opening %s",p->file[x]);    
+      PRINT_VERBOSE(p,"Opening %s",p->file[x]);
       fdi[x]=fastq_new(p->file[x],FALSE,"r");
+      fdi[x]->is_pe=TRUE;
     }
   }
   PRINT_VERBOSE(p,"done\n");
@@ -562,7 +583,11 @@ int main(int argc, char **argv ) {
     for (x=READ1;x<=INDEX3;++x) // read one entry from each input  file
       if ( p->file[x] != NULL )
 	if (fastq_read_next_entry(fdi[x],m[x])==0) goto end_loop; // EOF
-
+    // handle interleaved
+    if (p->has_interleaved_entries) {
+      // jump to next read
+      if (fastq_read_next_entry(fdi[p->interleaved[1]],m[p->interleaved[1]])==0) goto end_loop; // EOF
+    }
     // check if the read names match
     if (p->num_input_files>1) {
       unsigned long len;
@@ -679,6 +704,12 @@ int main(int argc, char **argv ) {
 	}
     }
     PRINT_READS_PROCESSED(fdi[READ1]->cline/4,100000);
+    // handle interleaved
+    if (p->has_interleaved_entries) {
+      // jump to next read
+      if (fastq_read_next_entry(fdi[p->interleaved[0]],m[p->interleaved[0]])==0) goto end_loop; // EOF
+    }
+
   }
  end_loop: 
   //   extract the info, change read name, trim the read, write
