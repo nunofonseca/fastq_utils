@@ -17,3 +17,8 @@ script: pwd && ls && DO_COV_TEST=1 make install && make tests
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+branches:
+  only:
+    - master
+    - /.*/
