@@ -344,3 +344,4 @@ gcov src/fastq_split_interleaved
 
 echo Failed tests: $num_failed
 exit $num_failed
+
