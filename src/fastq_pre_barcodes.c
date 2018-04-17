@@ -413,6 +413,7 @@ int main(int argc, char **argv ) {
       }
       if ( xx!=2 ) {
 	PRINT_ERROR("two file references should be passed to --interleaved");
+	exit(1);
       }
       p->has_interleaved_entries=TRUE;
       break;
