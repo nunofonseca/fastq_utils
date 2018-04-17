@@ -284,7 +284,7 @@ must_succeed "./src/fastq_pre_barcodes --interleaved index1,read1 --read1 tests/
 must_succeed "./src/fastq_pre_barcodes --interleaved read1,index1 --read1 tests/inter.fastq.gz --index1 tests/inter.fastq.gz  --outfile1 x3.gz  --umi_read index1  --umi_offset 0 --umi_size 16 --sam"
 
 ##
-must_succeed "fastq_split_interleaved tests/inter.fastq.gz xxx && [ -e xxx_1.fastq.gz ] && [ -e xxx_2.fastq.gz ]"
+must_succeed "./src/fastq_split_interleaved tests/inter.fastq.gz xxx && [ -e xxx_1.fastq.gz ] && [ -e xxx_2.fastq.gz ]"
 
 ## ==x2 --interleaved read1,index1
 must_succeed "./src/fastq_pre_barcodes  --read1 xxx_1.fastq.gz --index1 xxx_2.fastq.gz  --outfile1 xni.gz  --umi_read index1  --umi_offset 0 --umi_size 16 && diff xni.gz x2.gz"
