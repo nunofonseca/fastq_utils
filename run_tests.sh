@@ -25,7 +25,7 @@ function must_succeed {
 }
 
 
-
+export PATH=$PWD/bin:$PATH
 #############################################
 ##
 ##
