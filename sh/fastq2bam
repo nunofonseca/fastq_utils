@@ -1,7 +1,7 @@
 #!/bin/bash
 # wrapper to fastq_pre_barcodes
 # Generates a BAM file with unaligned reads and all barcodes preprocessed
-VERSION=0.15.0
+VERSION="0.15.1"0.15.0
 
 command -v fastq_pre_barcodes   >/dev/null 2>&1 || { echo "ERROR: fastq_utils does not seem to be installed - fastq_pre_barcodes not found.  Aborting." >&2; exit 1; }
 command -v samtools   >/dev/null 2>&1 || { echo "ERROR: fastq_utils does not seem to be installed - samtools not found.  Aborting." >&2; exit 1; }
@@ -17,7 +17,7 @@ function perror {
 }
 
 function usage() {
-    echo "fastq2bam $VERSION"
+    echo "fastq2bam $VERSION="0.15.1""
     echo "Usage: fastq2bam -s schema -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]"
     echo "barcode schema: 10xV1 10xV1i 10xV1a 10xV2 drop-seq none"
 }
