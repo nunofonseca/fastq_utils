@@ -9,6 +9,7 @@ install:
 release:
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.c
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.h
+	sed -i "s/VERSION=*/VERSION=\"$(VERSION)\"/" sh/*
 	git pull && \
 	git commit -m "New version $(VERSION)" . &&\
 	git push &&\
