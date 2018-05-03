@@ -1,4 +1,5 @@
-FROM python:3.6-alpine
+FROM humancellatlas/upload-validator-base-alpine
+
 LABEL maintainer="nuno.fonseca at gmail.com"
 
 #RUN yum update -y && yum install -y bzip2-devel ncurses-devel bzip2 zlib-devel git gcc wget make xz-devel && yum clean all
