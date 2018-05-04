@@ -106,6 +106,39 @@ FASTQ_FILE* validate_interleaved(char *f) {
 }
 
 
+FASTQ_FILE* validate_single_fastq_file(char *f) {
+
+  FASTQ_FILE* fd1=fastq_new(f,FALSE,"r");
+  fastq_is_pe(fd1);
+  FASTQ_ENTRY *m1=fastq_new_entry();
+
+  unsigned long nreads1=0;
+
+  while(!gzeof(fd1->fd)) {
+    // read 1
+    if (fastq_read_entry(fd1,m1)==0) break;
+
+    if (fastq_validate_entry(fd1,m1)) {
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+    }
+    PRINT_READS_PROCESSED(fd1->cline/4,100000);
+    nreads1+=1;
+  }
+  printf("\n");
+  //fastq_destroy(fd1);
+  return(fd1);
+}
+
+void print_usage(int verbose_usage) {
+
+  printf("Usage: fastq_info [-r -s -h] fastq1 [fastq2 file|pe]\n");
+  if ( verbose_usage ) {
+    printf(" -h  : print this help message\n");
+  //printf(" -s  : use when the input is two fastq files with the same ordering of the reads in both files\n");
+    printf(" -r  : skip check for duplicated readnames\n");
+  }
+}
+
 int main(int argc, char **argv ) {
   //long paired=0;
   unsigned long num_reads1=0,
@@ -118,6 +151,8 @@ int main(int argc, char **argv ) {
  
   int is_paired_data=FALSE;
   int is_interleaved=FALSE;
+  int is_sorted=FALSE;
+  int skip_readname_check=FALSE;
   //int fix_dot=FALSE;
   
   int nopt=0;
@@ -126,9 +161,21 @@ int main(int argc, char **argv ) {
 
   fastq_print_version();
   
-  while ((c = getopt (argc, argv, "f")) != -1)
+  while ((c = getopt (argc, argv, "frh")) != -1)
     switch (c)
       {
+      case 's':
+	is_sorted=TRUE;
+	++nopt;
+	break;
+      case 'r':
+	skip_readname_check=TRUE;
+	++nopt;
+	break;
+      case 'h':
+	print_usage(TRUE);
+	exit(0);
+	break;
       case 'f':
         //fix_dot = TRUE;
 	fprintf(stderr,"Fixing (-f) enabled: Replacing . by N (creating .fix.gz files)\n");
@@ -143,7 +190,8 @@ int main(int argc, char **argv ) {
       }
   
   if (argc-nopt<2 || argc-nopt>3) {
-    PRINT_ERROR("Usage: fastq_info fastq1 [fastq2 file|pe]");
+    PRINT_ERROR("Invalid number of arguments");
+    print_usage(FALSE);
     //fprintf(stderr,"%d",argc);
     exit(PARAMS_ERROR_EXIT_STATUS);
   }
@@ -159,7 +207,7 @@ int main(int argc, char **argv ) {
       is_interleaved=TRUE;
     }
   }
-
+  
   FASTQ_FILE* fd1=NULL;
   FASTQ_FILE* fd2=NULL;
   hashtable index=NULL;
@@ -169,23 +217,29 @@ int main(int argc, char **argv ) {
     fd1=validate_interleaved(argv[1+nopt]);
     num_reads1=fd1->num_rds;
   } else {
+    if ( is_paired_data && is_sorted ) {
+      fprintf(stderr,"Not supported");
+    } else if ( !is_paired_data && skip_readname_check ) {
+      // SE & skip readname check
+      fprintf(stderr,"Skipping check for duplicated read names\n");
+      fd1=validate_single_fastq_file(argv[1+nopt]);
+      num_reads1=fd1->num_rds;
+    } else {
     // single or pair of fastq file(s)
-    //unsigned long cline=1;
-    fd1=fastq_new(argv[1+nopt],FALSE,"r");
-    if ( is_paired_data) fastq_is_pe(fd1);
-
-    fprintf(stderr,"HASHSIZE=%lu\n",(long unsigned int)HASHSIZE);
-    index=new_hashtable(HASHSIZE);
-    index_mem+=sizeof(hashtable);
-    fprintf(stderr,"Scanning and indexing all reads from %s\n",fd1->filename);
-    fastq_index_readnames(fd1,index,0,FALSE);
-    fprintf(stderr,"Scanning complete.\n");
-
-    num_reads1=index->n_entries;
-    fprintf(stderr,"\n");
+      fd1=fastq_new(argv[1+nopt],FALSE,"r");
+      if ( is_paired_data) fastq_is_pe(fd1);   
+      fprintf(stderr,"HASHSIZE=%lu\n",(long unsigned int)HASHSIZE);
+      index=new_hashtable(HASHSIZE);
+      index_mem+=sizeof(hashtable);
+      fprintf(stderr,"Scanning and indexing all reads from %s\n",fd1->filename);
+      fastq_index_readnames(fd1,index,0,FALSE);
+      fprintf(stderr,"Scanning complete.\n");    
+      num_reads1=index->n_entries;
+      fprintf(stderr,"\n");
     // print some info
-    fprintf(stderr,"Reads processed: %llu\n",index->n_entries);    
-    fprintf(stderr,"Memory used in indexing: ~%ld MB\n",index_mem/1024/1024);
+      fprintf(stderr,"Reads processed: %llu\n",index->n_entries);    
+      fprintf(stderr,"Memory used in indexing: ~%ld MB\n",index_mem/1024/1024);
+    }
   }
   if (num_reads1 == 0 ) {
     PRINT_ERROR("No reads found in %s.",argv[1+nopt]);
