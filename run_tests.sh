@@ -179,20 +179,28 @@ must_fail ./src/fastq_info tests/test_e5.fastq.gz
 must_fail ./src/fastq_info tests/test_e6.fastq.gz 
 must_fail ./src/fastq_info tests/test_e7.fastq.gz 
 must_fail ./src/fastq_info tests/test_e8.fastq.gz 
-must_fail ./src/fastq_info tests/test_e9.fastq.gz 
+must_fail ./src/fastq_info tests/test_e9.fastq.gz
+must_succeed ./src/fastq_info -r tests/test_e9.fastq.gz
 must_fail ./src/fastq_info tests/test_e10.fastq.gz
 must_fail ./src/fastq_info tests/test_e13.fastq.gz 
 must_fail ./src/fastq_info tests/test_e14.fastq.gz 
 must_fail ./src/fastq_info tests/test_e15.fastq.gz 
-must_fail ./src/fastq_info tests/test_e16.fastq.gz 
+must_fail ./src/fastq_info tests/test_e16.fastq.gz
+must_fail ./src/fastq_info -r tests/test_e10.fastq.gz
+must_fail ./src/fastq_info -r tests/test_e13.fastq.gz 
+must_fail ./src/fastq_info -r tests/test_e14.fastq.gz 
+must_fail ./src/fastq_info -r tests/test_e15.fastq.gz 
+must_fail ./src/fastq_info -r tests/test_e16.fastq.gz 
 must_fail ./src/fastq_info tests/test_e17.fastq.gz
 must_fail ./src/fastq_info tests/test_e19_1.fastq.gz  tests/test_e19_2.fastq.gz
 must_fail ./src/fastq_info tests/test_e19_2.fastq.gz  tests/test_e19_1.fastq.gz 
 must_fail ./src/fastq_info -f tests/test_dot.fastq.gz
 must_fail ./src/fastq_info tests/test_empty.fastq.gz
+must_fail ./src/fastq_info -r  tests/test_empty.fastq.gz
 ##must_fail ./src/fastq_info tests/c18_1M_1.fastq.gz tests/c18_1M_2.fastq.gz 
 ##
 ## just checks the exit status
+must_succeed ./src/fastq_info -h 
 must_succeed ./src/fastq_info tests/test_dot.fastq.gz 
 must_succeed 	./src/fastq_info tests/test_1.fastq.gz
 must_succeed 	./src/fastq_info tests/test_30_1.fastq.gz  tests/test_30_2.fastq.gz 
