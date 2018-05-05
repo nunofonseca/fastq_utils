@@ -136,7 +136,7 @@ FASTQ_FILE* validate_paired_sorted_fastq_file(char *f1,char *f2) {
       PRINT_ERROR("Readnames do not match across files (read #%ld)",fd1->cline/4+1);
       exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
-    PRINT_READS_PROCESSED(fd1->cline/4,100000);
+    PRINT_READS_PROCESSED(fd1->cline/2,100000);
     nreads1+=1;
   }
   if ( fastq_read_entry(fd1,m1)!=0) {
