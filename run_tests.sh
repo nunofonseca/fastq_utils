@@ -193,10 +193,16 @@ must_fail ./src/fastq_info -r tests/test_e15.fastq.gz
 must_fail ./src/fastq_info -r tests/test_e16.fastq.gz 
 must_fail ./src/fastq_info tests/test_e17.fastq.gz
 must_fail ./src/fastq_info tests/test_e19_1.fastq.gz  tests/test_e19_2.fastq.gz
-must_fail ./src/fastq_info tests/test_e19_2.fastq.gz  tests/test_e19_1.fastq.gz 
+must_fail ./src/fastq_info tests/test_e19_2.fastq.gz  tests/test_e19_1.fastq.gz
+must_fail ./src/fastq_info tests/test_e19_1.fastq.gz tests/test_empty.fastq.gz  
+must_fail ./src/fastq_info tests/test_empty.fastq.gz  tests/test_e19_1.fastq.gz
+must_fail ./src/fastq_info -r -s tests/test_e19_1.fastq.gz  tests/test_e19_2.fastq.gz
+must_fail ./src/fastq_info -r -s tests/test_e19_2.fastq.gz  tests/test_e19_1.fastq.gz 
 must_fail ./src/fastq_info -f tests/test_dot.fastq.gz
 must_fail ./src/fastq_info tests/test_empty.fastq.gz
 must_fail ./src/fastq_info -r  tests/test_empty.fastq.gz
+must_fail ./src/fastq_info -s -r  tests/test_empty.fastq.gz tests/test_1.fastq.gz
+must_fail ./src/fastq_info -s -r  tests/test_1.fastq.gz tests/test_empty.fastq.gz 
 ##must_fail ./src/fastq_info tests/c18_1M_1.fastq.gz tests/c18_1M_2.fastq.gz 
 ##
 ## just checks the exit status
@@ -208,7 +214,8 @@ must_succeed 	./src/fastq_info tests/test_2.fastq.gz
 must_succeed 	./src/fastq_info tests/test_13.fastq.gz
 must_succeed 	./src/fastq_info tests/test_17.fastq.gz
 must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz
-must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz 
+must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz
+must_succeed 	./src/fastq_info -r -s tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz 
 must_succeed 	time -p ./src/fastq_info tests/pe_bug14.fastq.gz tests/pe_bug14.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_2.fastq.gz 
@@ -220,7 +227,9 @@ must_succeed 	time -p ./src/fastq_info tests/test_solid_1.fastq.gz tests/test_so
 must_fail 	time -p ./src/fastq_info tests/test_solid2_1.fastq.gz tests/test_solid2_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info tests/solexa_1.fastq.gz tests/solexa_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info  tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_readname_trunc_2.fastq.gz
+must_succeed 	time -p ./src/fastq_info -s  tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_readname_trunc_2.fastq.gz
 must_succeed 	time -p ./src/fastq_info  tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_2.fastq.gz
+must_succeed 	time -p ./src/fastq_info  -r -s tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_2.fastq.gz
 
 must_fail "./src/fastq_info --help"
 ##

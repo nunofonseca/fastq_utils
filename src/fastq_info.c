@@ -105,6 +105,52 @@ FASTQ_FILE* validate_interleaved(char *f) {
   return(fd1);
 }
 
+FASTQ_FILE* validate_paired_sorted_fastq_file(char *f1,char *f2) {
+
+  FASTQ_FILE* fd1=fastq_new(f1,FALSE,"r");
+  FASTQ_FILE* fd2=fastq_new(f2,FALSE,"r");
+  fastq_is_pe(fd1);
+  fastq_is_pe(fd2);
+  FASTQ_ENTRY *m1=fastq_new_entry();
+  FASTQ_ENTRY *m2=fastq_new_entry();
+  char rname1[MAX_LABEL_LENGTH];
+  char rname2[MAX_LABEL_LENGTH];
+    
+  unsigned long nreads1=0;
+  unsigned long len1,len2;
+  while(!gzeof(fd1->fd)) {
+    // read 1
+    if (fastq_read_entry(fd1,m1)==0) break;
+
+    if (fastq_validate_entry(fd1,m1)) {
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+    }
+    
+    if (fastq_read_entry(fd2,m2)==0) break;
+    if (fastq_validate_entry(fd2,m2)) {
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+    }
+    fastq_get_readname(fd1,m1,&rname1[0],&len1,TRUE);
+    fastq_get_readname(fd2,m2,&rname2[0],&len2,TRUE);
+    if (strcmp(rname1,rname2) ) {
+      PRINT_ERROR("Readnames do not match across files (read #%ld)",fd1->cline/4+1);
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+    }
+    PRINT_READS_PROCESSED(fd1->cline/4,100000);
+    nreads1+=1;
+  }
+  if ( fastq_read_entry(fd1,m1)!=0) {
+      PRINT_ERROR("Premature end of file2");
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+  }
+  if ( fastq_read_entry(fd2,m2)!=0) {
+      PRINT_ERROR("Premature end of file1");
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+  }
+  printf("\n");
+  return(fd1);
+}
+
 
 FASTQ_FILE* validate_single_fastq_file(char *f) {
 
@@ -134,7 +180,7 @@ void print_usage(int verbose_usage) {
   printf("Usage: fastq_info [-r -s -h] fastq1 [fastq2 file|pe]\n");
   if ( verbose_usage ) {
     printf(" -h  : print this help message\n");
-  //printf(" -s  : use when the input is two fastq files with the same ordering of the reads in both files\n");
+    printf(" -s  : the reads in the two fastq files have the same ordering\n");
     printf(" -r  : skip check for duplicated readnames\n");
   }
 }
@@ -161,7 +207,7 @@ int main(int argc, char **argv ) {
 
   fastq_print_version();
   
-  while ((c = getopt (argc, argv, "frh")) != -1)
+  while ((c = getopt (argc, argv, "sfrh")) != -1)
     switch (c)
       {
       case 's':
@@ -216,31 +262,33 @@ int main(int argc, char **argv ) {
     // interleaved    
     fd1=validate_interleaved(argv[1+nopt]);
     num_reads1=fd1->num_rds;
+  } else if ( is_paired_data && is_sorted && skip_readname_check ) {
+    fprintf(stderr,"-s option used: assuming that reads have the same ordering in both files\n");
+    fd1=validate_paired_sorted_fastq_file(argv[1+nopt],argv[2+nopt]);
+    num_reads1=fd1->num_rds;
+    
+  } else if ( !is_paired_data && skip_readname_check) {
+    // SE & skip readname check
+    fprintf(stderr,"Skipping check for duplicated read names\n");
+    fd1=validate_single_fastq_file(argv[1+nopt]);
+    num_reads1=fd1->num_rds;
   } else {
-    if ( is_paired_data && is_sorted ) {
-      fprintf(stderr,"Not supported");
-    } else if ( !is_paired_data && skip_readname_check ) {
-      // SE & skip readname check
-      fprintf(stderr,"Skipping check for duplicated read names\n");
-      fd1=validate_single_fastq_file(argv[1+nopt]);
-      num_reads1=fd1->num_rds;
-    } else {
     // single or pair of fastq file(s)
-      fd1=fastq_new(argv[1+nopt],FALSE,"r");
-      if ( is_paired_data) fastq_is_pe(fd1);   
-      fprintf(stderr,"HASHSIZE=%lu\n",(long unsigned int)HASHSIZE);
-      index=new_hashtable(HASHSIZE);
-      index_mem+=sizeof(hashtable);
-      fprintf(stderr,"Scanning and indexing all reads from %s\n",fd1->filename);
-      fastq_index_readnames(fd1,index,0,FALSE);
-      fprintf(stderr,"Scanning complete.\n");    
-      num_reads1=index->n_entries;
-      fprintf(stderr,"\n");
+    fd1=fastq_new(argv[1+nopt],FALSE,"r");
+    if ( is_paired_data) fastq_is_pe(fd1);   
+    fprintf(stderr,"HASHSIZE=%lu\n",(long unsigned int)HASHSIZE);
+    index=new_hashtable(HASHSIZE);
+    index_mem+=sizeof(hashtable);
+    fprintf(stderr,"Scanning and indexing all reads from %s\n",fd1->filename);
+    fastq_index_readnames(fd1,index,0,FALSE);
+    fprintf(stderr,"Scanning complete.\n");    
+    num_reads1=index->n_entries;
+    fprintf(stderr,"\n");
     // print some info
-      fprintf(stderr,"Reads processed: %llu\n",index->n_entries);    
-      fprintf(stderr,"Memory used in indexing: ~%ld MB\n",index_mem/1024/1024);
-    }
+    fprintf(stderr,"Reads processed: %llu\n",index->n_entries);    
+    fprintf(stderr,"Memory used in indexing: ~%ld MB\n",index_mem/1024/1024);
   }
+  
   if (num_reads1 == 0 ) {
     PRINT_ERROR("No reads found in %s.",argv[1+nopt]);
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
@@ -252,7 +300,7 @@ int main(int argc, char **argv ) {
   max_qual=fd1->max_qual;
 
   // pair-end
-  if (argc-nopt ==3 && !is_interleaved ) {
+  if (argc-nopt ==3 && !is_interleaved && ! is_sorted ) {
     fprintf(stderr,"File %s processed\n",argv[1+nopt]);  
     fprintf(stderr,"Next file %s\n",argv[2+nopt]);  
     // validate the second file and check if all reads are paired
