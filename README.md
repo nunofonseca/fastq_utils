@@ -52,7 +52,13 @@ If something goes wrong, then remove the whole build subdirectory with make clea
 
 #### fastq_info - validates and collects information from single or paired fastq files.
 
-Usage: fastq_info fastq_file1 [fastq_file2|pe]
+Usage: fastq_info [-s -r ] fastq_file1 [fastq_file2|pe]
+
+If the fastq file(s) pass the checks then the program will exit with an exit status of 0 otherwise an error message is printed describing the error and the exit status will be different from 0. Further details about the checks are available in the [wiki](https://github.com/nunofonseca/fastq_utils/wiki/FASTQ-validation) page.
+
+By using the -r option no checks are made to determine if the read names/identifiers are unique (fastq_info will run faster and use less memory). The -s option can be used when the reads are sorted in the same way in two paired fastq files. This option combined with -r for paired fastq files will make the validation checks less strict but fastq_info will run faster and use a fraction of the memory.
+
+##### Examples
 
 Check a single fastq file
 
