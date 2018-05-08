@@ -7,7 +7,7 @@ class Validator:
     def validate(self, file_path):
         report = ValidationReport()
 
-        process = subprocess.Popen(["fastq_info", file_path, "-r", "-s"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(["fastq_info", "-r", "-s", file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.wait()
         err_lines = process.stderr.readlines()
         for line in err_lines:
