@@ -1,4 +1,4 @@
-FROM humancellatlas/upload-validator-base-alpine
+FROM humancellatlas/upload-validator-base-alpine:14
 
 LABEL maintainer="nuno.fonseca at gmail.com"
 
