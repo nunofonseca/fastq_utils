@@ -28,8 +28,8 @@
 #define __ptr_t         char *
 #endif /* C++ or ANSI C.  */           
 
-#ifndef ulong
-#define ulong unsigned long long
+#ifndef unsignedlong
+#define unsignedlong unsigned long long
 #endif
 
 #ifndef NULL
@@ -39,7 +39,7 @@
 
 struct bucket {
  struct bucket *next;
- ulong value;      /* Value >=0 used as key in the hashing*/ 
+ unsignedlong value;      /* Value >=0 used as key in the hashing*/ 
  __ptr_t  obj;     /* pointer to a object*/
 };
 typedef struct bucket  hashnode;
@@ -48,9 +48,9 @@ typedef struct bucket  hashnode;
 struct hashtable_s {
   hashnode **buckets; //
   hashnode **buckets_last; // pointer to the last element of each bucket
-  ulong size;         // number of buckets
-  ulong last_bucket; // used in searchs/ hash traversals
-  ulong n_entries; // number of entries in the hashtable
+  unsignedlong size;         // number of buckets
+  unsignedlong last_bucket; // used in searchs/ hash traversals
+  unsignedlong n_entries; // number of entries in the hashtable
   hashnode* last_node;
 };
 
@@ -58,12 +58,12 @@ struct hashtable_s {
 typedef struct hashtable_s* hashtable;
 
 /* functions */
-hashtable new_hashtable(ulong hashsize);
-__ptr_t get_next_object(hashtable,ulong);
-__ptr_t delete(hashtable,ulong,__ptr_t);
-//__ptr_t replace_object(hashtable,ulong,__ptr_t);
-__ptr_t get_object(hashtable,ulong);
-int insere(hashtable,ulong,__ptr_t);
+hashtable new_hashtable(unsignedlong hashsize);
+__ptr_t get_next_object(hashtable,unsignedlong);
+__ptr_t delete(hashtable,unsignedlong,__ptr_t);
+//__ptr_t replace_object(hashtable,unsignedlong,__ptr_t);
+__ptr_t get_object(hashtable,unsignedlong);
+int insere(hashtable,unsignedlong,__ptr_t);
 void free_hashtable(hashtable);
 
 void init_hash_traversal(hashtable table);

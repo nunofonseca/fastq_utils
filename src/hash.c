@@ -30,11 +30,11 @@
 #define LAST_ENTRY(table,i) table->buckets_last[i]
 #define HASHSIZE(table) table->size
 
-static ulong mhash(hashtable,ulong);
-static hashnode* hash_lookup(hashtable,ulong);
+static unsignedlong mhash(hashtable,unsignedlong);
+static hashnode* hash_lookup(hashtable,unsignedlong);
 
 
-static hashnode* hash_lookup(hashtable table,ulong  key){
+static hashnode* hash_lookup(hashtable table,unsignedlong  key){
   
   table->last_node = BUCKET(table,mhash(table,key)); /* set a pointer to the first bucket */
   while ( table->last_node != NULL ) {
@@ -43,7 +43,7 @@ static hashnode* hash_lookup(hashtable table,ulong  key){
   }
   return NULL;
 }
-__ptr_t get_next_object(hashtable table,ulong key)
+__ptr_t get_next_object(hashtable table,unsignedlong key)
 {
   if(table->last_node==NULL)
     return NULL; 
@@ -57,10 +57,10 @@ __ptr_t get_next_object(hashtable table,ulong key)
 
 
 /* removes the element with key 'key' and returns the object stored on him */
-__ptr_t delete(hashtable table,ulong key,__ptr_t obj)
+__ptr_t delete(hashtable table,unsignedlong key,__ptr_t obj)
 {
   hashnode *b,*prev=NULL;
-  ulong c=mhash(table,key);
+  unsignedlong c=mhash(table,key);
   b=BUCKET(table,c); /* set a pointer to the first bucket */
   while( b!=NULL) {
     if( b->value==key && b->obj==obj){
@@ -80,7 +80,7 @@ __ptr_t delete(hashtable table,ulong key,__ptr_t obj)
   return NULL;
 }
 
-__ptr_t replace_object(hashtable table,ulong  key,__ptr_t newobj)
+__ptr_t replace_object(hashtable table,unsignedlong  key,__ptr_t newobj)
 {
   __ptr_t old;
   hashnode *b=hash_lookup(table,key); 
@@ -93,7 +93,7 @@ __ptr_t replace_object(hashtable table,ulong  key,__ptr_t newobj)
 
 /* looks a 'bucket' in the hashing table whith 'key' and return the
  pointer to the object stored in that bucket or NULL if no bucket is found */ 
-__ptr_t get_object(hashtable table,ulong key){
+__ptr_t get_object(hashtable table,unsignedlong key){
   
    hashnode *b=hash_lookup(table,key); 
    if(b==NULL)
@@ -103,7 +103,7 @@ __ptr_t get_object(hashtable table,ulong key){
 }
 
 /* Allocates space to a new hash table */
-hashtable new_hashtable(ulong hashsize) {
+hashtable new_hashtable(unsignedlong hashsize) {
   hashtable new;
 
   if( (new = (hashtable)malloc(sizeof(struct hashtable_s)))==NULL) return NULL;
@@ -123,10 +123,10 @@ hashtable new_hashtable(ulong hashsize) {
 }
 
 void hashtable_stats(hashtable table) {
-  ulong zbuckets=0;
-  ulong collisions=0;
-  ulong max_col=0;
-  ulong i,ctr;
+  unsignedlong zbuckets=0;
+  unsignedlong collisions=0;
+  unsignedlong max_col=0;
+  unsignedlong i,ctr;
   for(i=0;i<HASHSIZE(table);++i) {
     hashnode *b=BUCKET(table,i);
     if ( b==NULL ) ++zbuckets;
@@ -152,15 +152,15 @@ void hashtable_stats(hashtable table) {
 }
 
 /* A very simple hashing function */
-static ulong mhash(hashtable table,ulong key)
+static unsignedlong mhash(hashtable table,unsignedlong key)
 {
-  return (ulong)(key%HASHSIZE(table));
+  return (unsignedlong)(key%HASHSIZE(table));
 }
 
 /* inserts a new element in the hash table*/
-int insere(hashtable table,ulong key,__ptr_t obj)
+int insere(hashtable table,unsignedlong key,__ptr_t obj)
 {
-   ulong ind;
+   unsignedlong ind;
    hashnode *new;
    if((new=(hashnode *)malloc(sizeof(hashnode)))==NULL) return -1;
    ind=mhash(table,key);
@@ -185,7 +185,7 @@ int insere(hashtable table,ulong key,__ptr_t obj)
 
 void free_hashtable(hashtable table)
 {
-   register ulong i;
+   register unsignedlong i;
    hashnode *n,*tmp;
    //fprintf(stderr,"free_hashtable\n");fflush(stderr);
    if (table==NULL) return;
