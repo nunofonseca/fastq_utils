@@ -328,6 +328,10 @@ must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --p
 must_succeed "./src/fastq_pre_barcodes --help"
 
 ## wrapper to fastq_pre_barcodes
+must_fail ./sh/fastq2bam  -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -3 tests/10xv1a_R3.fastq.gz -2 tests/10xv1a_R2.fastq.gz 
+
+fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz
+
 must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo -3 tests/tx.I2.fastq.gz
 must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo2
 must_fail diff <(samtools view lixo) <(samtools view lixo2)
