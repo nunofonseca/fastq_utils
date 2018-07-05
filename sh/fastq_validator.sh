@@ -139,19 +139,19 @@ else
 	    # check integrity
 	    set +e
 	    echo "Checking integrity of $f..."
-	    bzip2  -t $f 
+	    set -e pipefail
+	    tmp_file=$(mktemp  --suffix `basename .$f`.tmp.gz -p .)
+	    rm -f $named_pipe
+	    echo "Creating a temporary gzip version of $f as $tmp_file..."
+	    bunzip2   -c $f | gzip -c > $tmp_file
 	    if [ $? -ne 0 ]; then
 		echo "ERROR: $f: error uncompressing bzip2 file"
 		exit 2
 	    fi
-	    set -e
+	    echo "Creating a temporary gzip version of $f...done."
 	    echo "Checking integrity of $f...complete."
-	    named_pipe=$(mktemp  --suffix `basename .$f`.pipe2.fastq -p .)
-	    rm -f $named_pipe
-	    mkfifo $named_pipe
-	    bunzip2 -k  -c $f > $named_pipe  &
-	    FILES2PROCESS="$FILES2PROCESS $named_pipe"
-	    FILES2DELETE="$FILES2DELETE $named_pipe"
+	    FILES2PROCESS="$FILES2PROCESS $tmp_file"
+	    FILES2DELETE="$FILES2DELETE $tmp_file"
 	else
 	    FILES2PROCESS="$FILES2PROCESS $f"
 	fi
@@ -174,10 +174,8 @@ if [ $(echo $FILES2PROCESS|wc -w) -gt 1 ]; then
     ##
     if [ $failed -eq 0 ]; then
 	## checking both files
-	## recreate the named pipes if necessary
 	## ugggly code :(
 	PREV_EXT=
-	FILES2PROCESS=
 	for f in $FILES; do
 	    ext=`file_extension $f`
 	    if [ "-$ext" == "-" ]; then
@@ -190,17 +188,6 @@ if [ $(echo $FILES2PROCESS|wc -w) -gt 1 ]; then
 	    if [ "-$PREV_EXT" != "-$ext" ]; then
 		echo "ERROR: File types differ $ext vs $PREV_EXT" > /dev/stderr
 		exit 2
-	    fi
-	    if [ "-$ext" == "-bz2" ] || [ "-$ext" == "-bzip2" ] ; then
-		echo BZIP file		
-		named_pipe=$(mktemp  --suffix `basename .$f`.pipe2.fastq -p .)
-		rm -f $named_pipe
-		mkfifo $named_pipe
-		bunzip2 -k  -c $f > $named_pipe  &
-		FILES2PROCESS="$named_pipe"
-		FILES2DELETE="$FILES2DELETE $named_pipe"
-	    else
-		FILES2PROCESS="$FILES2PROCESS $f"
 	    fi
 	done
 	echo "Checking $FILES2PROCESS"
