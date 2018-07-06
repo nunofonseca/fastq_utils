@@ -1,4 +1,4 @@
-VERSION=0.16.1
+VERSION=0.16.2
 # Requires zlib and samtools 0.1.9
 all:
 	make -C src
@@ -9,7 +9,7 @@ install:
 release:
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.c
 	sed -i "s/#define VERSION.*/#define VERSION \"$(VERSION)\"/" src/*.h
-	sed -i "s/^VERSION=*/VERSION=\"$(VERSION)\"/" sh/*
+	sed -i "s/^VERSION=.*/VERSION=\"$(VERSION)\"/" sh/*
 	git pull && \
 	git commit -m "New version $(VERSION)" . &&\
 	git push &&\
