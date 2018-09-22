@@ -41,15 +41,15 @@ must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam 
 
 must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts lixo "
 
-must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3.bam  --ucounts lixo "
+must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3_small.bam  --ucounts lixo "
 
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam  --ucounts lixo"
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam  --ucounts lixo"
 
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo"
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts lixo"
 
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3.bam -x TX --ucounts lixo --ignore_sample"
+must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts lixo --ignore_sample"
 
-must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans.bam  --ucounts lixo --ucounts_MM"
+must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans_small.bam  --ucounts lixo --ucounts_MM"
 
 #must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
@@ -346,16 +346,16 @@ rm -f lixo lixo2
 gcov src/fastq_pre_barcodes
 echo "*** bam_add_tags"
 
-must_succeed "./src/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam"
-must_succeed "./src/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam --tx --tx_2_gx tests/mapTrans2Gene.tsv"
-must_succeed "./src/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam --tx "
-must_fail "./src/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam --tx --tx_2_gx aaaatests/mapTrans2Gene.tsv"
+must_succeed "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam"
+must_succeed "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam --tx --tx_2_gx tests/mapTrans2Gene.tsv"
+must_succeed "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam --tx "
+must_fail "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam --tx --tx_2_gx aaaatests/mapTrans2Gene.tsv"
 rm -f tmp.bam
 
 must_fail "./src/bam_add_tags"
-must_fail "./src/bam_add_tags --inbam tests/trans.bam --outbam tmp.bam  --tx_2_gx tests/mapTrans2Gene.tsv"
-must_fail "./src/bam_add_tags --inbam tests/trans.bam_missing --outbam tmp.bam  --tx --tx_2_gx tests/mapTrans2Gene.tsv"
-must_fail "./src/bam_add_tags --inbam tests/trans.bam_missing --outbam folder/does/not/exist/tmp.bam  --tx --tx_2_gx tests/mapTrans2Gene.tsv"
+must_fail "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam  --tx_2_gx tests/mapTrans2Gene.tsv"
+must_fail "./src/bam_add_tags --inbam tests/trans_small.bam_missing --outbam tmp.bam  --tx --tx_2_gx tests/mapTrans2Gene.tsv"
+must_fail "./src/bam_add_tags --inbam tests/trans_small.bam_missing --outbam folder/does/not/exist/tmp.bam  --tx --tx_2_gx tests/mapTrans2Gene.tsv"
 must_succeed "./src/bam_add_tags --help"
 must_succeed "./src/bam_add_tags -h"
 
