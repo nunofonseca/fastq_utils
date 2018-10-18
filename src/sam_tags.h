@@ -31,8 +31,8 @@
 #define CELL_TAG "CR" 
 #define CELL_QUAL_TAG "CY" 
 
-#define UMI_TAG "QX" 
-#define UMI_QUAL_TAG "OQ" 
+#define UMI_TAG "RX" 
+#define UMI_QUAL_TAG "QX" 
 
 #define SAMPLE_TAG "BC"
 #define SAMPLE_QUAL_TAG  "QT"
