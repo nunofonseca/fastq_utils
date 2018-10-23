@@ -87,6 +87,8 @@ hash.o: hash.c hash.h
 %.o: %.c
 	gcc -I $(SAMTOOLS_PATH) $(CFLAGS)   -c $<
 
+fastq_pre_barcodes.o: fastq_pre_barcodes.c sam_tags.h hash.h fastq.h
+	gcc -I $(SAMTOOLS_PATH) $(CFLAGS)   -c $<
 clean:
 	rm -f *.o $(TARGETS) *~
 
