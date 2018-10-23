@@ -16,7 +16,8 @@ release:
 	git commit -m "New version $(VERSION)" . &&\
 	git push &&\
 	git tag -a "$(VERSION)" -m "New version $(VERSION)" &&\
-	git push --tags
+	git push --follow-tags
+#--tags
 
 tests: FORCE
 	./run_tests.sh
