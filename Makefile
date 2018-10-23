@@ -1,7 +1,9 @@
 VERSION=0.17.0
 # Requires zlib and samtools 0.1.9
 all:
+	make -C src clean
 	make -C src
+
 
 install:
 	mkdir -p bin && make -C src install && cp sh/*.sh sh/fastq2bam bin
