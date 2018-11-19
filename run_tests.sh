@@ -330,8 +330,10 @@ must_succeed "./src/fastq_pre_barcodes --help"
 ## wrapper to fastq_pre_barcodes
 must_fail ./sh/fastq2bam  -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -3 tests/10xv1a_R3.fastq.gz -2 tests/10xv1a_R2.fastq.gz 
 
-fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz
+must_succeed fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz
 
+must_succeed ./sh/fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz -c 1 -C 2 -u 3 -U 4
+must_fail ./sh/fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz -c 1 -C 2 -u 3 -U 
 must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo -3 tests/tx.I2.fastq.gz
 must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo2
 must_fail diff <(samtools view lixo) <(samtools view lixo2)
@@ -344,6 +346,7 @@ must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq
 must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz
 must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz   -b lixo2
 must_fail ./sh/fastq2bam -s 10xV1i -2 tests/tx.I1.fastq.gz -b lixo2
+must_fail ./sh/fastq2bam -s 10xV1i -2 tests/tx.I1.fastq.gz -b 
 rm -f lixo lixo2
 gcov src/fastq_pre_barcodes
 echo "*** bam_add_tags"
