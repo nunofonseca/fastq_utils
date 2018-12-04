@@ -952,7 +952,8 @@ int main(int argc, char *argv[])
 	  
 	  if ( prev_cell_id!=0 ) {
 	    ++ncells;
-	    fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-10llu",ncells);
+	    if (ncells%10000==0)
+	      fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-10llu",ncells);
 	    cell2MM(db,counts_fd,TRUE,min_num_reads,min_num_umis,&tot_ctr,&tot_feat_cells,prev_cell_id);
 	    if ( rcounts_fd!=NULL )
 	      cell2MM(db,rcounts_fd,FALSE,min_num_reads,min_num_umis,&tot_ctr,&tot_feat_cells,prev_cell_id);
@@ -1016,7 +1017,8 @@ int main(int argc, char *argv[])
     // last cell
     if ( cell_id!=0 ) {
       ++ncells;
-      fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-10llu",ncells);
+      if (ncells%10000==0)
+	fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b%-10llu",ncells);
       cell2MM(db,counts_fd,TRUE,min_num_reads,min_num_umis,&tot_ctr,&tot_feat_cells,cell_id);
       if ( rcounts_fd!=NULL ) 
 	cell2MM(db,rcounts_fd,FALSE,min_num_reads,min_num_umis,&tot_ctr,&tot_feat_cells,cell_id);
