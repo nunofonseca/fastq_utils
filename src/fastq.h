@@ -20,7 +20,7 @@
 #
 # =========================================================
 */
-#define VERSION "0.18.0"
+#define VERSION "0.18.1"
 
 #define DEFAULT  0
 #define CASAVA18 1
