@@ -1,7 +1,11 @@
 # Note: avoid having boost in  -I : it may result on including the wrong regexp.h
 # zlib is required
 #CFLAGS+= -g -Wunused-result  -pg -Wall
-CFLAGS+=  -O3 -Wunused-result  -Wall 
+CFLAGS+=  -O3 -Wunused-result  -Wall
+
+ifdef PROFILE
+CFLAGS+= -pg
+endif
 ifdef DO_COV_TEST
 CFLAGS+= -fprofile-arcs -ftest-coverage
 endif
@@ -63,7 +67,7 @@ fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
 bam_add_tags: hash.o bam_add_tags.o
 	gcc  $(CFLAGS) $^ -L $(ZLIB_PATH) -I $(ZLIB_PATH) -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
 
-bam_umi_count:   hash.o  bam_umi_count.o 
+bam_umi_count: range_list.o  hash.o  bam_umi_count.o 
 	gcc  $(CFLAGS)  $^  -L $(ZLIB_PATH) -I $(ZLIB_PATH) -L $(SAMTOOLS_PATH) -I $(SAMTOOLS_PATH) -lpthread  -lbam -lm -lz -pthread -o $@
 
 
@@ -82,6 +86,9 @@ fastq.o: fastq.c fastq.h hash.h
 	gcc $(CFLAGS) -I $(ZLIB_PATH) -lz -c $< 
 
 hash.o: hash.c hash.h
+	gcc $(CFLAGS) -c $<
+
+range_list.o: range_list.c range_list.h
 	gcc $(CFLAGS) -c $<
 
 %.o: %.c

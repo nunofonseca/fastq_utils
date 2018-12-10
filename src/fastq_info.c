@@ -276,8 +276,8 @@ int main(int argc, char **argv ) {
     // single or pair of fastq file(s)
     fd1=fastq_new(argv[1+nopt],FALSE,"r");
     if ( is_paired_data) fastq_is_pe(fd1);   
-    fprintf(stderr,"HASHSIZE=%lu\n",(long unsigned int)HASHSIZE);
-    index=new_hashtable(HASHSIZE);
+    fprintf(stderr,"DEFAULT_HASHSIZE=%lu\n",(long unsigned int)DEFAULT_HASHSIZE);
+    index=new_hashtable(DEFAULT_HASHSIZE);
     index_mem+=sizeof(hashtable);
     fprintf(stderr,"Scanning and indexing all reads from %s\n",fd1->filename);
     fastq_index_readnames(fd1,index,0,FALSE);

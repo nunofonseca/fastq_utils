@@ -46,11 +46,15 @@
 
 typedef enum  { COLORSPACE=1, SEQSPACE=0, UNDEFSPACE=-1 } READ_SPACE;
 typedef enum  { TRUE=1, FALSE=0 } FASTQ_BOOLEAN;
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 typedef long FASTQ_READ_OFFSET;
 
-#ifndef HASHSIZE
-#define HASHSIZE 39000001
-#endif
+#define DEFAULT_HASHSIZE 39000001
 
 #include "hash.h"
 #include <zlib.h> 

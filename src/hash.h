@@ -54,6 +54,9 @@ struct hashtable_s {
   hashnode* last_node;
 };
 
+#ifndef HASHSIZE
+#define HASHSIZE(t) t->size
+#endif
 //typedef hashnode **hashtable;
 typedef struct hashtable_s* hashtable;
 
@@ -65,9 +68,12 @@ __ptr_t delete(hashtable,ulong,__ptr_t);
 __ptr_t get_object(hashtable,ulong);
 int insere(hashtable,ulong,__ptr_t);
 void free_hashtable(hashtable);
+void reset_hashtable(hashtable);
+
 
 void init_hash_traversal(hashtable table);
 __ptr_t next_hash_object(hashtable table);
 __ptr_t next_hashnode(hashtable table);
+__ptr_t next_delete_hash_object(hashtable table);
 void hashtable_stats(hashtable table);
 #endif
