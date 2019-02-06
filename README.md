@@ -17,14 +17,30 @@ Programs:
    9. [fastq2bam](#fastq2bam---lossless-fastq-to-bam-convertor)
    10. [bam2fastq](#bam2fastq---bam-to-fastq-convertor)	
 
-### Building
+### Installation
 
-#### Dependencies
+#### Conda
+
+The simplest way to install fastq_utils is via Conda. See the the [Conda documentation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) to get started if you don't already have a working installation.
+
+Installation of fastq_utils is then as simple as:
+
+```
+conda install -c bioconda fastq_utils
+```
+
+This handles software dependencies and provides the pre-built binaries for fastq_utils itself.
+
+#### Building from source
+
+Alternatively you can build the package yourself from source. 
+
+##### Dependencies
 
 samtools (version 0.1.19) and zlib (http://zlib.net) version 1.2.11 or latest are required to compile fastq_utils. 
 The [install_deps.sh](https://github.com/nunofonseca/fastq_utils/blob/master/install_deps.sh) script in the toplevel folder tries to download and compile the dependencies. The bam_annotate.sh script requires samtools (version 1.5 or higher).
 
-#### Getting sources
+##### Getting sources
 
 Option 1: download the latest source release tarball from https://github.com/nunofonseca/fastq_utils/releases, and then from your download directory type:
 
@@ -37,7 +53,7 @@ Option 2: to use git to download the repository  with the entire code history, t
     cd fastq_utils
 
 
-#### Generating the executables
+##### Generating the executables
 
 To compile fastq_utils, type:
 
