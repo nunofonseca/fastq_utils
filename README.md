@@ -22,7 +22,7 @@ Programs:
 
 #### Conda
 
-The simplest way to install fastq_utils is via Conda. See the the [Conda documentation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) to get started if you don't already have a working installation.
+An easy way to install fastq_utils is via Conda. See the the [Conda documentation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) to get started if you don't already have a working installation.
 
 Installation of fastq_utils is then as simple as:
 
