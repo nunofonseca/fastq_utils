@@ -44,6 +44,8 @@ typedef enum  { READ1=1, READ2=2, READ3=3 , READ4=4, READ5=5 } READ_IDX;
 
 typedef long FASTQ_SIZE;
 
+#define TMP_BUF_SIZE  1024
+
 struct params_s {
   char *file[INDEX3+1];
   char *outfile[2+1]; // index files are not touched
@@ -392,7 +394,7 @@ int main(int argc, char **argv ) {
   };
 
   // process arguments
-  char tmps[1024];
+  char tmps[TMP_BUF_SIZE+1];
   int xx=0;
   char *token;
   while (1) {
@@ -409,7 +411,7 @@ int main(int argc, char **argv ) {
 
     case 'z':
       xx=0;
-      strncpy(&tmps[0],optarg,1024);
+      strncpy(&tmps[0],optarg,TMP_BUF_SIZE);
       token = strtok(&tmps[0],",");
       while( token != NULL ) {
 	p->interleaved[xx]=read_index2read_idx(token);
