@@ -44,7 +44,7 @@ static void root_intervals(RL_Tree* tree);
 NUM next_min(RL_Tree *tree,NUM node,NUM node_num,NUM interval,NUM max,NUM min);
 NUM tree_minus(RL_Tree *r1,RL_Tree *r2,NUM node1,NUM node2,NUM node_num,NUM interval,NUM max);
 
-static void print_nodes(RL_Tree* tree);
+void print_nodes(RL_Tree* tree);
 
 //
 RL_Buffer* buffer=NULL;
@@ -242,7 +242,7 @@ NUM rl_next_in_bigger(RL_Tree *tree,NUM min) {
 /* ****************************************************************************** 
    Private Functions
    ****************************************************************************** */
-static void print_nodes(RL_Tree* tree) {
+void print_nodes(RL_Tree* tree) {
   RL_Node* nodes=tree->root;
   int j;
   
