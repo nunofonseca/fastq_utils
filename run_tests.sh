@@ -50,7 +50,7 @@ must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot2.bam --out lixo5 && .
 
 must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out lixo6 && ./src/fastq_info lixo6.fastq.gz > /dev/null && zcat lixo6.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 497978 ]"
 rm -f lixo*.fastq*
-exit
+
 echo "*** bam_umi_count"
 #
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX --not_sorted_by_cell"
