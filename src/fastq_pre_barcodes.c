@@ -652,7 +652,7 @@ int main(int argc, char **argv ) {
     PRINT_VERBOSE(p,"_STAGS_CELL=%s_UMI=%s_SAMPLE=%s_ETAGS\n",cell,umi,sample);
     
     if ( out_sam ) {
-      int se=(p->outfile[READ2]!=NULL?FALSE: TRUE);
+      int se=(p->file[READ2]!=NULL?FALSE: TRUE);
       // prepare the "alignment"
       // slice_read(m[x],p,x);
       int flag=0;
