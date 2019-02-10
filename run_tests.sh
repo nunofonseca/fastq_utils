@@ -29,6 +29,28 @@ export PATH=$PWD/bin:$PATH
 #############################################
 ##
 ##
+
+echo "*** bam2fastq"
+rm -f lixo*.fastq*
+must_fail "./src/bam2fastq"
+must_fail "./src/bam2fastq -i "
+must_fail "./src/bam2fastq -o "
+must_fail "./src/bam2fastq --bam  tests/no_qual.bam"
+must_fail "./src/bam2fastq --bam  tests/missing_no_qual.bam --out lixo"
+must_succeed "./src/bam2fastq -h"
+must_succeed "[ `./src/bam2fastq --bam  tests/no_qual.bam --out lixo1 && ./src/fastq_info lixo1.fastq.gz 2> /dev/null && zcat lixo1.fastq.gz|wc -l|cut -f 1 -d\ ` \> 0 ] "
+
+must_succeed " [ `./src/bam2fastq --bam  tests/test.bam --out lixo2 && ./src/fastq_info lixo2.fastq.gz 2> /dev/null && zcat lixo2.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` \> 0 ]"
+
+must_succeed " [ `./src/bam2fastq --bam  tests/test_one_cell.bam --out lixo3 && ./src/fastq_info lixo3.fastq.gz 2> /dev/null && zcat lixo3.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 4939 ]"
+
+must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot.bam --out lixo4 && ./src/fastq_info lixo4.fastq.gz > /dev/null && zcat lixo4.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 724 ]"
+
+must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot2.bam --out lixo5 && ./src/fastq_info lixo5.fastq.gz > /dev/null && zcat lixo5.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 57412 ]"
+
+must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out lixo6 && ./src/fastq_info lixo6.fastq.gz > /dev/null && zcat lixo6.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 497978 ]"
+rm -f lixo*.fastq*
+exit
 echo "*** bam_umi_count"
 #
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX --not_sorted_by_cell"
