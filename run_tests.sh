@@ -49,6 +49,12 @@ must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot.bam --out lixo4 && ./
 must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot2.bam --out lixo5 && ./src/fastq_info lixo5.fastq.gz > /dev/null && zcat lixo5.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 57412 ]"
 
 must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out lixo6 && ./src/fastq_info lixo6.fastq.gz > /dev/null && zcat lixo6.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 497978 ]"
+must_succeed " [ `./src/bam2fastq --bam  tests/se.bam --out lixo7 && ./src/fastq_info lixo7.fastq.gz > /dev/null && zcat lixo7.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
+must_succeed " [ `./src/bam2fastq --bam  tests/pe.bam --out lixo8 && ./src/fastq_info lixo8_1.fastq.gz lixo8_2.fastq.gz > /dev/null && zcat lixo8_1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
+
+gcov src/bam2fastq
+
+#
 rm -f lixo*.fastq*
 
 echo "*** bam_umi_count"
