@@ -1,4 +1,4 @@
-VERSION=0.18.2
+VERSION=0.19.0
 # Requires zlib and samtools 0.1.9
 all:
 	make -C src clean
