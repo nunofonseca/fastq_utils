@@ -235,7 +235,11 @@ must_fail ./src/fastq_info -s -r  tests/test_1.fastq.gz tests/test_empty.fastq.g
 ##
 ## just checks the exit status
 must_succeed ./src/fastq_info -h 
-must_succeed ./src/fastq_info tests/test_dot.fastq.gz 
+must_succeed ./src/fastq_info tests/test_dot.fastq.gz
+must_succeed ./src/fastq_info -e tests/test_dot.fastq.gz
+touch tests/empty.fastq
+must_fail ./src/fastq_info tests/empty.fastq
+must_succeed ./src/fastq_info -e tests/empty.fastq
 must_succeed 	./src/fastq_info tests/test_1.fastq.gz
 must_succeed 	./src/fastq_info tests/test_30_1.fastq.gz  tests/test_30_2.fastq.gz 
 must_succeed 	./src/fastq_info tests/test_2.fastq.gz 
