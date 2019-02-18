@@ -177,10 +177,11 @@ FASTQ_FILE* validate_single_fastq_file(char *f) {
 
 void print_usage(int verbose_usage) {
 
-  printf("Usage: fastq_info [-r -s -h] fastq1 [fastq2 file|pe]\n");
+  printf("Usage: fastq_info [-r -e -s -h] fastq1 [fastq2 file|pe]\n");
   if ( verbose_usage ) {
     printf(" -h  : print this help message\n");
     printf(" -s  : the reads in the two fastq files have the same ordering\n");
+    printf(" -e  : do not fail with empty files\n");
     printf(" -r  : skip check for duplicated readnames\n");
   }
 }
@@ -198,6 +199,7 @@ int main(int argc, char **argv ) {
   int is_paired_data=FALSE;
   int is_interleaved=FALSE;
   int is_sorted=FALSE;
+  int empty_ok=FALSE;
   int skip_readname_check=FALSE;
   //int fix_dot=FALSE;
   
@@ -207,9 +209,13 @@ int main(int argc, char **argv ) {
 
   fastq_print_version();
   
-  while ((c = getopt (argc, argv, "sfrh")) != -1)
+  while ((c = getopt (argc, argv, "esfrh")) != -1)
     switch (c)
       {
+      case 'e':
+	empty_ok=TRUE;
+	++nopt;
+	break;
       case 's':
 	is_sorted=TRUE;
 	++nopt;
@@ -290,6 +296,13 @@ int main(int argc, char **argv ) {
   }
   
   if (num_reads1 == 0 ) {
+    if ( empty_ok ) {
+      fprintf(stdout,"Number of reads: %lu\n",0L);
+      fprintf(stdout,"Quality encoding range: %lu %lu\n",0L,0L);
+      fprintf(stdout,"Quality encoding: %s\n","");
+      fprintf(stdout,"Read length: %lu %lu %u\n",0L,0L,0);
+      exit(0);
+    }
     PRINT_ERROR("No reads found in %s.",argv[1+nopt]);
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
