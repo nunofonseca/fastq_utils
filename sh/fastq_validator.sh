@@ -139,11 +139,11 @@ else
 	    # check integrity
 	    set +e
 	    echo "Checking integrity of $f..."
-	    set -e pipefail
+	    set -o pipefail
 	    tmp_file=$(mktemp  --suffix `basename .$f`.tmp.gz -p .)
 	    rm -f $named_pipe
 	    echo "Creating a temporary gzip version of $f as $tmp_file..."
-	    bunzip2   -c $f | gzip -c > $tmp_file
+	    bunzip2 -c $f | gzip -c > $tmp_file
 	    if [ $? -ne 0 ]; then
 		echo "ERROR: $f: error uncompressing bzip2 file"
 		exit 2
