@@ -1,7 +1,7 @@
 #!/bin/bash
 # wrapper to fastq_pre_barcodes
 # Generates a BAM file with unaligned reads and all barcodes preprocessed
-VERSION="0.19.2"
+VERSION="0.19.3"
 
 command -v fastq_pre_barcodes   >/dev/null 2>&1 || { echo "ERROR: fastq_utils does not seem to be installed - fastq_pre_barcodes not found.  Aborting." >&2; exit 1; }
 command -v samtools   >/dev/null 2>&1 || { echo "ERROR: fastq_utils does not seem to be installed - samtools not found.  Aborting." >&2; exit 1; }
