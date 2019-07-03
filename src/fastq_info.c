@@ -374,7 +374,7 @@ int main(int argc, char **argv ) {
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
   fprintf(out,"Quality encoding: %s\n",enc);
-  fprintf(out,"Read length: %lu %lu %u\n",min_rl,max_rl,median_rl(fd1,fd2));
+  fprintf(out,"Read length: %lu %lu %u\n",min_rl-1,max_rl-1,median_rl(fd1,fd2)-1);
   fprintf(out,"OK\n"); 
   exit(0);
 }
