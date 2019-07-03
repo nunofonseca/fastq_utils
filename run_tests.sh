@@ -29,7 +29,6 @@ export PATH=$PWD/bin:$PATH
 #############################################
 ##
 ##
-
 echo "*** bam2fastq"
 rm -f lixo*.fastq*
 must_fail "./src/bam2fastq"
@@ -241,6 +240,8 @@ touch tests/empty.fastq
 must_fail ./src/fastq_info tests/empty.fastq
 must_succeed ./src/fastq_info -e tests/empty.fastq
 must_succeed 	./src/fastq_info tests/test_1.fastq.gz
+must_succeed 	"[ \"`./src/fastq_info tests/test_1.fastq.gz 2> /dev/stdout|grep 'Read length:'|cut -f 2 -d:`\" == \" 90 90 90\" ]"
+
 must_succeed 	./src/fastq_info tests/test_30_1.fastq.gz  tests/test_30_2.fastq.gz 
 must_succeed 	./src/fastq_info tests/test_2.fastq.gz 
 must_succeed 	./src/fastq_info tests/test_13.fastq.gz
