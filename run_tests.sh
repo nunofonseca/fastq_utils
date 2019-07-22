@@ -80,15 +80,16 @@ must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam 
 
 #must_succeed  "./src/bam_umi_count --min_reads 1 --not_sorted_by_cell --bam tests/test_annot.bam  --ucounts lixo "
 
-must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3_small.bam  --ucounts lixo --not_sorted_by_cell"
 
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam  --ucounts lixo --not_sorted_by_cell"
+#must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3_small.bam  --ucounts lixo --not_sorted_by_cell"
 
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts lixo --not_sorted_by_cell"
+#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam  --ucounts lixo --not_sorted_by_cell"
 
-must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts lixo --ignore_sample --not_sorted_by_cell"
+#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts lixo --not_sorted_by_cell"
 
-must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans_small.bam  --ucounts lixo --ucounts_MM --not_sorted_by_cell"
+#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts lixo --ignore_sample --not_sorted_by_cell"
+
+#must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans_small.bam  --ucounts lixo --ucounts_MM --not_sorted_by_cell"
 
 #must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
