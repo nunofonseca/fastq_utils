@@ -97,7 +97,7 @@ must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam 
 
 #must_succeed  " ./src/bam_umi_count --min_reads 1 --not_sorted_by_cell --bam tests/test_annot2.bam --ucounts xx --not_sorted_by_cell"
 
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx --uniq_mapped --not_sorted_by_cell"
+#must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --ucounts xx --uniq_mapped --not_sorted_by_cell"
 
 #must_succeed  " ./src/bam_umi_count --min_reads 10 --bam tests/test_annot2.bam --ucounts xx --not_sorted_by_cell"
 
