@@ -437,7 +437,7 @@ rm -f out_prefix_*.fastq.gz
 #gcov src/fastq_split_interleaved
 
 must_succeed ./src/fastq_tests
-gcov src/fastq_tests
+#gcov src/fastq_tests
 make -C src gcov
 
 echo Failed tests: $num_failed

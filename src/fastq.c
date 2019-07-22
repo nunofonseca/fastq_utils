@@ -374,6 +374,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
 // add option to replace dots
 void fastq_index_readnames(FASTQ_FILE* fd1,hashtable index,long long start_offset,int replace_dots) {
 
+  // replace dots not used anymore
   fd1->fix_dot=replace_dots;
   FASTQ_ENTRY *m1=fastq_new_entry();
   char rname[MAX_LABEL_LENGTH];
@@ -732,25 +733,25 @@ READ_SPACE is_color_space(char *seq,FASTQ_FILE* f) {
 }
 
 
-inline long replace_dot_by_N(char* seq) {
-  long n=0;  
-  long replaced=0;
-  while (seq[n]!='\0') {
-    if (seq[n]=='.') {
-      ++replaced;
-      seq[n]='N';
-    }
-    ++n;
-  }
-  return replaced;
-}
+/* inline long replace_dot_by_N(char* seq) { */
+/*   long n=0;   */
+/*   long replaced=0; */
+/*   while (seq[n]!='\0') { */
+/*     if (seq[n]=='.') { */
+/*       ++replaced; */
+/*       seq[n]='N'; */
+/*     } */
+/*     ++n; */
+/*   } */
+/*   return replaced; */
+/* } */
 
-inline long replace_dots(long long start,char* seq, char *hdr1, char *hdr2, char *qual,gzFile fd) {
-  // FIX .
-  long replaced=0;
-  //if ( fix_dot ) {
-    replaced+=replace_dot_by_N(seq);
-    gzprintf(fd,"%s%s%s%s",hdr1,seq,hdr2,qual);
-    //}
-  return(replaced);
-}
+/* inline long replace_dots(long long start,char* seq, char *hdr1, char *hdr2, char *qual,gzFile fd) { */
+/*   // FIX . */
+/*   long replaced=0; */
+/*   //if ( fix_dot ) { */
+/*     replaced+=replace_dot_by_N(seq); */
+/*     gzprintf(fd,"%s%s%s%s",hdr1,seq,hdr2,qual); */
+/*     //} */
+/*   return(replaced); */
+/* } */
