@@ -98,6 +98,9 @@ hash.o: hash.c hash.h
 range_list.o: range_list.c range_list.h
 	gcc $(CFLAGS) -c $<
 
+fastq_tests.o: fastq_tests.c
+	gcc $(CFLAGS) -c $<
+
 %.o: %.c
 	gcc -I $(SAMTOOLS_PATH) $(CFLAGS)   -c $<
 

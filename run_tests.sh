@@ -28,6 +28,18 @@ function must_succeed {
 export PATH=$PWD/bin:$PATH
 #############################################
 ##
+echo "*** fastq_split_interleaved"
+must_succeed 	time -p ./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz   out_prefix
+
+must_fail 	time -p ./src/fastq_split_interleaved tests/casava.1.8i_e1.fastq.gz   out_prefix
+must_fail 	./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz a1 a2
+must_fail 	./src/fastq_split_interleaved
+must_fail 	./src/fastq_split_interleaved tests/one.fastq.gz out_prefix
+must_fail 	./src/fastq_split_interleaved tests/test_e1.fastq.gz
+must_fail        ./src/fastq_split_interleaved 
+must_fail      ./src/fastq_split_interleaved   tests/test_21_2.fastq.gz xxx
+must_succeed "./src/fastq_split_interleaved tests/inter.fastq.gz tests/xxx && [ -e tests/xxx_1.fastq.gz ] && [ -e tests/xxx_2.fastq.gz ]"
+
 ##
 echo "*** bam2fastq"
 rm -f lixo*.fastq*
@@ -352,14 +364,12 @@ must_succeed "./src/fastq_pre_barcodes --interleaved index1,read1 --read1 tests/
 
 must_succeed "./src/fastq_pre_barcodes --interleaved read1,index1 --read1 tests/inter.fastq.gz --index1 tests/inter.fastq.gz  --outfile1 x3.gz  --umi_read index1  --umi_offset 0 --umi_size 16 --sam"
 
-##
-must_succeed "./src/fastq_split_interleaved tests/inter.fastq.gz xxx && [ -e xxx_1.fastq.gz ] && [ -e xxx_2.fastq.gz ]"
 
 ## ==x2 --interleaved read1,index1
-must_succeed "./src/fastq_pre_barcodes  --read1 xxx_1.fastq.gz --index1 xxx_2.fastq.gz  --outfile1 xni.gz  --umi_read index1  --umi_offset 0 --umi_size 16 && diff xni.gz x2.gz"
+must_succeed "./src/fastq_pre_barcodes  --read1 tests/xxx_1.fastq.gz --index1 tests/xxx_2.fastq.gz  --outfile1 xni.gz  --umi_read index1  --umi_offset 0 --umi_size 16 && diff xni.gz x2.gz"
 
 ## ==x1
-must_succeed "./src/fastq_pre_barcodes  --read1 xxx_2.fastq.gz --index1 xxx_1.fastq.gz  --outfile1 xni.gz  --umi_read index1  --umi_offset 0 --umi_size 16 && diff xni.gz x1.gz"
+must_succeed "./src/fastq_pre_barcodes  --read1 tests/xxx_2.fastq.gz --index1 tests/xxx_1.fastq.gz  --outfile1 xni.gz  --umi_read index1  --umi_offset 0 --umi_size 16 && diff xni.gz x1.gz"
 
 rm -f xxx_*.fastq.gz x?.gz xni.gz
 
@@ -393,9 +403,10 @@ must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq
 must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo2 -S 10
 
 must_fail diff <(samtools view lixo) <(samtools view lixo2)
-cat <<EOF 
+cat << EOF 
 1	4	*	0	255	*	*	0	98	GAGACCATGCTCAACAGCAACATCAATGACCTGCTGATGGTGACCTACCTGGCCAATCTCACCCAGTCACAGATTGCCCTCAACGAGAAACTTGTAAA	3>BBCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGBG:CFCGGGEF0GGGFGGECCFEG?FGGE>FG/;;?GFGFGG:C0	on:Z:D00408:393:CAYR8ANXX:1:1101:2629:2244@1:N:0:0	op:Z:3>BBCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGBG:CFCGGGEF0GGGFGGECCFEG?FGGE>FG/;;?GFGFGG:C0	QX:Z:AAAAACGGAT	OQ:Z:ABB=:///??	CR:Z:GTGGATTGCCTAAG	CY:Z:B@BBBEGBGGGGCF	BC:Z:ACCGAACA	QT:Z::@BBBGG/
 EOF > tmp2
+
 must_succeed diff <(samtools view lixo) tmp2
 rm -f tmp2
 must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b 
@@ -423,14 +434,7 @@ must_succeed "./src/bam_add_tags -h"
 
 #gcov src/bam_add_tags
 
-echo "*** fastq_split_interleaved"
-must_succeed 	time -p ./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz   out_prefix
 
-must_fail 	time -p ./src/fastq_split_interleaved tests/casava.1.8i_e1.fastq.gz   out_prefix
-must_fail 	./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz a1 a2
-must_fail 	./src/fastq_split_interleaved
-must_fail 	./src/fastq_split_interleaved tests/one.fastq.gz out_prefix
-must_fail 	./src/fastq_split_interleaved tests/test_e1.fastq.gz
 
 rm -f out_prefix_*.fastq.gz
 
