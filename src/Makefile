@@ -7,7 +7,7 @@ ifdef PROFILE
 CFLAGS+= -pg
 endif
 ifdef DO_COV_TEST
-CFLAGS+= -fprofile-arcs -ftest-coverage
+CFLAGS+= -fprofile-arcs -ftest-coverage -O0
 endif
 #
 SHELL=bash
