@@ -26,8 +26,8 @@ function usage() {
     echo " -C int : cell barcode size"
     echo " -u int : UMI barcode offset"
     echo " -U int : UMI barcode size"
-    echo " -s int : sample barcode offset"
-    echo " -S int : sample barcode size"
+    echo " -z int : sample barcode offset"
+    echo " -Z int : sample barcode size"
 }
 
 function gen_bam() {
@@ -68,7 +68,7 @@ umi_barcode_size=
 sample_barcode_offset=
 sample_barcode_size=
 
-while getopts "s:S:c:C:u:U:b:s:a:1:2:3:4:h"  Option
+while getopts "s:z:Z:c:C:u:U:b:s:a:1:2:3:4:h"  Option
 do
     case $Option in
         b ) bam_file=$OPTARG;;
@@ -82,8 +82,8 @@ do
 	C ) cell_barcode_size=$OPTARG;;
 	u ) umi_barcode_offset=$OPTARG;;
 	U ) umi_barcode_size=$OPTARG;;
-	s ) sample_barcode_offset=$OPTARG;;
-	S ) sample_barcode_size=$OPTARG;;
+	z ) sample_barcode_offset=$OPTARG;;
+	Z ) sample_barcode_size=$OPTARG;;
         h ) usage; exit 0;;
 	\?) exit 1;;
     esac
