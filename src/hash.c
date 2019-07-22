@@ -81,16 +81,16 @@ __ptr_t delete(hashtable table,ulong key,__ptr_t obj)
   return NULL;
 }
 
-__ptr_t replace_object(hashtable table,ulong  key,__ptr_t newobj)
-{
-  __ptr_t old;
-  hashnode *b=hash_lookup(table,key); 
+/* __ptr_t replace_object(hashtable table,ulong  key,__ptr_t newobj) */
+/* { */
+/*   __ptr_t old; */
+/*   hashnode *b=hash_lookup(table,key);  */
 
-  if(b==NULL)return NULL;
-  old=b->obj;
-  b->obj=newobj;
-  return old;  
-}
+/*   if(b==NULL)return NULL; */
+/*   old=b->obj; */
+/*   b->obj=newobj; */
+/*   return old;   */
+/* } */
 
 /* looks a 'bucket' in the hashing table whith 'key' and return the
  pointer to the object stored in that bucket or NULL if no bucket is found */ 
