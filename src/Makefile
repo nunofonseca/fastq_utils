@@ -31,6 +31,9 @@ all: $(TARGETS)
 install: $(TARGETS)
 	cp $^ ../bin
 
+gcov:
+	gcov $(TARGETS) hash.o range_list.o
+
 fastq_filterpair: hash.o fastq_filterpair.o fastq.o 
 	gcc  $(CFLAGS) $^ -lz -o $@
 
@@ -54,6 +57,7 @@ fastq_split_interleaved: fastq_split_interleaved.o fastq.o hash.o
 
 fastq_tests: fastq_tests.o hash.o fastq.o range_list.o
 	gcc  $(CFLAGS) $^ -lz -o $@
+
 
 # deprecated
 #fastq_validator:  hash.o fastq_validator.o

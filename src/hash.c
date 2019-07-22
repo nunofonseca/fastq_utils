@@ -85,7 +85,6 @@ __ptr_t delete(hashtable table,ulong key,__ptr_t obj)
 /* { */
 /*   __ptr_t old; */
 /*   hashnode *b=hash_lookup(table,key);  */
-
 /*   if(b==NULL)return NULL; */
 /*   old=b->obj; */
 /*   b->obj=newobj; */

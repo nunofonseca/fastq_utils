@@ -51,7 +51,7 @@ must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out lixo6 && ./src/fa
 must_succeed " [ `./src/bam2fastq --bam  tests/se.bam --out lixo7 && ./src/fastq_info lixo7.fastq.gz > /dev/null && zcat lixo7.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
 must_succeed " [ `./src/bam2fastq --bam  tests/pe.bam --out lixo8 && ./src/fastq_info lixo8_1.fastq.gz lixo8_2.fastq.gz > /dev/null && zcat lixo8_1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
 
-gcov src/bam2fastq
+#gcov src/bam2fastq
 
 #
 rm -f lixo*.fastq*
@@ -130,7 +130,7 @@ must_fail "./src/bam_umi_count"
 must_succeed "./src/bam_umi_count --help"
 must_succeed "./src/bam_umi_count -h"
 
-gcov src/bam_umi_count
+#gcov src/bam_umi_count
 
 
 echo "*** fastq_trim_poly_at"
@@ -151,7 +151,7 @@ must_succeed "zcat tests/poly_at.fastq.gz | ./src/fastq_trim_poly_at --file - --
 
 must_succeed "diff <(zcat tests/poly_at.fastq.gz | ./src/fastq_trim_poly_at --file - --outfile -  --min_poly_at_len 300 --min_len 1|zcat ) <(zcat tests/poly_at.fastq.gz) "
 
-gcov src/fastq_trim_poly_at
+#gcov src/fastq_trim_poly_at
 
 
 echo "*** fastq_filter_n"
@@ -162,7 +162,7 @@ must_succeed "./src/fastq_filter_n tests/test_1.fastq.gz > tmp && diff -q <(zcat
 must_fail "./src/fastq_filter_n --help"
 must_fail "./src/fastq_filter_n"
 
-gcov src/fastq_filter_n
+#gcov src/fastq_filter_n
 
 ##
 echo "*** fastq_num_reads"
@@ -174,7 +174,7 @@ must_succeed "[ `./src/fastq_num_reads tests/one.fastq.gz` -eq 1 ]"
 must_fail "./src/fastq_num_reads --help"
 must_fail "./src/fastq_num_reads"
 
-gcov src/fastq_num_reads
+#gcov src/fastq_num_reads
 
 ##
 echo "*** fastq_truncate"
@@ -184,7 +184,7 @@ must_succeed "[ `./src/fastq_truncate tests/test_21_2.fastq.gz 2|wc -l` -eq 8 ]"
 must_fail "./src/fastq_truncate tests/test_21_2.fastq.gz"
 must_fail "./src/fastq_truncate --help"
 
-gcov src/fastq_truncate
+#gcov src/fastq_truncate
 
 echo "*** fastq_empty"
 must_succeed "./src/fastq_not_empty tests/barcode_test_1.fastq.gz" 
@@ -194,7 +194,7 @@ must_fail "./src/fastq_not_empty /dev/null"
 must_fail "./src/fastq_not_empty --help"
 must_fail "./src/fastq_not_empty"
 
-gcov src/fastq_not_empty
+#gcov src/fastq_not_empty
 
 echo "*** fastq_info"
 must_fail ./src/fastq_info 
@@ -285,7 +285,7 @@ must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-00
 must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 tests/read-I2_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2
 must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 tests/read-I2_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 
 
-gcov src/fastq_info
+#gcov src/fastq_info
 
 
 echo "*** fastq_filterpair"
@@ -308,7 +308,7 @@ must_fail "./src/fastq_filterpair --help"
 
 #echo "This may take a while..."
 #must_succeed ./src/fastq_filterpair tests/c18_1M_1.fastq.gz tests/c18_1M_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz
-gcov src/fastq_filterpair
+#gcov src/fastq_filterpair
 
 ##
 echo "*** fastq_pre_barcodes"
@@ -404,7 +404,7 @@ must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz   -b lixo2
 must_fail ./sh/fastq2bam -s 10xV1i -2 tests/tx.I1.fastq.gz -b lixo2
 must_fail ./sh/fastq2bam -s 10xV1i -2 tests/tx.I1.fastq.gz -b 
 rm -f lixo lixo2
-gcov src/fastq_pre_barcodes
+#gcov src/fastq_pre_barcodes
 echo "*** bam_add_tags"
 
 must_succeed "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam"
@@ -421,7 +421,7 @@ must_succeed "./src/bam_add_tags --help"
 must_succeed "./src/bam_add_tags -h"
 
 
-gcov src/bam_add_tags
+#gcov src/bam_add_tags
 
 echo "*** fastq_split_interleaved"
 must_succeed 	time -p ./src/fastq_split_interleaved tests/casava.1.8i.fastq.gz   out_prefix
@@ -434,10 +434,11 @@ must_fail 	./src/fastq_split_interleaved tests/test_e1.fastq.gz
 
 rm -f out_prefix_*.fastq.gz
 
-gcov src/fastq_split_interleaved
+#gcov src/fastq_split_interleaved
 
 must_succeed ./src/fastq_tests
 gcov src/fastq_tests
+make -C src gcov
 
 echo Failed tests: $num_failed
 exit $num_failed
