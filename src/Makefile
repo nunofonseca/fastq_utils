@@ -19,7 +19,7 @@ ifeq ($(DEBUG),1)
 CFLAGS+= -g -DDEBUG=1 -O1
 endif
 
-TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at fastq_split_interleaved
+TARGETS=fastq_truncate fastq_filterpair  fastq_filter_n fastq_num_reads fastq_not_empty fastq_pre_barcodes fastq_trim_poly_at fastq_split_interleaved fastq_tests
 
 ifdef SAMTOOLS_PATH
 TARGETS+= bam_add_tags bam_umi_count bam2fastq fastq_info
@@ -51,6 +51,9 @@ fastq_truncate:  fastq_truncate.o  hash.o fastq.o
 
 fastq_split_interleaved: fastq_split_interleaved.o fastq.o hash.o
 	gcc  $(CFLAGS) $^ -lz -o $@ 
+
+fastq_tests: fastq_tests.o hash.o fastq.o range_list.o
+	gcc  $(CFLAGS) $^ -lz -o $@
 
 # deprecated
 #fastq_validator:  hash.o fastq_validator.o
@@ -90,6 +93,7 @@ hash.o: hash.c hash.h
 
 range_list.o: range_list.c range_list.h
 	gcc $(CFLAGS) -c $<
+
 
 %.o: %.c
 	gcc -I $(SAMTOOLS_PATH) $(CFLAGS)   -c $<

@@ -273,7 +273,19 @@ must_succeed 	time -p ./src/fastq_info  -r -s tests/casava.1.8_readname_trunc_1.
 
 must_fail "./src/fastq_info --help"
 ##
+echo "*** fastq_validator.sh"
+export PATH=$PWD/src:$PATH
+must_fail ./sh/fastq_validator.sh tests/c18_10000_1.fastq.gz.bz2 tests/c18_10000_2.fastq.gz.bz2
+must_fail ./sh/fastq_validator.sh tests/c18_10000_1.fastq.gz tests/c18_10000_2.fastq.gz
 
+must_fail ./sh/fastq_validator.sh tests/SRR3587500_1.fastq.gz.missing.bz2 
+must_fail ./sh/fastq_validator.sh tests/a_1.fastq.err.bz2
+must_fail ./sh/fastq_validator.sh tests/SRR3587500_1.fastq.gz.bz2 tests/SRR3587500_2.fastq.gz.bz2.
+must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-001.fastq.gz tests/read-I2_si-ACCGAACA_lane-001-chunk-001.fastq.gz
+must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 tests/read-I2_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2
+must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 tests/read-I2_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 
+
+gcov src/fastq_info
 
 
 echo "*** fastq_filterpair"
@@ -424,19 +436,8 @@ rm -f out_prefix_*.fastq.gz
 
 gcov src/fastq_split_interleaved
 
-echo "*** fastq_validator.sh"
-export PATH=$PWD/src:$PATH
-must_fail ./sh/fastq_validator.sh tests/c18_10000_1.fastq.gz.bz2 tests/c18_10000_2.fastq.gz.bz2
-must_fail ./sh/fastq_validator.sh tests/c18_10000_1.fastq.gz tests/c18_10000_2.fastq.gz
-
-must_fail ./sh/fastq_validator.sh tests/SRR3587500_1.fastq.gz.missing.bz2 
-must_fail ./sh/fastq_validator.sh tests/a_1.fastq.err.bz2
-must_fail ./sh/fastq_validator.sh tests/SRR3587500_1.fastq.gz.bz2 tests/SRR3587500_2.fastq.gz.bz2.
-must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-001.fastq.gz tests/read-I2_si-ACCGAACA_lane-001-chunk-001.fastq.gz
-must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 tests/read-I2_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2
-must_succeed ./sh/fastq_validator.sh tests/read-I1_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 tests/read-I2_si-ACCGAACA_lane-001-chunk-001.fastq.gz.bz2 
-
-gcov src/fastq_info
+must_succeed ./src/fastq_tests
+gcov src/fastq_tests
 
 echo Failed tests: $num_failed
 exit $num_failed
