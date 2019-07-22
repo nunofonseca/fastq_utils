@@ -32,7 +32,7 @@ install: $(TARGETS)
 	cp $^ ../bin
 
 gcov:
-	gcov $(TARGETS) hash.o range_list.o
+	gcov $(TARGETS) hash.o range_list.o fastq.o
 
 fastq_filterpair: hash.o fastq_filterpair.o fastq.o 
 	gcc  $(CFLAGS) $^ -lz -o $@
@@ -97,7 +97,6 @@ hash.o: hash.c hash.h
 
 range_list.o: range_list.c range_list.h
 	gcc $(CFLAGS) -c $<
-
 
 %.o: %.c
 	gcc -I $(SAMTOOLS_PATH) $(CFLAGS)   -c $<
