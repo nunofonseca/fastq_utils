@@ -280,34 +280,34 @@ __ptr_t next_hashnode(hashtable table)
  * Returns all objects stored in a basket by making successive calls
  * the returned objects are deleted from the hash table
  */
-__ptr_t next_delete_hash_object(hashtable table)
-{
-  // first time....
-  if( table->last_bucket>=HASHSIZE(table)) 
-    return NULL;
+/* __ptr_t next_delete_hash_object(hashtable table) */
+/* { */
+/*   // first time.... */
+/*   if( table->last_bucket>=HASHSIZE(table))  */
+/*     return NULL; */
     
-  if( table->last_node==NULL ) {
-    // find bucket
-    // find next bucket
-    while ( table->last_node == NULL && table->last_bucket+1<HASHSIZE(table)) {
-      ++table->last_bucket;
-      table->last_node = BUCKET(table,table->last_bucket);
-    }
-    if (table->last_node==NULL)
-      return NULL;
-    // delete
-    void *obj=table->last_node->obj;
-    free(table->last_node);
-    table->last_node=NULL;
-    return obj;
-  } 
-  // Next in bucket
-  table->last_node=table->last_node->next;
-  if (table->last_node==NULL) return next_hash_object(table);
-  void *obj=table->last_node->obj;
-  free(table->last_node);
-  table->last_node=NULL;
-  return obj;
-}
+/*   if( table->last_node==NULL ) { */
+/*     // find bucket */
+/*     // find next bucket */
+/*     while ( table->last_node == NULL && table->last_bucket+1<HASHSIZE(table)) { */
+/*       ++table->last_bucket; */
+/*       table->last_node = BUCKET(table,table->last_bucket); */
+/*     } */
+/*     if (table->last_node==NULL) */
+/*       return NULL; */
+/*     // delete */
+/*     void *obj=table->last_node->obj; */
+/*     free(table->last_node); */
+/*     table->last_node=NULL; */
+/*     return obj; */
+/*   }  */
+/*   // Next in bucket */
+/*   table->last_node=table->last_node->next; */
+/*   if (table->last_node==NULL) return next_hash_object(table); */
+/*   void *obj=table->last_node->obj; */
+/*   free(table->last_node); */
+/*   table->last_node=NULL; */
+/*   return obj; */
+/* } */
 
 

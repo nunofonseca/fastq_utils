@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 let num_failed=0
 function must_fail {
@@ -41,31 +41,31 @@ must_succeed "./src/fastq_split_interleaved tests/inter.fastq.gz tests/xxx && [ 
 
 ##
 echo "*** bam2fastq"
-rm -f lixo*.fastq*
+rm -f tmpf*.fastq*
 must_fail "./src/bam2fastq"
 must_fail "./src/bam2fastq -i "
 must_fail "./src/bam2fastq -o "
 must_fail "./src/bam2fastq --bam  tests/no_qual.bam"
-must_fail "./src/bam2fastq --bam  tests/missing_no_qual.bam --out lixo"
+must_fail "./src/bam2fastq --bam  tests/missing_no_qual.bam --out tmpf"
 must_succeed "./src/bam2fastq -h"
-must_succeed "[ `./src/bam2fastq --bam  tests/no_qual.bam --out lixo1 && ./src/fastq_info lixo1.fastq.gz 2> /dev/null && zcat lixo1.fastq.gz|wc -l|cut -f 1 -d\ ` \> 0 ] "
+must_succeed "[ `./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1 && ./src/fastq_info tmpf1.fastq.gz 2> /dev/null && zcat tmpf1.fastq.gz|wc -l|cut -f 1 -d\ ` \> 0 ] "
 
-must_succeed " [ `./src/bam2fastq --bam  tests/test.bam --out lixo2 && ./src/fastq_info lixo2.fastq.gz 2> /dev/null && zcat lixo2.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` \> 0 ]"
+must_succeed " [ `./src/bam2fastq --bam  tests/test.bam --out tmpf2 && ./src/fastq_info tmpf2.fastq.gz 2> /dev/null && zcat tmpf2.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` \> 0 ]"
 
-must_succeed " [ `./src/bam2fastq --bam  tests/test_one_cell.bam --out lixo3 && ./src/fastq_info lixo3.fastq.gz 2> /dev/null && zcat lixo3.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 4939 ]"
+must_succeed " [ `./src/bam2fastq --bam  tests/test_one_cell.bam --out tmpf3 && ./src/fastq_info tmpf3.fastq.gz 2> /dev/null && zcat tmpf3.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 4939 ]"
 
-must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot.bam --out lixo4 && ./src/fastq_info lixo4.fastq.gz > /dev/null && zcat lixo4.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 724 ]"
+must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot.bam --out tmpf4 && ./src/fastq_info tmpf4.fastq.gz > /dev/null && zcat tmpf4.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 724 ]"
 
-must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot2.bam --out lixo5 && ./src/fastq_info lixo5.fastq.gz > /dev/null && zcat lixo5.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 57412 ]"
+must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot2.bam --out tmpf5 && ./src/fastq_info tmpf5.fastq.gz > /dev/null && zcat tmpf5.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 57412 ]"
 
-must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out lixo6 && ./src/fastq_info lixo6.fastq.gz > /dev/null && zcat lixo6.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 497978 ]"
-must_succeed " [ `./src/bam2fastq --bam  tests/se.bam --out lixo7 && ./src/fastq_info lixo7.fastq.gz > /dev/null && zcat lixo7.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
-must_succeed " [ `./src/bam2fastq --bam  tests/pe.bam --out lixo8 && ./src/fastq_info lixo8_1.fastq.gz lixo8_2.fastq.gz > /dev/null && zcat lixo8_1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
+must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out tmpf6 && ./src/fastq_info tmpf6.fastq.gz > /dev/null && zcat tmpf6.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 497978 ]"
+must_succeed " [ `./src/bam2fastq --bam  tests/se.bam --out tmpf7 && ./src/fastq_info tmpf7.fastq.gz > /dev/null && zcat tmpf7.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
+must_succeed " [ `./src/bam2fastq --bam  tests/pe.bam --out tmpf8 && ./src/fastq_info tmpf8_1.fastq.gz tmpf8_2.fastq.gz > /dev/null && zcat tmpf8_1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
 
 #gcov src/bam2fastq
 
 #
-rm -f lixo*.fastq*
+rm -f tmpf*.fastq*
 
 echo "*** bam_umi_count"
 #
@@ -77,18 +77,18 @@ must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --u
 
 must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --multi_mapped --ucounts xx --not_sorted_by_cell && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
 
-#must_succeed  "./src/bam_umi_count --min_reads 1 --not_sorted_by_cell --bam tests/test_annot.bam  --ucounts lixo "
+#must_succeed  "./src/bam_umi_count --min_reads 1 --not_sorted_by_cell --bam tests/test_annot.bam  --ucounts tmpf "
 
 
-#must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3_small.bam  --ucounts lixo --not_sorted_by_cell"
+#must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot3_small.bam  --ucounts tmpf --not_sorted_by_cell"
 
-#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam  --ucounts lixo --not_sorted_by_cell"
+#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam  --ucounts tmpf --not_sorted_by_cell"
 
-#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts lixo --not_sorted_by_cell"
+#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts tmpf --not_sorted_by_cell"
 
-#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts lixo --ignore_sample --not_sorted_by_cell"
+#must_succeed  "./src/bam_umi_count --min_reads 10 --bam tests/test_annot3_small.bam -x TX --ucounts tmpf --ignore_sample --not_sorted_by_cell"
 
-#must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans_small.bam  --ucounts lixo --ucounts_MM --not_sorted_by_cell"
+#must_fail   "./src/bam_umi_count --min_reads 10 --bam tests/trans_small.bam  --ucounts tmpf --ucounts_MM --not_sorted_by_cell"
 
 #must_succeed  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
@@ -396,25 +396,22 @@ must_succeed fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 test
 
 must_succeed ./sh/fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz -c 1 -C 2 -u 3 -U 4
 must_fail ./sh/fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz -c 1 -C 2 -u 3 -U 
-must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo -3 tests/tx.I2.fastq.gz
-must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo -3 tests/tx.I2.fastq.gz -z 0 -Z 10
-must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo -3 tests/tx.I2.fastq.gz -z 0 -Z 5
-must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo2 -s 10
-must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b lixo2 -S 10
+must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf -3 tests/tx.I2.fastq.gz
+must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf -3 tests/tx.I2.fastq.gz -z 0 -Z 10
+must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf -3 tests/tx.I2.fastq.gz -z 0 -Z 5
+must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf2 -s 10
+must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf2 -S 10
 
-must_fail diff <(samtools view lixo) <(samtools view lixo2)
-cat << EOF 
-1	4	*	0	255	*	*	0	98	GAGACCATGCTCAACAGCAACATCAATGACCTGCTGATGGTGACCTACCTGGCCAATCTCACCCAGTCACAGATTGCCCTCAACGAGAAACTTGTAAA	3>BBCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGBG:CFCGGGEF0GGGFGGECCFEG?FGGE>FG/;;?GFGFGG:C0	on:Z:D00408:393:CAYR8ANXX:1:1101:2629:2244@1:N:0:0	op:Z:3>BBCGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGBG:CFCGGGEF0GGGFGGECCFEG?FGGE>FG/;;?GFGFGG:C0	QX:Z:AAAAACGGAT	OQ:Z:ABB=:///??	CR:Z:GTGGATTGCCTAAG	CY:Z:B@BBBEGBGGGGCF	BC:Z:ACCGAACA	QT:Z::@BBBGG/
-EOF > tmp2
+must_fail diff <(samtools view tmpf) <(samtools view tmpf2)
 
-must_succeed diff <(samtools view lixo) tmp2
-rm -f tmp2
+must_succeed diff <(samtools view tmpf) tests/ref1.sam
+
 must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b 
 must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz
-must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz   -b lixo2
-must_fail ./sh/fastq2bam -s 10xV1i -2 tests/tx.I1.fastq.gz -b lixo2
+must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz   -b tmpf2
+must_fail ./sh/fastq2bam -s 10xV1i -2 tests/tx.I1.fastq.gz -b tmpf2
 must_fail ./sh/fastq2bam -s 10xV1i -2 tests/tx.I1.fastq.gz -b 
-rm -f lixo lixo2
+rm -f tmpf tmpf2
 #gcov src/fastq_pre_barcodes
 echo "*** bam_add_tags"
 
@@ -441,7 +438,7 @@ rm -f out_prefix_*.fastq.gz
 #gcov src/fastq_split_interleaved
 
 must_succeed ./src/fastq_tests
-#gcov src/fastq_tests
+gcov src/fastq_tests
 make -B -C src gcov
 
 echo Failed tests: $num_failed

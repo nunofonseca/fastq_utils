@@ -74,6 +74,6 @@ void reset_hashtable(hashtable);
 void init_hash_traversal(hashtable table);
 __ptr_t next_hash_object(hashtable table);
 __ptr_t next_hashnode(hashtable table);
-__ptr_t next_delete_hash_object(hashtable table);
+//__ptr_t next_delete_hash_object(hashtable table);
 void hashtable_stats(hashtable table);
 #endif
