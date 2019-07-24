@@ -31,8 +31,6 @@ all: $(TARGETS)
 install: $(TARGETS)
 	cp $^ ../bin
 
-gcov:
-	gcov $(TARGETS) hash.o range_list.o fastq.o
 
 fastq_filterpair: hash.o fastq_filterpair.o fastq.o 
 	gcc  $(CFLAGS) $^ -lz -o $@
@@ -113,4 +111,9 @@ clean:
 
 tests:
 	../run_tests.sh
+
+
+gcov: 
+	gcov $(TARGETS) hash.o range_list.o fastq.o
+
 

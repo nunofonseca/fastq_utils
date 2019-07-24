@@ -24,7 +24,6 @@ function must_succeed {
     echo $STATUS $cmd
 }
 
-
 export PATH=$PWD/bin:$PATH
 #############################################
 ##
@@ -443,7 +442,7 @@ rm -f out_prefix_*.fastq.gz
 
 must_succeed ./src/fastq_tests
 #gcov src/fastq_tests
-make -C src gcov
+make -B -C src gcov
 
 echo Failed tests: $num_failed
 exit $num_failed
