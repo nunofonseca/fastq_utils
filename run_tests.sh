@@ -68,7 +68,7 @@ must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot2.bam --out tmpf5 && .
 must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out tmpf6 && ./src/fastq_info tmpf6.fastq.gz > /dev/null && zcat tmpf6.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 497978 ]"
 must_succeed " [ `./src/bam2fastq --bam  tests/se.bam --out tmpf7 && ./src/fastq_info tmpf7.fastq.gz > /dev/null && zcat tmpf7.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
 must_succeed " [ `./src/bam2fastq --bam  tests/pe.bam --out tmpf8 && ./src/fastq_info tmpf8_1.fastq.gz tmpf8_2.fastq.gz > /dev/null && zcat tmpf8_1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
-
+must_succeed "./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1 "
 #gcov src/bam2fastq
 
 #
@@ -449,7 +449,7 @@ must_fail "./src/bam_add_tags --inbam tests/trans_small.bam_missing --outbam tmp
 must_fail "./src/bam_add_tags --inbam tests/trans_small.bam_missing --outbam folder/does/not/exist/tmp.bam  --tx --tx_2_gx tests/mapTrans2Gene.tsv"
 must_succeed "./src/bam_add_tags --help"
 must_succeed "./src/bam_add_tags -h"
-
+must_fail "./src/bam_add_tags --inbam tests/trans_small.bam --outbam /tmp.bam --tx "
 
 #gcov src/bam_add_tags
 

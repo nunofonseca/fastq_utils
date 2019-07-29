@@ -81,7 +81,7 @@ gzFile get_fp(gzFile *fps, FILE_LOC type, const char *file_prefix) {
   }
   return(fps[type]);
 }
-
+/*
 char* restore_read_name(char *s) {
   unsigned int i=0;
   while ( s[i]!='\0' ) {
@@ -90,7 +90,7 @@ char* restore_read_name(char *s) {
   }
   return(s);
 }
-
+*/
 char* my_get_seq(bam1_t *aln, char *buf) {
   unsigned int i,len = aln->core.l_qseq;
   uint8_t *seq = bam1_seq(aln);
