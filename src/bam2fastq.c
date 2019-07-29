@@ -112,7 +112,7 @@ char* get_qual(bam1_t *aln,char *buf) {
 
 
 void print_usage(int exit_status) {
-    PRINT_ERROR("Usage: bam2fastq --bam in.bam --out fastq_prefix");
+    PRINT_ERROR("Usage: bam2fastq --bam in.bam --out fastq_prefix [--verbose --10x|-X]");
     if ( exit_status>=0) exit(exit_status);
 }
 
@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
     {"help",   no_argument, &help, TRUE},
     {"bam",  required_argument, 0, 'b'},
     {"out",  required_argument, 0, 'o'},
+    {"10x",  no_argument, (int*)&__10x_compat,1},
     {0,0,0,0}
   };
   
@@ -140,12 +141,15 @@ int main(int argc, char *argv[])
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    int c = getopt_long (argc, argv, "b:o:h",
+    int c = getopt_long (argc, argv, "b:o:hX",
 			 long_options, &option_index);      
     if (c == -1) // no more options
       break;
     
-    switch (c) {      
+    switch (c) {
+    case 'X':
+      __10x_compat=1;
+      break;
     case 'b':
       bam_file=optarg;
       break;
@@ -257,8 +261,8 @@ int main(int argc, char *argv[])
 	 if (get_tag(aln,CELL_TAG)!=NULL)
 	   QWRITE(get_fp(fd, CELL, out_file_prefix),CELL, hdr,get_tag(aln,CELL_TAG),get_tag(aln,CELL_QUAL_TAG),FALSE);
 	 // umi
-	 if (get_tag(aln,UMI_TAG)!=NULL)
-	   QWRITE(get_fp(fd, UMI, out_file_prefix),UMI,hdr,get_tag(aln,UMI_TAG),get_tag(aln,UMI_QUAL_TAG),FALSE);
+	 if (get_tag(aln,GET_UMI_TAG)!=NULL)
+	   QWRITE(get_fp(fd, UMI, out_file_prefix),UMI,hdr,get_tag(aln,GET_UMI_TAG),get_tag(aln,GET_UMI_QUAL_TAG),FALSE);
 	 // sample
 	 if (get_tag(aln,SAMPLE_TAG)!=NULL)
 	   QWRITE(get_fp(fd, SAMPLE, out_file_prefix),SAMPLE,hdr,get_tag(aln,SAMPLE_TAG),get_tag(aln,SAMPLE_QUAL_TAG),FALSE);

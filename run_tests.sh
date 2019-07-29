@@ -45,12 +45,19 @@ rm -f tmpf*.fastq*
 must_fail "./src/bam2fastq"
 must_fail "./src/bam2fastq -i "
 must_fail "./src/bam2fastq -o "
+must_fail "./src/bam2fastq --10x "
 must_fail "./src/bam2fastq --bam  tests/no_qual.bam"
 must_fail "./src/bam2fastq --bam  tests/missing_no_qual.bam --out tmpf"
 must_succeed "./src/bam2fastq -h"
 must_succeed "[ `./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1 && ./src/fastq_info tmpf1.fastq.gz 2> /dev/null && zcat tmpf1.fastq.gz|wc -l|cut -f 1 -d\ ` \> 0 ] "
 
 must_succeed " [ `./src/bam2fastq --bam  tests/test.bam --out tmpf2 && ./src/fastq_info tmpf2.fastq.gz 2> /dev/null && zcat tmpf2.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` \> 0 ]"
+
+must_succeed " [ `./src/bam2fastq --bam  tests/test.bam --out tmpf2 -X && ./src/fastq_info tmpf2.fastq.gz 2> /dev/null && zcat tmpf2.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` \> 0 ]"
+
+must_succeed " ./src/bam2fastq --bam  tests/test10.bam --out tmpf5  && [ ! -e tmpf5_umi.fastq.gz  ]"
+
+must_succeed " ./src/bam2fastq --bam  tests/test10.bam --out tmpf6 -X  && [ -e tmpf6_umi.fastq.gz  ]"
 
 must_succeed " [ `./src/bam2fastq --bam  tests/test_one_cell.bam --out tmpf3 && ./src/fastq_info tmpf3.fastq.gz 2> /dev/null && zcat tmpf3.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 4939 ]"
 
@@ -69,13 +76,21 @@ rm -f tmpf*.fastq*
 
 echo "*** bam_umi_count"
 #
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX --not_sorted_by_cell"
-must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX --not_sorted_by_cell"
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x TX --not_sorted_by_cell"
+
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucounts xx  -x GX --not_sorted_by_cell"
+
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx  -x TX --not_sorted_by_cell"
+
+must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx  -x GX --not_sorted_by_cell"
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx  -x TX --not_sorted_by_cell --10x"
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx  -x GX --not_sorted_by_cell --10x"
+
 
 #must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts xx --not_sorted_by_cell && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
 #must_succeed  "./src/bam_umi_count --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
-must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam  --multi_mapped --ucounts xx --not_sorted_by_cell && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
+must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam  --multi_mapped --ucounts xx --not_sorted_by_cell && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
 
 #must_succeed  "./src/bam_umi_count --min_reads 1 --not_sorted_by_cell --bam tests/test_annot.bam  --ucounts tmpf "
 
@@ -111,10 +126,12 @@ must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot2.bam --uco
 
 #must_succeed  " ./src/bam_umi_count --min_reads 4 --bam tests/test_annot2.bam --ucounts xx --ignore_sample --not_sorted_by_cell"
 
-must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot4.bam --ucounts xx --ignore_sample --not_sorted_by_cell --cell_suffix '-123456789' && grep -c 123456789 xx_cols ` -eq  9 ]"
+must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx --ignore_sample --not_sorted_by_cell --cell_suffix '-123456789' && grep -c 123456789 xx_cols ` -eq  365 ]"
+
+must_fail  "./src/bam_umi_count --min_reads 1 --bam tests/test_annot4.bam --ucounts xx --ignore_sample --not_sorted_by_cell --cell_suffix '-123456789' && grep -c 123456789 xx_cols"
 
 
-must_succeed  "[ `./src/bam_umi_count --not_sorted_by_cell --min_reads 1 --bam tests/test_annot.bam --known_cells tests/known_cells.txt --ucounts xx && cat xx  | wc -l ` -eq 4 ]"
+must_succeed  "[ `./src/bam_umi_count --not_sorted_by_cell --min_reads 1 --bam tests/test_annot5.bam --known_cells tests/known_cells.txt --ucounts xx && cat xx  | wc -l ` -eq 4 ]"
 
 
 
@@ -394,6 +411,8 @@ must_fail ./sh/fastq2bam  -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -3 t
 
 must_succeed fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz
 
+must_succeed fastq2bam -b test10.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz -X
+
 must_succeed ./sh/fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz -c 1 -C 2 -u 3 -U 4
 must_fail ./sh/fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz -c 1 -C 2 -u 3 -U 
 must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf -3 tests/tx.I2.fastq.gz
@@ -416,6 +435,9 @@ rm -f tmpf tmpf2
 echo "*** bam_add_tags"
 
 must_succeed "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam"
+must_succeed "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.10.bam --10x"
+must_succeed "samtools view tmp.10.bam | grep -c 'UB:Z' > tmp.10 && samtools view tmp.bam | grep -c 'RX:Z' > tmp && diff tmp tmp.10"
+
 must_succeed "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam --tx --tx_2_gx tests/mapTrans2Gene.tsv"
 must_succeed "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam --tx "
 must_fail "./src/bam_add_tags --inbam tests/trans_small.bam --outbam tmp.bam --tx --tx_2_gx aaaatests/mapTrans2Gene.tsv"
@@ -433,7 +455,7 @@ must_succeed "./src/bam_add_tags -h"
 
 
 
-rm -f out_prefix_*.fastq.gz
+rm -f out_prefix_*.fastq.gz tmp.*.bam
 
 #gcov src/fastq_split_interleaved
 

@@ -150,6 +150,7 @@ int main(int argc, char *argv[])   {
     {"inbam",  required_argument, 0, 'i'},
     {"outbam",  required_argument, 0, 'o'},
     {"tx_2_gx",  required_argument, 0, 'm'},
+    {"10x",  no_argument, (int*)&__10x_compat,1},
     {0,0,0,0}
   };
 
@@ -159,7 +160,7 @@ int main(int argc, char *argv[])   {
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    int c = getopt_long (argc, argv, "i:o:m:h",
+    int c = getopt_long (argc, argv, "i:o:m:hX",
 			 long_options, &option_index);      
     if (c == -1) // no more options
       break;
@@ -169,6 +170,7 @@ int main(int argc, char *argv[])   {
     case 'o': outbam_file=optarg; break;
     case 'm': map_file=optarg; break;
     case 'h': help=TRUE; break;
+    case 'X': __10x_compat=1;break;
     default: break;
     }
   }
@@ -265,7 +267,7 @@ int main(int argc, char *argv[])   {
     if (get_barcodes(qn,&sample[0],&umi[0],&cell[0],&sample_len,&umi_len,&cell_len)) {
 
       if ( umi_len > 0 )   // UMI
-	bam_aux_append(aln, UMI_TAG, 'Z', umi_len+1, (uint8_t *)umi);
+	bam_aux_append(aln, GET_UMI_TAG, 'Z', umi_len+1, (uint8_t *)umi);
 
       if ( cell_len > 0 )  // cellular barcode sequence as reported by the sequencer
 	bam_aux_append(aln, CELL_TAG, 'Z', cell_len+1, (uint8_t *)cell); 

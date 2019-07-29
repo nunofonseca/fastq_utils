@@ -722,7 +722,7 @@ FILE* MM_header(const char* counts_file,long *header_loc) {
 }
 
 void print_usage(int exit_status) {
-    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--min_umis 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag gx|tx] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample] [--cell_suffix suffix] [--max_cells number] [--max_feat number] [--feat_cell number] [--cell_tag tag] [--sorted_by_cell]");
+    PRINT_ERROR("Usage: bam_umi_count --bam in.bam --ucounts output_filename [--min_reads 0] [--min_umis 0] [--uniq_mapped|--multi_mapped]  [--dump filename] [--tag gx|tx] [--known_umi file_one_umi_per_line] [--ucounts_MM |--ucounts_tsv] [--ucounts_MM|--ucounts_tsv] [--ignore_sample] [--cell_suffix suffix] [--max_cells number] [--max_feat number] [--feat_cell number] [--cell_tag tag] [--sorted_by_cell] [--10x]");
     if ( exit_status>=0) exit(exit_status);
 }
 
@@ -785,19 +785,20 @@ int main(int argc, char *argv[])
     {"max_cells",  required_argument, 0, 'C'},
     {"max_feat",  required_argument, 0, 'F'},
     {"feat_cell",  required_argument, 0, 'T'},
+    {"10x",  no_argument, (int*)&__10x_compat,1},
     {0,0,0,0}
   };
   //2018-12-08: disabling a few options for now...
   ignore_sample=TRUE;
   bam_sorted_by_cell=TRUE;
-  
+
   fprintf(stderr,"bam_umi_count version %sb\n",VERSION);
   // process arguments
   while (1) {
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    int c = getopt_long (argc, argv, "F:T:C:b:U:u:r:t:x:c:s:h",
+    int c = getopt_long (argc, argv, "F:T:C:b:U:u:r:t:x:c:s:hX:",
 		     long_options, &option_index);      
     if (c == -1) // no more options
       break;
@@ -895,6 +896,7 @@ int main(int argc, char *argv[])
   fprintf(stderr,"@uniq mapped reads=%u\n",uniq_mapped_only);
   fprintf(stderr,"@sorted bam=%u\n",bam_sorted_by_cell);
   fprintf(stderr,"@tag=%s\n",feat_tag);
+  fprintf(stderr,"@umi tag=%s\n",GET_UMI_TAG);
   fprintf(stderr,"@unique counts file=%s\n",ucounts_file);
   if (cell_suffix!=NULL)
     fprintf(stderr,"@cell_suffix=%s\n",cell_suffix);
@@ -962,9 +964,10 @@ int main(int argc, char *argv[])
     feat=get_tag(aln,feat_tag);
     if (feat[0]!='\0') {
       num_tags_found++;
-      umi=get_tag(aln,UMI_TAG);
+      umi=get_tag(aln,GET_UMI_TAG);
       // TODO: remove support for this tag and update tests
-      // if ( umi[0]=='\0') // backwards compatibility
+      if ( umi[0]=='\0') // no UMI
+	continue;
       // umi=get_tag(aln,"UM");
       cell=get_tag(aln,cell_tag);
       if ( !ignore_sample)

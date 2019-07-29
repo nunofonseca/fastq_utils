@@ -339,6 +339,7 @@ void print_usage(void) {
   --read1_size integer     :\n\
   --read2_offset integer   :\n\
   --read2_size integer     :\n\
+  --10x     : use 10X UMI tags (UB and UY) instead of the default tags defined in the SAM specification\n\
 ";
   fprintf(stderr,"usage: fastq_pre_barcodes --read1 fastq_file --outfile1 out_file [optional parameters]\n");
   fprintf(stderr,"%s\n",msg);
@@ -390,6 +391,7 @@ int main(int argc, char **argv ) {
     {"sample_offset",  required_argument,       0, 'q'},
     {"sample_size",  required_argument, 0, 'r'},
     {"phred_encoding",  required_argument, 0, 's'},
+    {"10x",  no_argument, (int*)&__10x_compat,1},
     {0,0,0,0}
   };
 
@@ -401,14 +403,16 @@ int main(int argc, char **argv ) {
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    c = getopt_long (argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:z:",
+    c = getopt_long (argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:z:X",
 		     long_options, &option_index);
   
     if (c == -1) // no more options
       break;
       
     switch (c) {
-
+    case 'X':
+      __10x_compat=1;
+      break;
     case 'z':
       xx=0;
       strncpy(&tmps[0],optarg,TMP_BUF_SIZE);
@@ -419,8 +423,7 @@ int main(int argc, char **argv ) {
 	  token=NULL;
 	else
 	  token = strtok(NULL, ",");
-	++xx;			
-      }
+	++xx;			      }
       if ( xx!=2 ) {
 	PRINT_ERROR("two file references should be passed to --interleaved");
 	exit(1);
@@ -675,7 +678,7 @@ int main(int argc, char **argv ) {
       PRINT_SAM("\t%s:Z:%s",ORIG_QUAL_TAG,m[READ1]->qual);
       //
       if ( umi[0]!='\0'  ) 
-        PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",UMI_TAG,umi,UMI_QUAL_TAG,umi_qual);
+        PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",GET_UMI_TAG,umi,GET_UMI_QUAL_TAG,umi_qual);
       if ( cell[0]!='\0'  ) 
         PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",CELL_TAG,cell,CELL_QUAL_TAG,cell_qual);
       if ( sample[0]!='\0'  ) 
@@ -697,7 +700,7 @@ int main(int argc, char **argv ) {
 	 PRINT_SAM("\t%s:Z:%s",ORIG_QUAL_TAG,m[READ2]->qual);
 	 //
 	 if ( umi[0]!='\0'  ) 
-	   PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",UMI_TAG,umi,UMI_QUAL_TAG,umi_qual);
+	   PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",GET_UMI_TAG,umi,GET_UMI_QUAL_TAG,umi_qual);
 	 if ( cell[0]!='\0'   ) 
 	   PRINT_SAM(" %s:Z:%s\t%s:Z:%s",CELL_TAG,cell,CELL_QUAL_TAG,cell_qual);
 	 if ( sample[0]!='\0'  ) 
