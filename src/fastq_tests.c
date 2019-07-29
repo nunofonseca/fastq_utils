@@ -147,7 +147,7 @@ int main(int argc, char **argv ) {
   t4=minus_rl(t2,t1);
   assert(t4==NULL);
   t4=minus_rl(t2,t3);
-  print_nodes(t2);
+  display_tree(t2);
   rl_next_in_bigger(t2,0);
   rl_next_in_bigger(t4,10);
   rl_all(t1,IN);

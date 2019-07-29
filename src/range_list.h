@@ -157,6 +157,7 @@ RL_Tree* set_in_rl(RL_Tree* tree,NUM number,STATUS status);
 BOOLEAN  in_rl(RL_Tree* range,NUM number);
 BOOLEAN  freeze_rl(RL_Tree* tree); /* write operations on the range are finishe */
 RL_Tree* intersect_rl(RL_Tree* range1,RL_Tree* range2);
+RL_Tree* minus_rl(RL_Tree* range1,RL_Tree* range2);
 
 NUM rl_next_in_bigger(RL_Tree *tree,NUM min); /* Returns next number in tree bigger than min */
 
