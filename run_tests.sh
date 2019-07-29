@@ -83,6 +83,11 @@ must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot.bam --ucou
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx  -x TX --not_sorted_by_cell"
 
 must_succeed  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx  -x GX --not_sorted_by_cell"
+
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts /xx  -x GX --not_sorted_by_cell"
+
+must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts /xx  -x GX --not_sorted_by_cell -X"
+
 must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx  -x TX --not_sorted_by_cell --10x"
 must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --ucounts xx  -x GX --not_sorted_by_cell --10x"
 
@@ -342,6 +347,8 @@ must_fail "./src/fastq_filterpair --help"
 ##
 echo "*** fastq_pre_barcodes"
 must_succeed ./src/fastq_pre_barcodes --index1 tests/barcode_test_1.fastq.gz  --phred_encoding 33 --min_qual 10 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --read1 tests/barcode_test_2.fastq.gz --outfile1 test.fastq.gz
+
+must_succeed ./src/fastq_pre_barcodes --index1 tests/barcode_test_1.fastq.gz  --phred_encoding 33 --min_qual 10 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --read1 tests/barcode_test_2.fastq.gz --outfile1 test.fastq.gz -X
 
 must_succeed "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 10 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --read1 tests/barcode_test2_2.fastq.gz --outfile1 test.fastq.gz && diff -q  <(zcat test.fastq.gz)  <(zcat tests/pre1.fastq.gz)"
 
