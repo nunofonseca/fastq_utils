@@ -20,8 +20,8 @@ function perror {
 function usage() {
     echo "fastq2bam VERSION=$VERSION"
     echo "Usage: fastq2bam -s schema -b out_bam -1 fastqfile1 [ -2 fastqfile2 -3 fastqfile3 -4 fastqfile4]"
-    echo "barcode schema: 10xV1 10xV1i 10xV1a 10xV2 drop-seq none"
-    echo "10xV1 10xV1i 10xV1a 10xV2 and drop-seq schemas may be customised through the following paramaters:"
+    echo "barcode schema: 10xV1 10xV1i 10xV1a 10xV2 10xV3 drop-seq none"
+    echo "10xV1 10xV1i 10xV1a 10xV2 10xV3 and drop-seq schemas may be customised through the following paramaters:"
     echo " -c int : cell barcode offset"
     echo " -C int : cell barcode size"
     echo " -u int : UMI barcode offset"
@@ -136,6 +136,31 @@ if [ "$schema-"  == "10xV2-" ]; then
     gen_bam $cmd
     exit 0
 fi
+
+if [ "$schema-"  == "10xV3-" ]; then
+    # index1=R1 file index2=I1 reads=R2
+    if [ "$fastq_file2-"  == "-" ]; then
+	echo "Missing files for $schema:"
+	echo "-1 cell#16|umi#12 -2 cdna -3 [-3 sample#8]"
+	echo "e.g., -1 *R1*.fastq.gz -2 *R2*.fastq.gz [-3 *I1*.fastq.gz]"
+	usage
+	exit 1
+    fi
+    set_default_value "umi_barcode_offset" 16
+    set_default_value "umi_barcode_size" 12
+    set_default_value "cell_barcode_offset" 0
+    set_default_value "cell_barcode_size" 16
+
+    cmd="fastq_pre_barcodes --read1 $fastq_file2 --index1 $fastq_file1 --umi_read index1 --umi_offset $umi_barcode_offset --umi_size $umi_barcode_size --cell_read index1 --cell_offset $cell_barcode_offset --cell_size $cell_barcode_size  $_10x_compat"
+    if [ "$fastq_file3-" != "-" ]; then
+	set_default_value "sample_barcode_offset" 0
+	set_default_value "sample_barcode_size" 8
+	cmd="$cmd --index2 $fastq_file3 --sample_read index2 --sample_offset $sample_barcode_offset --sample_size $sample_barcode_size" 
+    fi
+    gen_bam $cmd
+    exit 0
+fi
+
 
 if [ "$schema-"  == "10xV1-" ]; then
     # index1=read2/I7, index2=I5
