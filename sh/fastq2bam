@@ -241,7 +241,7 @@ if [ "$schema-"  == "10xV1i-" ]; then
 fi
 
 
-if [ "$schema-"  == "dropseq-" ]; then
+if [ "$schema-"  == "drop-seq-" ]; then
     pinfo "schema $schema under development"
     if [ "$fastq_file2-"  == "-" ]; then
 	echo "Missing files for $schema:"
@@ -250,12 +250,14 @@ if [ "$schema-"  == "dropseq-" ]; then
 	usage
 	exit 1
     fi
+    # fastq_file1 = cell(12) umi(8)
+    # fastq_file2 = cdna
     set_default_value "umi_barcode_offset" 12
     set_default_value "umi_barcode_size" 8
     set_default_value "cell_barcode_offset" 0
     set_default_value "cell_barcode_size" 12
 
-    cmd="fastq_pre_barcodes --read1 $fastq_file2 --index1 $fastq_file1 --umi_read index1 --umi_offset $umi_barcode_offset --umi_size $umi_barcode_size --cell_read index1 --cell_offset  $cell_barcode_offset --cell_size $cell_barcode_size $_10x_compat"
+    cmd="fastq_pre_barcodes --read1 $fastq_file2 --index1 $fastq_file1 --umi_read index1 --umi_offset $umi_barcode_offset --umi_size $umi_barcode_size --cell_read index1 --cell_offset  $cell_barcode_offset --cell_size $cell_barcode_size  $_10x_compat"
     gen_bam $cmd
 
     exit 0

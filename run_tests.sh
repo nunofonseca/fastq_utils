@@ -424,6 +424,7 @@ must_succeed ./sh/fastq2bam -b test.bam -s 10xV1a -1 tests/10xv1a_R1.fastq.gz -2
 
 must_succeed ./sh/fastq2bam -b test2.bam -s 10xV2 -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz
 must_succeed ./sh/fastq2bam -b test3.bam -s 10xV3 -1 tests/10xv1a_R1.fastq.gz -2 tests/10xv1a_R3.fastq.gz -3 tests/10xv1a_R2.fastq.gz -4 tests/10xv1a_I1.fastq.gz 
+must_succeed  ./sh/fastq2bam -s drop-seq -1 tests/a_1.fastq.gz  -2 tests/a_2.fastq.gz  -b test.bam
 
 must_fail diff <(samtools view test3.bam) <(samtools view test2.bam)
 
@@ -433,6 +434,7 @@ must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq
 must_succeed ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf -3 tests/tx.I2.fastq.gz -z 0 -Z 5
 must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf2 -s 10
 must_fail ./sh/fastq2bam -s 10xV1i -1 tests/tx.RA.fastq.gz  -2 tests/tx.I1.fastq.gz -b tmpf2 -S 10
+must_fail ./sh/fastq2bam -s drop-seq -2 tests/10xv1a_R1.fastq.gz  -1 tests/10xv1a_R2.fastq.gz  -b test.bam
 
 must_fail diff <(samtools view tmpf) <(samtools view tmpf2)
 
