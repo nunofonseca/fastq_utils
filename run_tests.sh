@@ -243,6 +243,8 @@ must_fail ./src/fastq_info tests/test_e8.fastq.gz
 must_fail ./src/fastq_info tests/test_e9.fastq.gz
 must_succeed ./src/fastq_info -r tests/test_e9.fastq.gz
 must_fail ./src/fastq_info tests/test_e10.fastq.gz
+must_fail ./src/fastq_info  tests/test_33.fastq.gz
+must_succeed  ./src/fastq_info -q  tests/test_33.fastq.gz
 must_fail ./src/fastq_info tests/test_e13.fastq.gz 
 must_fail ./src/fastq_info tests/test_e14.fastq.gz 
 must_fail ./src/fastq_info tests/test_e15.fastq.gz 

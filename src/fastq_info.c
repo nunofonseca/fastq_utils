@@ -177,11 +177,12 @@ FASTQ_FILE* validate_single_fastq_file(char *f) {
 
 void print_usage(int verbose_usage) {
 
-  printf("Usage: fastq_info [-r -e -s -h] fastq1 [fastq2 file|pe]\n");
+  printf("Usage: fastq_info [-r -e -s -q -h] fastq1 [fastq2 file|pe]\n");
   if ( verbose_usage ) {
     printf(" -h  : print this help message\n");
     printf(" -s  : the reads in the two fastq files have the same ordering\n");
     printf(" -e  : do not fail with empty files\n");
+    printf(" -q  : do not fail if quality encoding cannot be determined\n");
     printf(" -r  : skip check for duplicated readnames\n");
   }
 }
@@ -200,6 +201,7 @@ int main(int argc, char **argv ) {
   int is_interleaved=FALSE;
   int is_sorted=FALSE;
   int empty_ok=FALSE;
+  int no_encoding_ok=FALSE;
   int skip_readname_check=FALSE;
   //int fix_dot=FALSE;
   
@@ -209,9 +211,13 @@ int main(int argc, char **argv ) {
 
   fastq_print_version();
   
-  while ((c = getopt (argc, argv, "esfrh")) != -1)
+  while ((c = getopt (argc, argv, "esfrhq")) != -1)
     switch (c)
       {
+      case 'q':
+	no_encoding_ok=TRUE;
+	++nopt;
+	break;
       case 'e':
 	empty_ok=TRUE;
 	++nopt;
@@ -369,11 +375,16 @@ int main(int argc, char **argv ) {
 
   fprintf(out,"Quality encoding range: %lu %lu\n",min_qual,max_qual);
   char *enc=fastq_qualRange2enc(min_qual,max_qual);
-  if ( enc == NULL ) {
+  if ( enc == NULL && no_encoding_ok==FALSE ) {
     PRINT_ERROR("Unable to determine quality encoding - unknown range [%lu,%lu]",min_qual,max_qual);
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
-  fprintf(out,"Quality encoding: %s\n",enc);
+
+  if ( enc==NULL && no_encoding_ok ) {
+    fprintf(out,"Quality encoding: NA\n");
+  } else {
+    fprintf(out,"Quality encoding: %s\n",enc);
+  }
   fprintf(out,"Read length: %lu %lu %u\n",min_rl-1,max_rl-1,median_rl(fd1,fd2)-1);
   fprintf(out,"OK\n"); 
   exit(0);
