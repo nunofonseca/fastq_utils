@@ -148,7 +148,7 @@ void fastq_index_readnames(FASTQ_FILE *,hashtable,long long,int);
 void fastq_write_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e);
 void fastq_write_entry2stdout(FASTQ_ENTRY *e);
 void fastq_seek_copy_read(long offset,FASTQ_FILE* from,FASTQ_FILE *to);
-char* fastq_qualRange2enc(int min_qual,int max_qual);
+char* fastq_qualRange2enc(unsigned int min_qual,unsigned int max_qual);
 void fastq_rewind(FASTQ_FILE* fd);
 
 void fastq_quick_copy_entry(long offset,FASTQ_FILE* from,FASTQ_FILE* to);
