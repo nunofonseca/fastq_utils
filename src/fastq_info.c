@@ -373,12 +373,17 @@ int main(int argc, char **argv ) {
     fprintf(out,"Number of reads: %lu\n",num_reads1);
   }
 
-  fprintf(out,"Quality encoding range: %lu %lu\n",min_qual,max_qual);
   char *enc=fastq_qualRange2enc(min_qual,max_qual);
   if ( enc == NULL && no_encoding_ok==FALSE ) {
-    PRINT_ERROR("Unable to determine quality encoding - unknown range [%lu,%lu]",min_qual,max_qual);
+    if (max_qual>126) {
+      PRINT_ERROR("Unable to determine quality encoding - unknown range [%lu,>126]",min_qual);
+    } else {
+      PRINT_ERROR("Unable to determine quality encoding - unknown range [%lu,%lu]",min_qual,max_qual);
+    }
+
     exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
   }
+  fprintf(out,"Quality encoding range: %lu %lu\n",min_qual,max_qual);
 
   if ( enc==NULL && no_encoding_ok ) {
     fprintf(out,"Quality encoding: NA\n");
