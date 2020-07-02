@@ -43,6 +43,7 @@
 #define MAX_BARCODE_LENGTH 50
 #define MIN_READ_LENGTH 1
 #define UNDEF -1
+#define MAX_PHRED_QUAL 126
 
 typedef enum  { COLORSPACE=1, SEQSPACE=0, UNDEFSPACE=-1 } READ_SPACE;
 typedef enum  { TRUE=1, FALSE=0 } FASTQ_BOOLEAN;
