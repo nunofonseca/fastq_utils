@@ -29,7 +29,7 @@
 
 #ifndef MAX_READ_LENGTH
 // 500000 bases should cover most of the cases for now :)
-#define MAX_READ_LENGTH 500000
+#define MAX_READ_LENGTH 2500000
 #endif
 
 #ifndef MAX_LABEL_LENGTH
