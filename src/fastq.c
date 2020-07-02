@@ -171,7 +171,7 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
   new->max_rl=0L;
   new->last_rl=0L;
   new->min_rl=MAX_READ_LENGTH;
-  new->min_qual=126;
+  new->min_qual=MAX_PHRED_QUAL;
   new->max_qual=0;
   new->num_rds=0;
   new->fix_dot=fix_dot;
@@ -286,7 +286,7 @@ char* fastq_qualRange2enc(unsigned int min_qual,unsigned int max_qual) {
   } else {
     enc=3; // 33 is the default value (* means that the default value was used)
   }
-  if ( max_qual > 126 )
+  if ( max_qual > MAX_PHRED_QUAL )
     return(NULL);
   // raw reads should not have a value greater than min_qual+60
   // higher scores are possible in assemblies or read maps (http://en.wikipedia.org/wiki/FASTQ_format)
