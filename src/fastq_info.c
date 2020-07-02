@@ -375,8 +375,8 @@ int main(int argc, char **argv ) {
 
   char *enc=fastq_qualRange2enc(min_qual,max_qual);
   if ( enc == NULL && no_encoding_ok==FALSE ) {
-    if (max_qual>126) {
-      PRINT_ERROR("Unable to determine quality encoding - unknown range [%lu,>126]",min_qual);
+    if (max_qual>MAX_PHRED_QUAL) {
+      PRINT_ERROR("Unable to determine quality encoding - unknown range [%lu,>%u]",min_qual,MAX_PHRED_QUAL);
     } else {
       PRINT_ERROR("Unable to determine quality encoding - unknown range [%lu,%lu]",min_qual,max_qual);
     }
