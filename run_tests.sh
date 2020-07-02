@@ -243,8 +243,12 @@ must_fail ./src/fastq_info tests/test_e8.fastq.gz
 must_fail ./src/fastq_info tests/test_e9.fastq.gz
 must_succeed ./src/fastq_info -r tests/test_e9.fastq.gz
 must_fail ./src/fastq_info tests/test_e10.fastq.gz
-must_fail ./src/fastq_info  tests/test_33.fastq.gz
-must_succeed  ./src/fastq_info -q  tests/test_33.fastq.gz
+must_fail ./src/fastq_info tests/test_e20.fastq.gz
+must_fail ./src/fastq_info tests/test_e21.fastq.gz
+must_succeed  ./src/fastq_info -q tests/test_e20.fastq.gz
+must_succeed  ./src/fastq_info -q tests/test_e21.fastq.gz
+must_succeed ./src/fastq_info  tests/test_33.fastq.gz
+must_succeed ./src/fastq_info -q  tests/test_33.fastq.gz
 must_fail ./src/fastq_info tests/test_e13.fastq.gz 
 must_fail ./src/fastq_info tests/test_e14.fastq.gz 
 must_fail ./src/fastq_info tests/test_e15.fastq.gz 
@@ -254,7 +258,7 @@ must_fail ./src/fastq_info -r tests/test_e13.fastq.gz
 must_fail ./src/fastq_info -r tests/test_e14.fastq.gz 
 must_fail ./src/fastq_info -r tests/test_e15.fastq.gz 
 must_fail ./src/fastq_info -r tests/test_e16.fastq.gz 
-must_fail ./src/fastq_info tests/test_e17.fastq.gz
+must_succeed ./src/fastq_info tests/test_e17.fastq.gz
 must_fail ./src/fastq_info tests/test_e19_1.fastq.gz  tests/test_e19_2.fastq.gz
 must_fail ./src/fastq_info tests/test_e19_2.fastq.gz  tests/test_e19_1.fastq.gz
 must_fail ./src/fastq_info tests/test_e19_1.fastq.gz tests/test_empty.fastq.gz  
@@ -282,10 +286,13 @@ must_succeed 	./src/fastq_info tests/test_30_1.fastq.gz  tests/test_30_2.fastq.g
 must_succeed 	./src/fastq_info tests/test_2.fastq.gz 
 must_succeed 	./src/fastq_info tests/test_13.fastq.gz
 must_succeed 	./src/fastq_info tests/test_17.fastq.gz
+must_succeed    ./src/fastq_info tests/test_pacbio.fastq.gz
+must_succeed    ./src/fastq_info tests/test_ont.fastq.gz
+must_succeed    ./src/fastq_info tests/test_pacbio2.fastq.gz
 must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz
 must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz
 must_succeed 	./src/fastq_info -r -s tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz 
-must_succeed 	time -p ./src/fastq_info tests/pe_bug14.fastq.gz tests/pe_bug14.fastq.gz 
+must_succeed 	time -p ./src/fastq_info tests/pe_bug14.fastq.gz tests/pe_bug14.fastq.gz
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_2.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz 
