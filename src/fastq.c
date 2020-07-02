@@ -36,7 +36,7 @@
 
 // public
 unsigned long index_mem=0;
-char* encodings[]={"33","64","solexa","33 *"};
+char* encodings[]={"33","64","solexa","33 *","sanger"};
 
 #define READ_LINE(fd) gzgets(fd,&read_buffer[0],MAX_READ_LENGTH)
 
@@ -271,10 +271,12 @@ void fastq_write_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
 }
 
 
-char* fastq_qualRange2enc(int min_qual,int max_qual) {
+char* fastq_qualRange2enc(unsigned int min_qual,unsigned int max_qual) {
   int enc=0;
-  if ( max_qual <=73 ) {
-    enc=0; //33
+  if ( min_qual>=33 && min_qual <59 && max_qual>100 ) {
+    enc=4; // sanger: used by ONT and possibly by pacbio
+  } else if ( min_qual >=33 && max_qual <=73 ) {
+    enc=0; // 33
   } else if ( min_qual <59 ) {
     enc=0; // 33
   } else if ( min_qual >=64 && max_qual>74 ) {
@@ -282,11 +284,13 @@ char* fastq_qualRange2enc(int min_qual,int max_qual) {
   } else if (min_qual >=59 && max_qual>74 ) { // min_qual<64
     enc=2; // solexa
   } else {
-    enc=3; // 33 is the default value (* means that the default value was used
+    enc=3; // 33 is the default value (* means that the default value was used)
   }
+  if ( max_qual > 126 )
+    return(NULL);
   // raw reads should not have a value greater than min_qual+60
   // higher scores are possible in assemblies or read maps (http://en.wikipedia.org/wiki/FASTQ_format)
-  if ( max_qual > min_qual+60  ) {
+  if ( enc!=4 && max_qual > min_qual+60  ) {
     return(NULL);
   }
   return encodings[enc];
@@ -350,7 +354,7 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   // qual length==slen
   unsigned long qlen=0;
   while ( e->qual[qlen]!='\0' && e->qual[qlen]!='\n' && e->qual[qlen]!='\r') {
-    int x=(int)e->qual[qlen];
+    unsigned int x=(unsigned int)e->qual[qlen];
     if (x<fd->min_qual) { fd->min_qual=x; }
     if (x>fd->max_qual) { fd->max_qual=x; }
     qlen++;    
