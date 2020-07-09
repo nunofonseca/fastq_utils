@@ -64,6 +64,10 @@ fastq_tests: fastq_tests.o hash.o fastq.o range_list.o
 fastq_trim_poly_at: fastq_trim_poly_at.o hash.o fastq.o
 	gcc  $(CFLAGS) $^ -lz -o $@
 
+##fastq_trim_poly_at: fastq_sanger2phred.o hash.o fastq.o
+##	gcc  $(CFLAGS) $^ -lz -o $@
+
+
 fastq_pre_barcodes: fastq.o fastq.h fastq_pre_barcodes.o hash.o
 	gcc  $(CFLAGS) $(patsubst %.h,,$^) -lz -o $@ 
 
