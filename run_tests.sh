@@ -288,6 +288,7 @@ must_succeed 	./src/fastq_info tests/test_13.fastq.gz
 must_succeed 	./src/fastq_info tests/test_17.fastq.gz
 must_succeed    ./src/fastq_info tests/test_pacbio.fastq.gz
 must_succeed    ./src/fastq_info tests/test_ont.fastq.gz
+must_succeed    ./src/fastq_info tests/test_ont2.fastq.gz
 must_succeed    ./src/fastq_info tests/test_pacbio2.fastq.gz
 must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz
 must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz
