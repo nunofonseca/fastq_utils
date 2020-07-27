@@ -273,7 +273,7 @@ void fastq_write_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
 
 char* fastq_qualRange2enc(unsigned int min_qual,unsigned int max_qual) {
   int enc=0;
-  if ( min_qual>=33 && min_qual <59 && max_qual>100 ) {
+  if ( min_qual>=33 && min_qual <59 && max_qual>=90 ) {
     enc=4; // sanger: used by ONT and possibly by pacbio
   } else if ( min_qual >=33 && max_qual <=73 ) {
     enc=0; // 33
