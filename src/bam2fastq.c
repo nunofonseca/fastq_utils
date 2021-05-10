@@ -1,6 +1,6 @@
 /*
  * =========================================================
- * Copyright 2017-2020,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
+ * Copyright 2017-2021,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
  *
  *
  * This is free software: you can redistribute it and/or modify

@@ -1,6 +1,6 @@
 /*
 # =========================================================
-# Copyright 2012-2020,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
+# Copyright 2012-2021,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
 #
 # This file is part of fastq_utils.
 #
