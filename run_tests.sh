@@ -294,6 +294,12 @@ must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz
 must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz
 must_succeed 	./src/fastq_info -r -s tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz 
 must_succeed 	time -p ./src/fastq_info tests/pe_bug14.fastq.gz tests/pe_bug14.fastq.gz
+must_succeed ./src/fastq_info   tests/nanopore_rna1.fastq.gz
+must_succeed ./src/fastq_info   tests/nanopore_rna2.fastq.gz
+must_fail ./src/fastq_info   tests/nanopore_rna3.fastq.gz
+must_fail ./src/fastq_info   tests/nanopore_rna4.fastq.gz
+must_fail ./src/fastq_info   tests/nanopore_rna5.fastq.gz
+
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_2.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz 
