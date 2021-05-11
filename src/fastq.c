@@ -315,13 +315,14 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   unsigned long slen=0;
   while ( e->seq[slen]!='\0' && e->seq[slen]!='\n' && e->seq[slen]!='\r' ) {
     // check content: ACGT acgt nN 0123....include the .?
-    if ( e->seq[slen]!='A' && e->seq[slen]!='C' && e->seq[slen]!='G' && e->seq[slen]!='T' &&
-	 e->seq[slen]!='a' && e->seq[slen]!='c' && e->seq[slen]!='g' && e->seq[slen]!='t' &&
+    if ( e->seq[slen]!='A' && e->seq[slen]!='C' && e->seq[slen]!='G' && e->seq[slen]!='T' && e->seq[slen]!='U' &&
+	 e->seq[slen]!='a' && e->seq[slen]!='c' && e->seq[slen]!='g' && e->seq[slen]!='t' && e->seq[slen]!='u' &&
 	 e->seq[slen]!='0' && e->seq[slen]!='1' && e->seq[slen]!='2' && e->seq[slen]!='3' &&
 	 e->seq[slen]!='n' && e->seq[slen]!='N' && e->seq[slen]!='.' ) {
-      PRINT_ERROR("Error in file %s: line %lu: invalid character '%c' (hex. code:'%x'), expected ACGTacgt0123nN.",fd->filename,fd->cline+1,e->seq[slen],e->seq[slen]);
+      PRINT_ERROR("Error in file %s: line %lu: invalid character '%c' (hex. code:'%x'), expected ACGTUacgtu0123nN.",fd->filename,fd->cline+1,e->seq[slen],e->seq[slen]);
       return 1;
     }
+    // update counters
     slen++;
   }  
   fastq_new_entry_stats(fd,e);  
