@@ -130,7 +130,7 @@ unsigned int restore_read_name(char *s) {
   while ( s[i]!='\0' ) {
     if ( s[i]=='@' ) {
       s[i]=' ';
-      if (s[i+1]=='1' && s[i+2]==':' ) {
+      if ( (s[i+1]=='1' || s[i+1]=='2') && s[i+2]==':' ) {
 	i++;
 	break;
       }
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
     /* getopt_long stores the option index here. */
     int option_index = 0;
     
-    int c = getopt_long (argc, argv, "b:o:h",
+    int c = getopt_long (argc, argv, "Xb:o:h",
 			 long_options, &option_index);      
     if (c == -1) // no more options
       break;
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
       if ( __10x_compat!= 0 ) {
 	char *cell, *umi, *sample;
 	char *cell_qual, *umi_qual, *sample_qual;
-	fprintf(stderr,">>>>10x mode\n");	
+	//fprintf(stderr,">>>>10x mode\n");	
 	if ( (cell=get_tag(aln,CELL_TAG))==NULL) FATAL_ERROR(3,"missing cell tag in entry  %llu\n",num_alns);
 	if ( (cell_qual=get_tag(aln,CELL_QUAL_TAG))==NULL) FATAL_ERROR(3,"missing cell quality tag in entry  %llu\n",num_alns);
 	if ( (umi=get_tag(aln,UMI_TAG))==NULL && (umi=get_tag(aln,GET_UMI_TAG))==NULL) FATAL_ERROR(3,"missing umi tag in entry  %llu\n",num_alns);
@@ -309,6 +309,8 @@ int main(int argc, char *argv[])
 	sample_qual=get_tag(aln,SAMPLE_QUAL_TAG);
 	unsigned int pos=restore_read_name(hdr);
 	// 1 and 2
+	if (pos)
+	  hdr[pos]='1';
 	QWRITE2(get_10x_fp(fd, R1 , out_file_prefix),R1, hdr,cell,cell_qual,umi,umi_qual,pos==0);
 	if (sample != NULL ) {
 	  if ( sample_qual == NULL )
@@ -333,13 +335,14 @@ int main(int argc, char *argv[])
 	  short write_to=R1;       
 	  if ( ! is_pe )
 	    write_to=SE;
-	  fprintf(stderr,">>>>PE?%d\n",is_pe);
+
 	  QWRITE(get_fp(fd, write_to , out_file_prefix),R1, hdr,seq,qual,FALSE);
 	  // cell
 	  if (get_tag(aln,CELL_TAG)!=NULL)
 	    QWRITE(get_fp(fd, CELL, out_file_prefix),CELL, hdr,get_tag(aln,CELL_TAG),get_tag(aln,CELL_QUAL_TAG),FALSE);
 	  // umi
-	  if (get_tag(aln,GET_UMI_TAG)!=NULL)
+	  char *umi_tag;
+	  if ( (umi_tag=get_tag(aln,GET_UMI_TAG)!=NULL) || (umi_tag=get_tag(aln,GET_1UMI_TAG)!=NULL) )
 	    QWRITE(get_fp(fd, UMI, out_file_prefix),UMI,hdr,get_tag(aln,GET_UMI_TAG),get_tag(aln,GET_UMI_QUAL_TAG),FALSE);
 	  // sample
 	  if (get_tag(aln,SAMPLE_TAG)!=NULL)
