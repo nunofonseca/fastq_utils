@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 	    QWRITE(get_fp(fd, CELL, out_file_prefix),CELL, hdr,get_tag(aln,CELL_TAG),get_tag(aln,CELL_QUAL_TAG),FALSE);
 	  // umi
 	  char *umi_tag;
-	  if ( (umi_tag=get_tag(aln,GET_UMI_TAG)!=NULL) || (umi_tag=get_tag(aln,GET_1UMI_TAG)!=NULL) )
+	  if ( (umi_tag=get_tag(aln,GET_UMI_TAG))!=NULL || (umi_tag=get_tag(aln,GET_UMI_TAG))!=NULL )
 	    QWRITE(get_fp(fd, UMI, out_file_prefix),UMI,hdr,get_tag(aln,GET_UMI_TAG),get_tag(aln,GET_UMI_QUAL_TAG),FALSE);
 	  // sample
 	  if (get_tag(aln,SAMPLE_TAG)!=NULL)
