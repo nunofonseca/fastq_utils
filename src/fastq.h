@@ -1,6 +1,6 @@
 /*
 # =========================================================
-# Copyright 2012-2020,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
+# Copyright 2012-2021,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
 #
 # This file is part of fastq_utils.
 #
@@ -67,6 +67,7 @@ typedef long FASTQ_READ_OFFSET;
 
 #define PRINT_INFO(s...) {fprintf(stderr,"INFO:"); fprintf(stderr,##s );fprintf(stderr,"\n");}
 #define PRINT_ERROR(s...) {fprintf(stderr,"\nERROR: "); fprintf(stderr,##s );fprintf(stderr,"\n");}
+#define FATAL_ERROR(e,s...) {fprintf(stderr,"\nERROR: "); fprintf(stderr,##s );fprintf(stderr,"\n");exit(e);}
 
 #ifdef DEBUG
 #define PRINT_DEBUG(s...) { fprintf(stderr,"DEBUG: "); fprintf(stderr,##s ); }

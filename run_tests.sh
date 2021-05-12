@@ -47,17 +47,27 @@ must_fail "./src/bam2fastq -i "
 must_fail "./src/bam2fastq -o "
 must_fail "./src/bam2fastq --10x "
 must_fail "./src/bam2fastq --bam  tests/no_qual.bam"
+must_fail "./src/bam2fastq --bam  tests/test10e1.bam --10xV2"
+must_fail "./src/bam2fastq --bam  tests/test10e3.bam --10xV2"
+must_fail "./src/bam2fastq --bam  tests/test10e4.bam --10xV2"
+must_fail "./src/bam2fastq --bam  tests/test10e5.bam --10xV2"
+must_fail "./src/bam2fastq --bam  tests/test10e6.bam --10xV2"
 must_fail "./src/bam2fastq --bam  tests/missing_no_qual.bam --out tmpf"
+must_fail "./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1.fastq.gz --10xV2"
+must_fail "./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1.fastq.gz --10xV3"
+
 must_succeed "./src/bam2fastq -h"
 must_succeed "[ `./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1 && ./src/fastq_info tmpf1.fastq.gz 2> /dev/null && zcat tmpf1.fastq.gz|wc -l|cut -f 1 -d\ ` \> 0 ] "
 
 must_succeed " [ `./src/bam2fastq --bam  tests/test.bam --out tmpf2 && ./src/fastq_info tmpf2.fastq.gz 2> /dev/null && zcat tmpf2.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` \> 0 ]"
 
-must_succeed " [ `./src/bam2fastq --bam  tests/test.bam --out tmpf2 -X && ./src/fastq_info tmpf2.fastq.gz 2> /dev/null && zcat tmpf2.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` \> 0 ]"
+must_succeed " [ `./src/bam2fastq --bam  tests/test10.bam --out tmpf2 -X && ./src/fastq_info tmpf2_R1.fastq.gz 2> /dev/null && zcat tmpf2_R2.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` \> 0 ]"
+
+must_fail "./src/bam2fastq --bam  tests/test.bam --out tmpf2 -X "
 
 must_succeed " ./src/bam2fastq --bam  tests/test10.bam --out tmpf5  && [ ! -e tmpf5_umi.fastq.gz  ]"
 
-must_succeed " ./src/bam2fastq --bam  tests/test10.bam --out tmpf6 -X  && [ -e tmpf6_umi.fastq.gz  ]"
+must_succeed " ./src/bam2fastq --bam  tests/test10.bam --out tmpf6 -X  && [ -e tmpf6_R1.fastq.gz  ]"
 
 must_succeed " [ `./src/bam2fastq --bam  tests/test_one_cell.bam --out tmpf3 && ./src/fastq_info tmpf3.fastq.gz 2> /dev/null && zcat tmpf3.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 4939 ]"
 
@@ -69,8 +79,17 @@ must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out tmpf6 && ./src/fa
 must_succeed " [ `./src/bam2fastq --bam  tests/se.bam --out tmpf7 && ./src/fastq_info tmpf7.fastq.gz > /dev/null && zcat tmpf7.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
 must_succeed " [ `./src/bam2fastq --bam  tests/pe.bam --out tmpf8 && ./src/fastq_info tmpf8_1.fastq.gz tmpf8_2.fastq.gz > /dev/null && zcat tmpf8_1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
 must_succeed "./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1 "
-#gcov src/bam2fastq
+# 10xV2 and 10xV3
+must_succeed "[ `./src/bam2fastq --bam  tests/test10.bam --out tmpf1 --10xV2 && ./src/fastq_info tmpf1_R1.fastq.gz tmpf1_R2.fastq.gz > /dev/null && zcat tmpf1_R1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 1 ]"
+must_succeed "[ `./src/bam2fastq --bam  tests/test10.bam --out tmpf1 --10xV3 && ./src/fastq_info tmpf1_R1.fastq.gz tmpf1_R2.fastq.gz > /dev/null && zcat tmpf1_R1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 1 ]"
+# generate a bam
+must_succeed "./sh/fastq2bam -b ttt1.bam -s 10xV2 -1 tests/pbmc8k_S1_L007_R1_001.fastq.gz -2 tests/pbmc8k_S1_L007_R2_001.fastq.gz"
+must_succeed "./src/bam2fastq --bam  ttt1.bam --out tmpf2 --10xV2 &&zdiff  tmpf2_R1.fastq.gz  tests/pbmc8k_S1_L007_R1_001.fastq.gz && zdiff  tmpf2_R2.fastq.gz  tests/pbmc8k_S1_L007_R2_001.fastq.gz" 
+rm -f tmpf2_*.fastq.gz
+must_succeed "./src/bam2fastq --bam  ttt1.bam --out tmpf2 --10xV3 &&zdiff  tmpf2_R1.fastq.gz  tests/pbmc8k_S1_L007_R1_001.fastq.gz && zdiff  tmpf2_R2.fastq.gz  tests/pbmc8k_S1_L007_R2_001.fastq.gz" 
+rm -f ttt1.bam  rm -f tmpf2_*.fastq.gz
 
+#gcov src/bam2fastq
 #
 rm -f tmpf*.fastq*
 
@@ -294,6 +313,12 @@ must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz
 must_succeed 	./src/fastq_info tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz
 must_succeed 	./src/fastq_info -r -s tests/test_21_1.fastq.gz tests/test_21_2.fastq.gz 
 must_succeed 	time -p ./src/fastq_info tests/pe_bug14.fastq.gz tests/pe_bug14.fastq.gz
+must_succeed ./src/fastq_info   tests/nanopore_rna1.fastq.gz
+must_succeed ./src/fastq_info   tests/nanopore_rna2.fastq.gz
+must_fail ./src/fastq_info   tests/nanopore_rna3.fastq.gz
+must_fail ./src/fastq_info   tests/nanopore_rna4.fastq.gz
+must_fail ./src/fastq_info   tests/nanopore_rna5.fastq.gz
+
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_2.fastq.gz 
 #must_succeed 	time -p ./src/fastq_info tests/c18_1M_1.fastq.gz 
