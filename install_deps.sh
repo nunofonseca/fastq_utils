@@ -5,9 +5,9 @@ mkdir -p deps
 
 ############################################
 ## zlib
-wget -c http://zlib.net/zlib-1.2.11.tar.gz
-tar xvzf zlib-1.2.11.tar.gz
-pushd zlib-1.2.11
+wget -c http://zlib.net/zlib-1.2.13.tar.gz
+tar xvzf zlib-1.2.13.tar.gz
+pushd zlib-1.2.13
 ./configure --prefix `pwd`/..
 make
 make install
