@@ -5,7 +5,7 @@ mkdir -p deps
 
 ############################################
 ## zlib
-wget -c http://zlib.net/zlib-1.2.13.tar.gz
+wget -c https://zlib.net/fossils/zlib-1.2.13.tar.gz
 tar xvzf zlib-1.2.13.tar.gz
 pushd zlib-1.2.13
 ./configure --prefix `pwd`/..
