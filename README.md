@@ -24,7 +24,7 @@ Programs:
 
 #### Conda
 
-An easy way to install fastq_utils is via Conda. See the the [Conda documentation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) to get started if you don't already have a working installation.
+An easy way to install fastq_utils is via Conda. See the [Conda documentation](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) to get started if you don't already have a working installation.
 
 Installation of fastq_utils is then as simple as:
 
@@ -34,9 +34,15 @@ conda install -c bioconda fastq_utils
 
 This handles software dependencies and provides the pre-built binaries for fastq_utils itself.
 
+If the above command fails, you may need to include the conda-forge.
+
+```
+conda install -c conda-forge -c bioconda fastq_utils
+```
+
 #### Building from source
 
-Alternatively you can build the package yourself from source. 
+Alternatively, you can build the package yourself from source. 
 
 ##### Dependencies
 
