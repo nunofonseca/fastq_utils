@@ -168,6 +168,7 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
     exit(SYS_INT_ERROR_EXIT_STATUS);
   }
   new->cur_offset=0L;
+  new->cline=1;
   new->max_rl=0L;
   new->last_rl=0L;
   new->min_rl=MAX_READ_LENGTH;
@@ -183,7 +184,7 @@ FASTQ_FILE* fastq_new(const char* filename, const int fix_dot,const char *mode) 
   strncpy(new->filename,filename,MAX_FILENAME_LENGTH-1);
   new->filename[MAX_FILENAME_LENGTH-1]='\0';
   new->fd=fastq_open(filename,mode);
-  memset(new->rdlen_ctr,0,sizeof(long)*MAX_READ_LENGTH);
+  memset(new->rdlen_ctr,0,sizeof(new->rdlen_ctr));
   return(new);
 }
 
@@ -359,8 +360,11 @@ inline int fastq_validate_entry(FASTQ_FILE* fd,FASTQ_ENTRY *e) {
   // length of hdr2 should be 1 or be the same has the hdr1
   // ignore the + sign
   //get_readname(&hdr2[1]);
+  if (fd->space==UNDEFSPACE) {
+    is_color_space(e->seq,fd);
+  }
   unsigned long len;
-  if (e->hdr2[0]!='\0' && e->hdr2[0]!='\r' ) {    
+  if (e->hdr2[1]!='\0' && e->hdr2[1]!='\n' && e->hdr2[1]!='\r' ) {    
     char *rn1=fastq_get_readname(fd,e,&rname1[0],&len,TRUE);
     char *rn2=fastq_get_readname(fd,e,&rname2[0],&len,FALSE);
     if ( !compare_headers(rn1,rn2) ) {
@@ -412,7 +416,8 @@ void fastq_index_readnames(FASTQ_FILE* fd1,hashtable index,long long start_offse
   unsigned long len;
   // index creation could be done in parallel...
   while(!gzeof(fd1->fd)) {
-    if ( fastq_read_next_entry(fd1,m1)==0) break;
+    // if ( fastq_read_next_entry(fd1,m1)==0) break;
+    if ( fastq_read_entry(fd1,m1)==0) break;
 
     char* readname=fastq_get_readname(fd1,m1,&rname[0],&len,TRUE);
     //fprintf(stderr,"4---%s\n",readname);fflush(stderr);
@@ -451,10 +456,8 @@ char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *
   }
 
   // rn=&rn[1];// ignore/discard @
-  if ( strncpy(rn,&hdr[1],MAX_LABEL_LENGTH-1)==NULL ) {
-    PRINT_ERROR("Error in strcpy");
-    exit(SYS_INT_ERROR_EXIT_STATUS);
-  }
+  strncpy(rn,&hdr[1],MAX_LABEL_LENGTH-1);
+  rn[MAX_LABEL_LENGTH-1]='\0';
   // executed only once
   if ( fd->readname_format == UNDEF ) {
       fd->is_casava_18=is_casava_1_8_readname(rn);
@@ -489,21 +492,25 @@ char* fastq_get_readname(FASTQ_FILE* fd, FASTQ_ENTRY* e,char* rn,unsigned long *
   case DEFAULT:
     // discard last character if PE && not casava 1.8
     len=strlen(rn);
-    if (fd->is_pe) 
-      len--;
-    rn[len-1]='\0';
+    while (len>0 && (rn[len-1]=='\n' || rn[len-1]=='\r')) {
+      rn[--len]='\0';
+    }
+    if (fd->is_pe && len>0) 
+      rn[--len]='\0';
     break;
     
   case INTEGERNAME: // == NOP
     // keep the sequence unchanged
     len=strlen(rn);
-    rn[len-1]='\0';
+    while (len>0 && (rn[len-1]=='\n' || rn[len-1]=='\r')) {
+      rn[--len]='\0';
+    }
     break;
   case CASAVA18:
     len=0;
-    while (rn[len]!=' ' && rn[len]!='\0') ++len;
+    while (rn[len]!=' ' && rn[len]!='\n' && rn[len]!='\r' && rn[len]!='\0') ++len;
     rn[len]='\0';
-    if  ( rn[len-2] == '/' ) {
+    if  ( len>=2 && rn[len-2] == '/' ) {
       // discard /[12]
       rn[len-2]='\0';
       len=len-2;
@@ -617,7 +624,9 @@ void free_indexentry(INDEX_ENTRY *e) {
 }
 
 void fastq_destroy(FASTQ_FILE* fd) {
+  if (fd==NULL) return;
   fastq_close(fd->fd);
+  free(fd);
 }
 
 static inline void fastq_close(gzFile fd) {

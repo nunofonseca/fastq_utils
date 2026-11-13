@@ -213,8 +213,13 @@ void reset_hashtable(hashtable table)
          tmp=n;
          n=n->next;
          free(tmp);
-      }      
+      }
+      BUCKET(table,i)=NULL;
+      LAST_ENTRY(table,i)=NULL;
    }
+   table->n_entries=0;
+   table->last_bucket=0;
+   table->last_node=NULL;
 }
 /*********************************************************************************/
 /*
@@ -235,18 +240,20 @@ __ptr_t next_hash_object(hashtable table)
     
   if( table->last_node==NULL ) {
     // find bucket
-    // find next bucket
-    while ( table->last_node == NULL && table->last_bucket+1<HASHSIZE(table)) {
+    while ( table->last_bucket<HASHSIZE(table) && BUCKET(table,table->last_bucket)==NULL ) {
       ++table->last_bucket;
-      table->last_node = BUCKET(table,table->last_bucket);
     }
-    if (table->last_node==NULL)
+    if (table->last_bucket>=HASHSIZE(table))
       return NULL;
+    table->last_node = BUCKET(table,table->last_bucket);
     return table->last_node->obj;
   } 
   // Next in bucket
   table->last_node=table->last_node->next;
-  if (table->last_node==NULL) return next_hash_object(table);
+  if (table->last_node==NULL) {
+    ++table->last_bucket;
+    return next_hash_object(table);
+  }
   return table->last_node->obj;
 }
 
@@ -261,19 +268,20 @@ __ptr_t next_hashnode(hashtable table)
     
   if( table->last_node==NULL ) {
     // find bucket
-    // find next bucket
-    while ( table->last_node == NULL && table->last_bucket+1<HASHSIZE(table)) {
+    while ( table->last_bucket<HASHSIZE(table) && BUCKET(table,table->last_bucket)==NULL ) {
       ++table->last_bucket;
-      table->last_node = BUCKET(table,table->last_bucket);
     }
-
-    if (table->last_node==NULL)
+    if (table->last_bucket>=HASHSIZE(table))
       return NULL;
+    table->last_node = BUCKET(table,table->last_bucket);
     return table->last_node;
   } 
   // Next in bucket
   table->last_node=table->last_node->next;
-  if (table->last_node==NULL) return next_hashnode(table);
+  if (table->last_node==NULL) {
+    ++table->last_bucket;
+    return next_hashnode(table);
+  }
   return table->last_node;
 }
 /*

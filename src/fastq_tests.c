@@ -57,6 +57,14 @@ int main(int argc, char **argv ) {
   insere(ht,110,&v2);
   hashtable_stats(ht);
   reset_hashtable(ht);
+  assert(ht->n_entries==0);
+  assert(get_object(ht,100)==NULL);
+  insere(ht,0,&v1);
+  init_hash_traversal(ht);
+  p=next_hash_object(ht);
+  assert(p==&v1);
+  assert(next_hash_object(ht)==NULL);
+  free_hashtable(ht);
 
   ht=new_hashtable(10);
   hashtable_stats(ht);
@@ -159,6 +167,28 @@ int main(int argc, char **argv ) {
   free_rl(t1);
   free_rl(t2);
   free_rl(t3);
+
+  // Test fastq_get_readname bounds on short CASAVA18 and DEFAULT PE headers
+  {
+    FASTQ_FILE *f_tmp = (FASTQ_FILE*)calloc(1, sizeof(FASTQ_FILE));
+    FASTQ_ENTRY *e_tmp = fastq_new_entry();
+    char rn_buf[MAX_LABEL_LENGTH];
+    unsigned long rn_len = 0;
+    f_tmp->readname_format = CASAVA18;
+    f_tmp->space = SEQSPACE;
+    strcpy(e_tmp->hdr1, "@A 1:Y:0\n");
+    strcpy(e_tmp->seq, "ACGT\n");
+    char *rn = fastq_get_readname(f_tmp, e_tmp, rn_buf, &rn_len, TRUE);
+    assert(strcmp(rn, "A") == 0 && rn_len == 1);
+
+    f_tmp->readname_format = DEFAULT;
+    f_tmp->is_pe = TRUE;
+    strcpy(e_tmp->hdr2, "+\n");
+    rn = fastq_get_readname(f_tmp, e_tmp, rn_buf, &rn_len, FALSE);
+    assert(rn[0] == '\0' && rn_len == 0);
+    free(e_tmp);
+    free(f_tmp);
+  }
   exit(0);
 }
 
