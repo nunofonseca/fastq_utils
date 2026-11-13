@@ -114,7 +114,10 @@ must_fail  " ./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam --uco
 #must_succeed  " [ `./src/bam_umi_count --bam tests/test_annot.bam  --ucounts xx --not_sorted_by_cell && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
 #must_succeed  "./src/bam_umi_count --bam tests/test_annot.bam  --ucounts test.tmp && ./tests/check_no_dups.sh test.tmp"
 
-must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam  --multi_mapped --ucounts xx --not_sorted_by_cell && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  89 ]"
+must_succeed  " [ `./src/bam_umi_count --min_reads 1 --bam tests/test_annot5.bam  --multi_mapped --ucounts xx --not_sorted_by_cell && grep -v % xx |wc -l |cut -f 1 -d\ ` ==  96 ]"
+
+must_succeed "printf '@HD\tVN:1.6\n@SQ\tSN:chr1\tLN:1000\nr1\t99\tchr1\t10\t60\t4M\t=\t50\t44\tACGT\tIIII\tCR:Z:AAAA\tRX:Z:TTTT\tGX:Z:GENE_VERY_LONG_FEATURE_ID_0001,GENE_B,GENE_B\nr1\t147\tchr1\t50\t60\t4M\t=\t10\t-44\tACGT\tIIII\tCR:Z:AAAA\tRX:Z:TTTT\tGX:Z:GENE_VERY_LONG_FEATURE_ID_0001,GENE_B,GENE_B\nr2\t99\tchr1\t10\t60\t4M\t=\t50\t44\tACGT\tIIII\tCR:Z:AAAA\tRX:Z:CCCC\tGX:Z:GENE_VERY_LONG_FEATURE_ID_0001,GENE_B,GENE_B\n' | samtools view -b - > tmp_umi_test.bam && ./src/bam_umi_count --min_reads 1 --bam tmp_umi_test.bam --ucounts tmp_umi_mm --rcounts tmp_umi_rmm -x GX -X CR --ignore_sample && [ \$(awk 'NR==2{print \$3}' tmp_umi_mm) -eq 2 ] && [ \$(awk 'NR>2{n++}END{print n+0}' tmp_umi_mm) -eq 2 ] && [ \$(awk 'NR==2{print \$3}' tmp_umi_rmm) -eq 2 ]"
+rm -f tmp_umi_test.bam tmp_umi_mm tmp_umi_mm_rows tmp_umi_mm_cols tmp_umi_rmm tmp_umi_rmm_rows tmp_umi_rmm_cols
 
 #must_succeed  "./src/bam_umi_count --min_reads 1 --not_sorted_by_cell --bam tests/test_annot.bam  --ucounts tmpf "
 

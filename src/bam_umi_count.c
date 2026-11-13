@@ -681,12 +681,12 @@ void cell2MM(DB*db, FILE *fd,int UMI,uint min_num_reads,uint min_num_umis,uint_6
 	  if ( UMI==TRUE && (uint)fe->tot_umi_obs>=1 ) {
 	    fprintf(fd,"%u%s%u%s%u\n",cf,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_umi_obs));
 	    *tot_ctr+=(uint)fe->tot_umi_obs;
-	    ++tot_feat_cells;
+	    ++(*tot_feat_cells);
 	    db->n_entries_reads++;
 	  } else if ( (uint)fe->tot_reads_obs>=1)  {
 	    fprintf(fd,"%u%s%u%s%u\n",cf,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_reads_obs));
 	    *tot_ctr+=(uint)fe->tot_reads_obs;
-	    ++tot_feat_cells;
+	    ++(*tot_feat_cells);
 	    db->n_entries_umis++;
 	  }
 	}	    
@@ -695,7 +695,6 @@ void cell2MM(DB*db, FILE *fd,int UMI,uint min_num_reads,uint min_num_umis,uint_6
       ++cf;
       if (pr>=db->samples[sample].cells[cell_idx].tot_umi_obs) break;
     }    
-    ++*tot_feat_cells;
   }/*  else if ( (uint)fe->tot_reads_obs >= 1 )  { */
   /*   fprintf(fd,"%u%s%u%s%u\n",fe->feat_id,MM_SEP,cell_id,MM_SEP,(uint)round(fe->tot_reads_obs)); */
   /*   *tot_ctr+=(uint)fe->tot_reads_obs; */
@@ -825,10 +824,12 @@ int main(int argc, char *argv[])
       known_cells_file=optarg;
       break;
     case 'x':
-      strncpy(feat_tag,optarg,3);
+      strncpy(feat_tag,optarg,2);
+      feat_tag[2]='\0';
       break;
     case 'X':
-      strncpy(cell_tag,optarg,3);
+      strncpy(cell_tag,optarg,2);
+      cell_tag[2]='\0';
       break;
     case 't':
       min_num_reads=atol(optarg);
@@ -953,7 +954,7 @@ int main(int argc, char *argv[])
     if (aln->core.tid < 0) continue;//ignore unaligned reads
     if (aln->core.flag & BAM_FUNMAP) continue;
     //if (aln->core.flag & BAM_FSECONDARY) continue; // use only primary alignments
-    if (aln->core.flag & BAM_FPAIRED & BAM_FPROPER_PAIR & BAM_FREAD2 ) continue; // avoid double counting
+    if ((aln->core.flag & BAM_FPAIRED) && (aln->core.flag & BAM_FREAD2)) continue; // avoid double counting
 
     //assert(r!=NULL);
     nh = bam_aux_get(aln, "NH");
@@ -1031,33 +1032,55 @@ int main(int argc, char *argv[])
       
       //
       // feature id
-      char *f=strtok(feat,",");
-      char *prev_f=NULL;
       int n_feat=0;
-      // number of features (count the number of , or ;
-      while (f !=NULL ) {
-	if (prev_f==NULL || !strcmp(f,prev_f)) 
+      const char *p=feat;
+      const char *prev_p=NULL;
+      size_t prev_len=0;
+      while (*p!='\0') {
+	const char *comma=strchr(p,',');
+	size_t tok_len=comma ? (size_t)(comma-p) : strlen(p);
+	if (tok_len>0 && (prev_p==NULL || tok_len!=prev_len || strncmp(p,prev_p,tok_len)!=0)) {
 	  ++n_feat;
-	prev_f=f;
-	f=strtok(NULL,",");
+	  prev_p=p;
+	  prev_len=tok_len;
+	}
+	if (!comma) break;
+	p=comma+1;
       }
 
-      f=strtok(feat,",");
-      prev_f=NULL;
-      float incr=1.0/(n_feat*nh_i);
-      while (f !=NULL ) {
-	if (prev_f==NULL || !strcmp(f,prev_f)) {
-	  int len1=strlen(f);
-	  assert( len1+1 < FEAT_ID_MAX_LEN );
-	  uint feat_id=label_str2id(f,db->feature_map);
+      if (n_feat>0) {
+	float incr=1.0f/(n_feat*nh_i);
+	size_t feat_buf_cap=256;
+	char feat_stack[256];
+	char *feat_buf=feat_stack;
+	p=feat;
+	prev_p=NULL;
+	prev_len=0;
+	while (*p!='\0') {
+	  const char *comma=strchr(p,',');
+	  size_t tok_len=comma ? (size_t)(comma-p) : strlen(p);
+	  if (tok_len>0 && (prev_p==NULL || tok_len!=prev_len || strncmp(p,prev_p,tok_len)!=0)) {
+	    if (tok_len+1>feat_buf_cap) {
+	      char *new_buf=(feat_buf==feat_stack) ? (char *)malloc(tok_len+1) : (char *)realloc(feat_buf,tok_len+1);
+	      if (!new_buf) { PRINT_ERROR("Out of memory"); exit(1); }
+	      feat_buf=new_buf;
+	      feat_buf_cap=tok_len+1;
+	    }
+	    memcpy(feat_buf,p,tok_len);
+	    feat_buf[tok_len]='\0';
+	    uint feat_id=label_str2id(feat_buf,db->feature_map);
 
-	  process_entry(feat_id,umi_id,cell_id,sample_id,db,incr);
+	    process_entry(feat_id,umi_id,cell_id,sample_id,db,incr);
 #ifdef DEBUG
 fprintf(stderr,">>>>%u-->%f\n",cell_id,incr);
 #endif
+	    prev_p=p;
+	    prev_len=tok_len;
+	  }
+	  if (!comma) break;
+	  p=comma+1;
 	}
-	prev_f=f;
-	f=strtok(NULL,",");
+	if (feat_buf!=feat_stack) free(feat_buf);
       }
     }
   }
@@ -1100,7 +1123,7 @@ fprintf(stderr,">>>>%u-->%f\n",cell_id,incr);
       // finish header
       fseek(counts_fd,header_loc,SEEK_SET);
       // update the header
-      fprintf(counts_fd,"%-10u %-10u %-15llu",db->feature_map->ctr,db->cells_map->ctr,tot_umi_ctr);
+      fprintf(counts_fd,"%-10u %-10u %-15llu",db->feature_map->ctr,db->cells_map->ctr,db->n_entries_reads);
       // write the two aux files
       write_map2fileL(ucounts_file,"rows",db->feature_map);
       write_map2fileB(ucounts_file,"cols",db->cells_map,cell_suffix);  
@@ -1109,10 +1132,11 @@ fprintf(stderr,">>>>%u-->%f\n",cell_id,incr);
     if (rcounts_fd!=NULL) {
       fseek(rcounts_fd,rheader_loc,SEEK_SET);
       // update the header
-      fprintf(rcounts_fd,"%-10u %-10u %-15llu",db->feature_map->ctr,db->cells_map->ctr,tot_reads_ctr);
+      fprintf(rcounts_fd,"%-10u %-10u %-15llu",db->feature_map->ctr,db->cells_map->ctr,db->n_entries_umis);
       // write the two aux files
       write_map2fileL(rcounts_file,"rows",db->feature_map);
       write_map2fileB(rcounts_file,"cols",db->cells_map,cell_suffix);
+      fclose(rcounts_fd);
     }
     exit(0);
   }
