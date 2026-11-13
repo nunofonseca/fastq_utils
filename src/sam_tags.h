@@ -39,7 +39,7 @@
 #define UMI_TAG_10X "UB" 
 #define UMI_TAG_QUAL_10X "UY" 
 
-short __10x_compat=0;
+static int __10x_compat=0;
 #define GET_UMI_TAG ((__10x_compat==0)?UMI_TAG:UMI_TAG_10X)
 #define GET_UMI_QUAL_TAG ((__10x_compat==0)?UMI_QUAL_TAG:UMI_TAG_QUAL_10X)
 

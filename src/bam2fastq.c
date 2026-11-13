@@ -181,8 +181,8 @@ int main(int argc, char *argv[])
     {"help",   no_argument, &help, TRUE},
     {"bam",  required_argument, 0, 'b'},
     {"out",  required_argument, 0, 'o'},
-    {"10xV2",  no_argument, (int*)&__10x_compat,2},
-    {"10xV3",  no_argument, (int*)&__10x_compat,3},    
+    {"10xV2",  no_argument, &__10x_compat,2},
+    {"10xV3",  no_argument, &__10x_compat,3},    
     {0,0,0,0}
   };
   

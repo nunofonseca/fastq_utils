@@ -149,7 +149,7 @@ int main(int argc, char *argv[])   {
     {"inbam",  required_argument, 0, 'i'},
     {"outbam",  required_argument, 0, 'o'},
     {"tx_2_gx",  required_argument, 0, 'm'},
-    {"10x",  no_argument, (int*)&__10x_compat,1},
+    {"10x",  no_argument, &__10x_compat,1},
     {0,0,0,0}
   };
 

@@ -784,7 +784,7 @@ int main(int argc, char *argv[])
     {"max_cells",  required_argument, 0, 'C'},
     {"max_feat",  required_argument, 0, 'F'},
     {"feat_cell",  required_argument, 0, 'T'},
-    {"10x",  no_argument, (int*)&__10x_compat,1},
+    {"10x",  no_argument, &__10x_compat,1},
     {0,0,0,0}
   };
   //2018-12-08: disabling a few options for now...

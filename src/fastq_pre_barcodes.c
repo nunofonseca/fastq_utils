@@ -391,7 +391,7 @@ int main(int argc, char **argv ) {
     {"sample_offset",  required_argument,       0, 'q'},
     {"sample_size",  required_argument, 0, 'r'},
     {"phred_encoding",  required_argument, 0, 's'},
-    {"10x",  no_argument, (int*)&__10x_compat,1},
+    {"10x",  no_argument, &__10x_compat,1},
     {0,0,0,0}
   };
 
