@@ -78,7 +78,7 @@ must_succeed " [ ` ./src/bam2fastq --bam  tests/test_annot2.bam --out tmpf5 && .
 must_succeed " [ `./src/bam2fastq --bam  tests/trans.bam --out tmpf6 && ./src/fastq_info tmpf6.fastq.gz > /dev/null && zcat tmpf6.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 497978 ]"
 must_succeed " [ `./src/bam2fastq --bam  tests/se.bam --out tmpf7 && ./src/fastq_info tmpf7.fastq.gz > /dev/null && zcat tmpf7.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
 must_succeed " [ `./src/bam2fastq --bam  tests/pe.bam --out tmpf8 && ./src/fastq_info tmpf8_1.fastq.gz tmpf8_2.fastq.gz > /dev/null && zcat tmpf8_1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 2 ]"
-must_succeed "./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1 "
+must_succeed "./src/bam2fastq --bam  tests/no_qual.bam --out tmpf1 && ./src/fastq_info tmpf1.fastq.gz > /dev/null"
 # 10xV2 and 10xV3
 must_succeed "[ `./src/bam2fastq --bam  tests/test10.bam --out tmpf1 --10xV2 && ./src/fastq_info tmpf1_R1.fastq.gz tmpf1_R2.fastq.gz > /dev/null && zcat tmpf1_R1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 1 ]"
 must_succeed "[ `./src/bam2fastq --bam  tests/test10.bam --out tmpf1 --10xV3 && ./src/fastq_info tmpf1_R1.fastq.gz tmpf1_R2.fastq.gz > /dev/null && zcat tmpf1_R1.fastq.gz|grep '^@'|wc -l|cut -f 1 -d\ ` == 1 ]"
@@ -449,6 +449,15 @@ must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --p
 must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read1_offset 0 --read1_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read1 tests/barcode_test2_2.fastq.gz "
 
 must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz  --phred_encoding 33 --min_qual 1 --umi_read index1  --umi_offset 0 --umi_size 16 --read2_offset 0 --read2_size -1 --cell_read index1 --cell_offset 0 --cell_size 8 --sample_read read1 --sample_offset 0  --sample_size 4 --read2 tests/barcode_test2_2.fastq.gz "
+
+must_succeed "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz --umi_read index1 --umi_offset 0 --umi_size 4 --read1_offset 2 --read1_size -1 --read1 tests/barcode_test2_2.fastq.gz --outfile1 tmp_pre_off.fastq.gz && ./src/fastq_info tmp_pre_off.fastq.gz > /dev/null"
+rm -f tmp_pre_off.fastq.gz
+
+must_fail "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz --umi_read index1 --umi_offset 0 --umi_size 55 --read1 tests/barcode_test2_2.fastq.gz --outfile1 tmp_pre_fail.fastq.gz"
+rm -f tmp_pre_fail.fastq.gz
+
+must_succeed "./src/fastq_pre_barcodes --index1 tests/barcode_test2_1.fastq.gz --umi_read index1 --umi_offset 0 --umi_size 4 --cell_read index1 --cell_offset 4 --cell_size 4 --read1 tests/barcode_test2_1.fastq.gz --read2 tests/barcode_test2_2.fastq.gz --sam --outfile1 - | samtools view -b - > tmp_pre_pe.bam && [ \`samtools view -c tmp_pre_pe.bam\` == 4 ]"
+rm -f tmp_pre_pe.bam
 
 must_succeed "./src/fastq_pre_barcodes --help"
 

@@ -172,21 +172,28 @@ void slice_read(FASTQ_ENTRY* m,const Params* p,READ_IDX cur_read) {
     return;
   }
   //
-  FASTQ_READ_OFFSET offset=p->read_offset[cur_read];  
-  if ( offset > 0 ) { // copy
-    FASTQ_READ_OFFSET len=p->read_size[cur_read];
-    FASTQ_READ_OFFSET x;
-    if ( len==-1 ) len=m->read_len;
-    for (x=0; x<=len;++x) {
-      m->seq[x]=m->seq[x+offset];
-      m->qual[x]=m->qual[x+offset];
-    }
+  FASTQ_READ_OFFSET offset=p->read_offset[cur_read];
+  FASTQ_READ_OFFSET len=p->read_size[cur_read];
+  if (offset < 0) offset=0;
+  FASTQ_READ_OFFSET seq_len=(m->read_len>0 && m->seq[m->read_len-1]=='\n') ? (FASTQ_READ_OFFSET)m->read_len-1 : (FASTQ_READ_OFFSET)m->read_len;
+  if (offset >= seq_len) {
+    m->seq[0]=m->qual[0]='\n';
+    m->seq[1]=m->qual[1]='\0';
+    m->read_len=1;
+    return;
   }
-  offset=p->read_size[cur_read];
-  m->seq[offset]='\n';
-  m->seq[offset+1]='\0';
-  m->qual[offset]='\n';
-  m->qual[offset+1]='\0';
+  if (len == -1 || offset + len > seq_len) {
+    len = seq_len - offset;
+  }
+  if ( offset > 0 ) { // copy
+    memmove(m->seq, m->seq+offset, (size_t)len);
+    memmove(m->qual, m->qual+offset, (size_t)len);
+  }
+  m->seq[len]='\n';
+  m->seq[len+1]='\0';
+  m->qual[len]='\n';
+  m->qual[len+1]='\0';
+  m->read_len=(unsigned long)(len+1);
 }
 
 void add_tags2readname(FASTQ_ENTRY* m,char*cell,char*umi,char*sample) {
@@ -201,6 +208,10 @@ void add_tags2readname(FASTQ_ENTRY* m,char*cell,char*umi,char*sample) {
 
   //fprintf(stderr,"->%s\n",m->hdr1);
   while(m->hdr1[s]!='\0') ++s;
+  if ( s + (unsigned long)offset >= MAX_LABEL_LENGTH ) {
+    PRINT_ERROR("Read header too long after adding tags");
+    exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+  }
   // create a gap
   while (s>=1) {
     m->hdr1[s+offset]=m->hdr1[s];
@@ -228,6 +239,10 @@ short get_barcode(const FASTQ_ENTRY *m1,
    
   if ( read==UNDEF || offset==UNDEF || size==0 )
     return(TRUE); // Nothing TODO but all OK
+  if ( size < 0 || size >= MAX_BARCODE_LENGTH ) {
+    PRINT_ERROR("Barcode size %ld exceeds maximum allowed (%d)", size, MAX_BARCODE_LENGTH-1);
+    exit(PARAMS_ERROR_EXIT_STATUS);
+  }
   // check boundaries
   if ( offset >  m1->read_len-1 || offset+size > m1->read_len-1 ) {
     //
@@ -416,6 +431,7 @@ int main(int argc, char **argv ) {
     case 'z':
       xx=0;
       strncpy(&tmps[0],optarg,TMP_BUF_SIZE);
+      tmps[TMP_BUF_SIZE]='\0';
       token = strtok(&tmps[0],",");
       while( token != NULL ) {
 	p->interleaved[xx]=read_index2read_idx(token);
@@ -584,7 +600,7 @@ int main(int argc, char **argv ) {
   else {
     PRINT_SAM("@HD\tVN:1.0 SO:unknown\n");    
     PRINT_SAM("@PG\tID:1 PN:fastq_pre_barcodes CL:%s",argv[0]);
-    for(c=1;c<argc-1;c++) {
+    for(c=1;c<argc;c++) {
       PRINT_SAM(" %s",argv[c]);
     }
     PRINT_SAM("\n");
@@ -702,7 +718,7 @@ int main(int argc, char **argv ) {
 	 if ( umi[0]!='\0'  ) 
 	   PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",GET_UMI_TAG,umi,GET_UMI_QUAL_TAG,umi_qual);
 	 if ( cell[0]!='\0'   ) 
-	   PRINT_SAM(" %s:Z:%s\t%s:Z:%s",CELL_TAG,cell,CELL_QUAL_TAG,cell_qual);
+	   PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",CELL_TAG,cell,CELL_QUAL_TAG,cell_qual);
 	 if ( sample[0]!='\0'  ) 
 	   PRINT_SAM("\t%s:Z:%s\t%s:Z:%s",SAMPLE_TAG,sample,SAMPLE_QUAL_TAG,sample_qual);
 	 

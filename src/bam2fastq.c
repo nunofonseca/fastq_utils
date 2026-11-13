@@ -129,7 +129,7 @@ unsigned int restore_read_name(char *s) {
   while ( s[i]!='\0' ) {
     if ( s[i]=='@' ) {
       s[i]=' ';
-      if ( (s[i+1]=='1' || s[i+1]=='2') && s[i+2]==':' ) {
+      if ( s[i+1]!='\0' && (s[i+1]=='1' || s[i+1]=='2') && s[i+2]==':' ) {
 	i++;
 	break;
       }
@@ -153,6 +153,8 @@ char* my_get_seq(bam1_t *aln, char *buf) {
 char* get_qual(bam1_t *aln,char *buf) {
   unsigned int i,len = aln->core.l_qseq;
   uint8_t *seq = bam_get_qual(aln);
+  if (len > 0 && seq[0] == 0xff)
+    return NULL;
   for (i = 0; i < len; ++i)
     buf[i] = 33 + seq[i];
   buf[len]='\0';
@@ -240,8 +242,11 @@ int main(int argc, char *argv[])
     FATAL_ERROR(PARAMS_ERROR_EXIT_STATUS,"Failed to read header from BAM file %s", bam_file);
   
   // tmp buffers
-  char seq_buf[BUF_SIZE];
-  char qual_buf[BUF_SIZE];
+  size_t buf_cap = BUF_SIZE;
+  char *seq_buf = (char *)malloc(buf_cap);
+  char *qual_buf = (char *)malloc(buf_cap);
+  if (seq_buf == NULL || qual_buf == NULL)
+    FATAL_ERROR(SYS_INT_ERROR_EXIT_STATUS, "Failed to allocate sequence buffers");
   
   //
   int is_pe=-1;
@@ -257,9 +262,19 @@ int main(int argc, char *argv[])
     // exclude non-primary alignments
     if ( aln->core.flag & BAM_FSECONDARY) 
       continue;
+    if ((size_t)aln->core.l_qseq + 1 > buf_cap) {
+      size_t new_cap = (size_t)aln->core.l_qseq + 1;
+      char *new_seq = (char *)realloc(seq_buf, new_cap);
+      char *new_qual = (char *)realloc(qual_buf, new_cap);
+      if (new_seq == NULL || new_qual == NULL)
+        FATAL_ERROR(SYS_INT_ERROR_EXIT_STATUS, "Failed to resize sequence buffers");
+      seq_buf = new_seq;
+      qual_buf = new_qual;
+      buf_cap = new_cap;
+    }
     // read/qual (se/pe/first/second)
     char *hdr=get_tag(aln,ORIG_RN_TAG);
-    char *seq=my_get_seq(aln,&seq_buf[0]);
+    char *seq=my_get_seq(aln,seq_buf);
     char *qual=get_tag(aln,ORIG_QUAL_TAG);
     if ( hdr==NULL ) {
       // ORIG_RN_TAG missing
@@ -339,15 +354,23 @@ int main(int argc, char *argv[])
 
 	  QWRITE(get_fp(fd, write_to , out_file_prefix),R1, hdr,seq,qual,FALSE);
 	  // cell
-	  if (get_tag(aln,CELL_TAG)!=NULL)
-	    QWRITE(get_fp(fd, CELL, out_file_prefix),CELL, hdr,get_tag(aln,CELL_TAG),get_tag(aln,CELL_QUAL_TAG),FALSE);
+	  char *cell_tag = get_tag(aln, CELL_TAG);
+	  if (cell_tag != NULL) {
+	    char *cell_qual = get_tag(aln, CELL_QUAL_TAG);
+	    QWRITE(get_fp(fd, CELL, out_file_prefix), CELL, hdr, cell_tag, cell_qual, FALSE);
+	  }
 	  // umi
-	  char *umi_tag;
-	  if ( (umi_tag=get_tag(aln,GET_UMI_TAG))!=NULL || (umi_tag=get_tag(aln,GET_UMI_TAG))!=NULL )
-	    QWRITE(get_fp(fd, UMI, out_file_prefix),UMI,hdr,get_tag(aln,GET_UMI_TAG),get_tag(aln,GET_UMI_QUAL_TAG),FALSE);
+	  char *umi_tag = get_tag(aln, GET_UMI_TAG);
+	  if (umi_tag != NULL) {
+	    char *umi_qual = get_tag(aln, GET_UMI_QUAL_TAG);
+	    QWRITE(get_fp(fd, UMI, out_file_prefix), UMI, hdr, umi_tag, umi_qual, FALSE);
+	  }
 	  // sample
-	  if (get_tag(aln,SAMPLE_TAG)!=NULL)
-	     QWRITE(get_fp(fd, SAMPLE, out_file_prefix),SAMPLE,hdr,get_tag(aln,SAMPLE_TAG),get_tag(aln,SAMPLE_QUAL_TAG),FALSE);
+	  char *sample_tag = get_tag(aln, SAMPLE_TAG);
+	  if (sample_tag != NULL) {
+	    char *sample_qual = get_tag(aln, SAMPLE_QUAL_TAG);
+	    QWRITE(get_fp(fd, SAMPLE, out_file_prefix), SAMPLE, hdr, sample_tag, sample_qual, FALSE);
+	  }
 	} else { //R2
 	  QWRITE(get_fp(fd, R2 , out_file_prefix),R2,hdr,seq,qual,FALSE);
 	}
@@ -359,6 +382,8 @@ int main(int argc, char *argv[])
     if (fd[i]!=NULL) gzclose(fd[i]);
   
   fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\n");fflush(stderr);
+  free(seq_buf);
+  free(qual_buf);
   bam_destroy1(aln);
   sam_hdr_destroy(header);
   sam_close(in);

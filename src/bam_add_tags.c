@@ -60,9 +60,10 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
   }
   // cell
   idx=idx+5;
-  while (s[idx]!='_') {
+  while (s[idx]!='\0' && s[idx]!='_' && z < MAX_BARCODE_LENGTH - 1) {
     cell[z++]=s[idx++];
   }
+  if (s[idx]!='_') return(0);
   cell[z]='\0';
   *cell_len=z;
   idx++;
@@ -73,9 +74,10 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
   }
   idx=idx+4;
   z=0;
-  while (s[idx]!='_') {
+  while (s[idx]!='\0' && s[idx]!='_' && z < MAX_BARCODE_LENGTH - 1) {
     umi[z++]=s[idx++];
   }
+  if (s[idx]!='_') return(0);
   umi[z]='\0';
   ++idx;
   *umi_len=z;
@@ -86,9 +88,10 @@ short get_barcodes(const char *s,char *sample,char *umi,char *cell,
   }
   idx=idx+7;
   z=0;
-  while (s[idx]!='_') {
+  while (s[idx]!='\0' && s[idx]!='_' && z < MAX_BARCODE_LENGTH - 1) {
     sample[z++]=s[idx++];
   }
+  if (s[idx]!='_') return(0);
   sample[z]='\0';
   *sample_len=z;
   return(1);
@@ -226,6 +229,8 @@ int main(int argc, char *argv[])   {
 	PRINT_ERROR("Failed to find the gene and transcript ids in %s\n",s);
 	exit(1);
       }
+      if (strlen(tx) >= MAX_FEAT_LEN || strlen(gx) >= MAX_FEAT_LEN)
+	FATAL_ERROR(PARAMS_ERROR_EXIT_STATUS,"Feature ID exceeds MAX_FEAT_LEN (%d)", MAX_FEAT_LEN);
       strcpy(e->tx,tx);
       strcpy(e->gx,gx);
       insere(t2g_ht,char2ulong(e->tx),e);// create a dummy entry (key is unique)
