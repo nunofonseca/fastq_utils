@@ -1,6 +1,6 @@
 /*******************************************************************************************
  *
- * Copyright (c) 2003-2018 Nuno Fonseca. All rights reserved.
+ * Copyright (c) 2003-2026 Nuno Fonseca. All rights reserved.
  * This code is freely available for academic purposes.
  * If you intend to use it for commercial purposes then please contact the author first.
 
