@@ -1,38 +1,37 @@
 #!/bin/bash
 set -e
 TOPLEVEL_DIR=$PWD
+J=${J:-4}
 mkdir -p deps
 
 ############################################
-## zlib
-wget -c https://zlib.net/fossils/zlib-1.2.13.tar.gz
-tar xvzf zlib-1.2.13.tar.gz
-pushd zlib-1.2.13
-./configure --prefix `pwd`/..
-make
+## zlib 1.4
+if [ ! -e deps/zlib-1.4.tar.gz ]; then
+    wget -c https://zlib.net/zlib-1.4.tar.gz -O deps/zlib-1.4.tar.gz
+fi
+tar xvzf deps/zlib-1.4.tar.gz
+pushd zlib-1.4
+./configure --prefix="$TOPLEVEL_DIR"
+make -j "$J"
 make install
 popd
-#############################################
-#
-if [ ! -e deps/samtools-0.1.19.tar.bz2  ]; then
-    wget -c https://sourceforge.net/projects/samtools/files/samtools/0.1.19/samtools-0.1.19.tar.bz2/download -O deps/samtools-0.1.19.tar.bz2
+
+############################################
+## samtools 1.25 (includes htslib 1.25)
+echo "Installing samtools 1.25 and htslib 1.25"
+if [ ! -e deps/samtools-1.25.tar.bz2 ]; then
+    wget -c https://github.com/samtools/samtools/releases/download/1.25/samtools-1.25.tar.bz2 -O deps/samtools-1.25.tar.bz2
 fi
-tar jxvf deps/samtools-0.1.19.tar.bz2 
-pushd samtools-0.1.19
-make
-make razip
+tar xvjf deps/samtools-1.25.tar.bz2
+
+pushd samtools-1.25/htslib-1.25
+./configure --prefix="$TOPLEVEL_DIR" CPPFLAGS="-I$TOPLEVEL_DIR/include" LDFLAGS="-L$TOPLEVEL_DIR/lib -Wl,-rpath,$TOPLEVEL_DIR/lib"
+make -j "$J"
+make install
 popd
 
-###############################################
-# Downloads were failing often so keep a local copy to speedup the installation
-echo "Installing samtools 1.x" 
-if [ ! -e deps/samtools-1.9.tar.bz2 ] ; then
-    wget -c https://sourceforge.net/projects/samtools/files/samtools/1.9/samtools-1.9.tar.bz2/download -O deps/samtools-1.9.tar.bz2
-fi
-
-tar xvjf deps/samtools-1.9.tar.bz2
-pushd samtools-1.9
-./configure  prefix=$TOPLEVEL_DIR
-make -j $J
-#prefix=$TOPLEVEL_DIR
-make install prefix:=$TOPLEVEL_DIR
+pushd samtools-1.25
+./configure --prefix="$TOPLEVEL_DIR" --with-htslib="$TOPLEVEL_DIR/samtools-1.25/htslib-1.25" CPPFLAGS="-I$TOPLEVEL_DIR/include" LDFLAGS="-L$TOPLEVEL_DIR/lib -Wl,-rpath,$TOPLEVEL_DIR/lib"
+make -j "$J"
+make install
+popd

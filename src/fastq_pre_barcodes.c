@@ -31,7 +31,7 @@
 #include <zlib.h> 
 #include <getopt.h>
 
-#include "bam.h"
+#include <htslib/sam.h>
 
 #include "hash.h"
 #include "fastq.h"

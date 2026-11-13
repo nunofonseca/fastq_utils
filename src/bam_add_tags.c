@@ -20,9 +20,8 @@
  */
 #include <stdio.h>  
 #include <math.h>
-#include <bam.h>
-#include <sam.h>
-#include <kstring.h>      
+#include <htslib/sam.h>
+#include <htslib/kstring.h>
 #include <getopt.h>
 
 #include <string.h>
@@ -129,8 +128,8 @@ char* get_gene( char* trans,hashtable ht) {
 
 int main(int argc, char *argv[])   {  
   short out2stdout=0;
-  bamFile in; 
-  bamFile out; 
+  samFile *in; 
+  samFile *out; 
   // inbam
   // outbam
   // --tx_to_gx
@@ -187,15 +186,15 @@ int main(int argc, char *argv[])   {
   }
 
   
-  in = strcmp(inbam_file, "-")? bam_open(inbam_file, "rb") : bam_dopen(fileno(stdin), "rb"); 
+  in = sam_open(inbam_file, "r"); 
   out2stdout = strcmp(outbam_file, "-")? 0 : 1; 
-  out = strcmp(outbam_file, "-")? bam_open(outbam_file, "w") : bam_dopen(fileno(stdout), "w"); 
-  if (in == 0 ) {  
+  out = sam_open(outbam_file, "wb"); 
+  if (in == NULL ) {  
     PRINT_ERROR("Failed to open BAM file %s", inbam_file);  
     return(PARAMS_ERROR_EXIT_STATUS);  
   }  
 
-  if (out == 0) {  
+  if (out == NULL) {  
     PRINT_ERROR("Failed to open BAM file %s", outbam_file);  
     return(PARAMS_ERROR_EXIT_STATUS);  
   }
@@ -239,9 +238,12 @@ int main(int argc, char *argv[])   {
   unsigned long num_alns=0;  
   // ***********
   // Copy header
-  bam_header_t *header;
-  header = bam_header_read(in);
-  bam_header_write(out,header);
+  sam_hdr_t *header;
+  header = sam_hdr_read(in);
+  if (header == NULL || sam_hdr_write(out,header) < 0) {
+    PRINT_ERROR("Failed to read/write BAM header");
+    return(SYS_INT_ERROR_EXIT_STATUS);
+  }
 
   // 
   bam1_t *aln=bam_init1();
@@ -257,12 +259,12 @@ int main(int argc, char *argv[])   {
   char cell[MAX_BARCODE_LENGTH];
   int sample_len, umi_len,cell_len;
   num_alns=0;
-  while(bam_read1(in,aln)>=0) {
+  while(sam_read1(in,header,aln)>=0) {
     //if (aln->core.tid < 0) continue;//ignore unaligned reads
     //if (aln->core.flag & BAM_FUNMAP) continue; // the mate is unmapped
     ++num_alns;
     //assert(r!=NULL);
-    char *qn=bam1_qname(aln);
+    const char *qn=bam_get_qname(aln);
     //fprintf(stderr,"-->%s\n",qn);
     if (get_barcodes(qn,&sample[0],&umi[0],&cell[0],&sample_len,&umi_len,&cell_len)) {
 
@@ -276,7 +278,7 @@ int main(int argc, char *argv[])   {
       if (tx_tag ) {
 	char *tx=NULL;
 	if ( aln->core.tid >= 0 ) {
-	  tx=header->target_name[aln->core.tid];
+	  tx=(char*)sam_hdr_tid2name(header, aln->core.tid);
 	  //fprintf(stderr,">>>>TX: %s\n",tx);
 	  bam_aux_append(aln,TRANSCRIPT_ID_TAG,'Z',strlen(tx)+1,(uint8_t *)tx);
 	  //
@@ -289,11 +291,15 @@ int main(int argc, char *argv[])   {
 	}
       }
     }
-    bam_write1(out,aln);
+    if (sam_write1(out,header,aln) < 0) {
+      PRINT_ERROR("Failed to write BAM alignment");
+      return(SYS_INT_ERROR_EXIT_STATUS);
+    }
   }
 
-  //bam_close(in); 
-  bam_close(out);
+  sam_close(in); 
+  sam_close(out);
+  sam_hdr_destroy(header);
   bam_destroy1(aln);
   if (!out2stdout) {
     fprintf(stderr,"Processing %s complete\n",inbam_file);

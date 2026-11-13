@@ -20,9 +20,8 @@
  */
 #include <stdio.h>  
 #include <math.h>
-#include <bam.h>
-#include <sam.h>
-#include <kstring.h>      
+#include <htslib/sam.h>
+#include <htslib/kstring.h>
 
 #include <string.h>
 #include <assert.h>
@@ -729,7 +728,7 @@ void print_usage(int exit_status) {
 
 int main(int argc, char *argv[])  
 {  
-  bamFile in; 
+  samFile *in;
   uint min_num_reads=0;
   uint min_num_umis=0;
 
@@ -884,12 +883,12 @@ int main(int argc, char *argv[])
   }
 
   // Open file and exit if error
-  in = strcmp(bam_file, "-")? bam_open(bam_file, "rb") : bam_dopen(fileno(stdin), "rb"); 
+  in = sam_open(bam_file, "r");
   
-  if (in == 0 ) {  
+  if (in == NULL ) {  
     PRINT_ERROR("Failed to open BAM file %s", bam_file);  
     return(PARAMS_ERROR_EXIT_STATUS);  
-  }  
+  }
 
   fprintf(stderr,"@min_num_reads=%u\n",min_num_reads);
   fprintf(stderr,"@min_num_umis=%u\n",min_num_umis);
@@ -909,7 +908,11 @@ int main(int argc, char *argv[])
   // 
   bam1_t *aln=bam_init1();
   // read header
-  bam_header_read(in);
+  sam_hdr_t *header = sam_hdr_read(in);
+  if (header == NULL) {
+    PRINT_ERROR("Failed to read header from BAM file %s", bam_file);
+    return(PARAMS_ERROR_EXIT_STATUS);
+  }
   
   fprintf(stderr,"Processing %s\n",bam_file);
 
@@ -939,7 +942,7 @@ int main(int argc, char *argv[])
   // TODO: change alns to entries
   num_alns=0;
   if ( bam_sorted_by_cell ) fprintf(stderr,"Cells processed\n");
-  while(bam_read1(in,aln)>=0) { // read alignment
+  while(sam_read1(in,header,aln)>=0) { // read alignment
     if ( num_alns == ULLONG_MAX ) {
       PRINT_ERROR("counter overflow (number of alignments) - %llu\n",num_alns);
       exit(3);
@@ -1072,6 +1075,8 @@ fprintf(stderr,">>>>%u-->%f\n",cell_id,incr);
 
   fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\n");fflush(stderr);
   bam_destroy1(aln);
+  sam_hdr_destroy(header);
+  sam_close(in);
   // write output
   fprintf(stderr,"Alignments processed: %llu\n",num_alns);
   fprintf(stderr,"%s encountered  %llu times\n",feat_tag,num_tags_found);
