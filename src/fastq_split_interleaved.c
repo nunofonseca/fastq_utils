@@ -40,10 +40,10 @@ FASTQ_FILE* split_interleaved(char *f,char *out_prefix) {
   FASTQ_FILE* fd1=fastq_new(f,FALSE,"r");
   fastq_is_pe(fd1);
 
-  char outfile1[1024];
-  char outfile2[1024];
-  sprintf(&outfile1[0],"%s_1.fastq.gz",out_prefix);
-  sprintf(&outfile2[0],"%s_2.fastq.gz",out_prefix);
+  char outfile1[MAX_FILENAME_LENGTH];
+  char outfile2[MAX_FILENAME_LENGTH];
+  snprintf(&outfile1[0],sizeof(outfile1),"%s_1.fastq.gz",out_prefix);
+  snprintf(&outfile2[0],sizeof(outfile2),"%s_2.fastq.gz",out_prefix);
   FASTQ_FILE* fdw1=fastq_new(&outfile1[0],FALSE,"w4");
   FASTQ_FILE* fdw2=fastq_new(&outfile2[0],FALSE,"w4"); 
 
@@ -90,7 +90,8 @@ FASTQ_FILE* split_interleaved(char *f,char *out_prefix) {
   printf("\n");
   fastq_destroy(fdw1);
   fastq_destroy(fdw2);  
-  return(fd1);
+  fastq_destroy(fd1);
+  return(NULL);
 }
 
 

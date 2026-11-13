@@ -194,6 +194,7 @@ int main(int argc, char **argv) {
     unsigned long remaining=index->n_entries;
     //FASTQ_ENTRY *m1=fastq_new_entry();
     //char rname[MAX_LABEL_LENGTH];
+    fastq_rewind(fd1);
     
     while(!gzeof(fd1->fd) && remaining ) {
       if (fastq_read_next_entry(fd1,m1)==0) break;

@@ -126,7 +126,10 @@ FASTQ_FILE* validate_paired_sorted_fastq_file(char *f1,char *f2) {
       exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
     
-    if (fastq_read_entry(fd2,m2)==0) break;
+    if (fastq_read_entry(fd2,m2)==0) {
+      PRINT_ERROR("Premature end of file2");
+      exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
+    }
     if (fastq_validate_entry(fd2,m2)) {
       exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
     }
@@ -155,7 +158,6 @@ FASTQ_FILE* validate_paired_sorted_fastq_file(char *f1,char *f2) {
 FASTQ_FILE* validate_single_fastq_file(char *f) {
 
   FASTQ_FILE* fd1=fastq_new(f,FALSE,"r");
-  fastq_is_pe(fd1);
   FASTQ_ENTRY *m1=fastq_new_entry();
 
   unsigned long nreads1=0;
@@ -258,7 +260,7 @@ int main(int argc, char **argv ) {
   if (argc-nopt ==3) {
     is_paired_data=TRUE;
     //fprintf(stderr,"%d %d %d %s\n",argc,nopt,argc-nopt,argv[2+nopt]);
-    if ( strncmp(argv[2+nopt],"pe",2) ) {
+    if ( strcmp(argv[2+nopt],"pe") ) {
       is_interleaved=FALSE;
     } else {
       //fprintf(stderr,"Expecting interleaved reads...\n");
@@ -342,7 +344,7 @@ int main(int argc, char **argv ) {
       }
       fastq_index_delete(readname,index);
       //
-      if (fastq_validate_entry(fd1,m2)) {
+      if (fastq_validate_entry(fd2,m2)) {
 	exit(FASTQ_FORMAT_ERROR_EXIT_STATUS);
       }
       //replace_dots(start_pos,seq,hdr,hdr2,qual,fdf);

@@ -70,6 +70,7 @@ Params* Params_new(void) {
   new->outfile=NULL;
   new->min_poly_at_len=10;
   new->min_len=10;
+  new->verbose=FALSE;
   return(new);
 }
 
@@ -217,7 +218,7 @@ int main(int argc, char **argv ) {
 	PRINT_VERBOSE(p,"Trimmed %s\n",m->seq);
 	++trimmed_reads;
     }
-    if ( m->read_len >= p->min_len) 
+    if ( (long)(m->read_len > 0 ? m->read_len - 1 : 0) >= p->min_len) 
       fastq_write_entry(fdw,m);
     else
       ++discarded_reads;

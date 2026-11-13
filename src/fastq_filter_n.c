@@ -76,7 +76,7 @@ int main(int argc, char **argv ) {
     if (fastq_read_entry(fd1,m1)==0) break;
     
     int k;
-    max_num_n=m1->read_len*max_n/100;
+    max_num_n=(m1->read_len>0?m1->read_len-1:0)*max_n/100;
     for ( k=0;k<MAX_READ_LENGTH;k++) {
       if (m1->seq[k]=='\n' || m1->seq[k]=='\0') break;
       if (m1->seq[k]=='N' || m1->seq[k]=='n'  ) {

@@ -203,6 +203,7 @@ must_succeed "./src/fastq_trim_poly_at --file tests/poly_at.fastq.gz --outfile t
 must_succeed "zcat tests/poly_at.fastq.gz | ./src/fastq_trim_poly_at --file - --outfile tmp.fastq.gz --min_poly_at_len 300 --min_len 1 && diff <(zcat tests/poly_at.fastq.gz) <(zcat tmp.fastq.gz) " 
 
 must_succeed "diff <(zcat tests/poly_at.fastq.gz | ./src/fastq_trim_poly_at --file - --outfile -  --min_poly_at_len 300 --min_len 1|zcat ) <(zcat tests/poly_at.fastq.gz) "
+must_succeed "printf '@r1\nACGTACGTA\n+\nIIIIIIIII\n' > tmp_9bp.fq && ./src/fastq_trim_poly_at --file tmp_9bp.fq --outfile tmp.fastq.gz --min_len 10 && [ \$(zcat tmp.fastq.gz | wc -l) -eq 0 ] && rm -f tmp_9bp.fq"
 
 #gcov src/fastq_trim_poly_at
 
@@ -212,6 +213,7 @@ must_succeed "./src/fastq_filter_n tests/test_21_2.fastq.gz > tmp && diff /dev/n
 must_fail "./src/fastq_filter_n -n 100 tests/test_21_2.fastq.gz > tmp && diff -q /dev/null tmp"
 must_fail "./src/fastq_filter_n tests/test_21_2.fastq.gz > tmp && diff  tests/test_21_2.fastq.gz tmp"
 must_succeed "./src/fastq_filter_n tests/test_1.fastq.gz > tmp && diff -q <(zcat tests/test_1.fastq.gz) tmp"
+must_succeed "printf '@r1\nACGTACGNT\n+\nIIIIIIIII\n' > tmp_9bp_n.fq && [ \$(./src/fastq_filter_n -n 10 tmp_9bp_n.fq | wc -l) -eq 0 ] && rm -f tmp_9bp_n.fq"
 must_fail "./src/fastq_filter_n --help"
 must_fail "./src/fastq_filter_n"
 
@@ -341,6 +343,7 @@ must_succeed 	time -p ./src/fastq_info  tests/casava.1.8_readname_trunc_1.fastq.
 must_succeed 	time -p ./src/fastq_info  -r -s tests/casava.1.8_readname_trunc_1.fastq.gz tests/casava.1.8_2.fastq.gz
 
 must_fail "./src/fastq_info --help"
+must_fail "printf '@r1/1\nACGT\n+\nIIII\n@r2/1\nACGT\n+\nIIII\n' > tmp_f1.fq && printf '@r1/2\nACGT\n+\nIIII\n' > tmp_f2.fq && ./src/fastq_info -r -s tmp_f1.fq tmp_f2.fq; rc=\$?; rm -f tmp_f1.fq tmp_f2.fq; exit \$rc"
 ##
 echo "*** fastq_validator.sh"
 export PATH=$PWD/src:$PATH
@@ -372,6 +375,7 @@ must_fail ./src/fastq_filterpair tests/c18_10000_1.fastq_missing.gz tests/c18_10
 must_fail ./src/fastq_filterpair tests/c18_10000_1.fastq.gz tests/c18_10000_2.fastq.gz  folder/does/not/exist/f1.fastq.gz f2.fastq.gz up.fastq.gz
 
 must_fail "./src/fastq_filterpair --help"
+must_succeed "printf '@r_unpaired/1\nACGT\n+\nIIII\n@r_paired/1\nACGT\n+\nIIII\n' > tmp_fp1.fq && printf '@r_paired/2\nACGT\n+\nIIII\n' > tmp_fp2.fq && ./src/fastq_filterpair tmp_fp1.fq tmp_fp2.fq f1.fastq.gz f2.fastq.gz up.fastq.gz && [ \$(zcat up.fastq.gz | grep -c '^@r_unpaired/1$') -eq 1 ] && rm -f tmp_fp1.fq tmp_fp2.fq"
 #must_succeed ./src/fastq_filterpair tests/c18_1M_2.fastq.gz tests/c18_1M_2.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz 
 #must_succeed ./src/fastq_filterpair tests/c18_1M_1.fastq.gz tests/c18_1M_1.fastq.gz  f1.fastq.gz f2.fastq.gz up.fastq.gz 
 
