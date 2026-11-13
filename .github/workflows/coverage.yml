@@ -1,4 +1,10 @@
-name: Upload coverage to Codecov
-uses: codecov/codecov-action@v5
-  with:
-    token: ${{ secrets.CODECOV_TOKEN }}
+steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        run: pytest
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
