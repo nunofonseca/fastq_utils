@@ -1,4 +1,4 @@
-VERSION=0.25.4
+VERSION=0.25.5
 # Requires zlib >= 1.4 and samtools/htslib >= 1.25
 all:
 	make -C src clean
